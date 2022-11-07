@@ -18,6 +18,9 @@ dependencies = [
 ]
 dynamic = ["version"]
 
+[project.urls]
+homepage = "https://github.com/phetdam/pdmpmt"
+
 [project.optional_dependencies]
 tests = ["pytest>=6.0.1"]
 
