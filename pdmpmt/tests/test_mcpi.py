@@ -27,7 +27,7 @@ def test_mcpi_serial(n_serial_samples, default_seed, big_tol):
     """
     mcpi = mcpi_serial(n_samples=n_serial_samples, seed=default_seed)
     # the estimate is pretty rough with low samples so ballpark 3.14 is fine
-    np.testing.assert_allclose(mcpi, math.pi, atol=1e-2)
+    np.testing.assert_allclose(mcpi, math.pi, atol=big_tol)
 
 
 def test_mcpi_gather(n_serial_samples, n_batches, default_seed, big_tol):
