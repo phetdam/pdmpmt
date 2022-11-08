@@ -1,0 +1,11 @@
+# ignore Python cache and build files
+**/__pycache__
+**/*.egg-info
+**/*.tar.gz
+**/*.whl
+# ignore shared objects + C/C++ build artifacts
+**/*.dll
+**/*.exe
+**/*.ilk
+**/*.pdb
+**/*.so
