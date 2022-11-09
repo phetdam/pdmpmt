@@ -31,7 +31,7 @@ def test_mcpi_serial(n_serial_samples, default_seed, big_tol):
 
 
 def test_mcpi_gather(n_serial_samples, n_batches, default_seed, big_tol):
-    """Test that the parallel Monte Carlo pi implementation works.
+    """Test that the parallel Monte Carlo pi implementation reduce works.
 
     We do this in a serial context, with around same complexity as serial. See
     test_mcpi_serial for documentation on unlisted parameters.
