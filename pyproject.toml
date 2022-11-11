@@ -14,7 +14,9 @@ classifiers = [
     "Programming Language :: Python :: 3"
 ]
 dependencies = [
-    "numpy>=1.19"
+    "numpy>=1.19",
+    "dask>=2022.10.2",
+    "distributed>=2022.10.2"
 ]
 dynamic = ["version"]
 

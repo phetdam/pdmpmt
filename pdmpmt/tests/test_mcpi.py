@@ -9,7 +9,7 @@ import numpy as np
 
 # pyright: reportMissingImports=false
 from pdmpmt.mcpi import (
-    generate_seeds, mcpi_gather, mcpi_serial, unit_circle_samples
+    generate_seeds, mcpi_dask, mcpi_gather, mcpi_serial, unit_circle_samples
 )
 
 
@@ -51,4 +51,22 @@ def test_mcpi_gather(n_serial_samples, n_batches, default_seed, big_tol):
     ]
     mcpi = mcpi_gather(circle_counts, [n_batch_samples] * n_batches)
     # same tolerance as test_mcpi_serial
+    np.testing.assert_allclose(mcpi, math.pi, atol=big_tol)
+
+
+def test_mcpi_dask(n_serial_samples, default_seed, big_tol):
+    """Test that parallel pi estimation using local Dask cluster works.
+
+    See test_mcpi_serial for parameter documentation.
+    """
+    # we don't need that many batches
+    n_batches = 2
+    # run using LocalCluster with 2 workers, 2 jobs
+    mcpi = mcpi_dask(
+        n_samples=n_serial_samples,
+        seed=default_seed,
+        n_jobs=n_batches,
+        n_workers=n_batches,
+        verbose=True
+    )
     np.testing.assert_allclose(mcpi, math.pi, atol=big_tol)
