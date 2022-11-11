@@ -9,3 +9,5 @@
 **/*.ilk
 **/*.pdb
 **/*.so
+# ignore Dask worker space
+dask-worker-space
