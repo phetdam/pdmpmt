@@ -66,7 +66,6 @@ def test_mcpi_dask(n_serial_samples, default_seed, big_tol):
         n_samples=n_serial_samples,
         seed=default_seed,
         n_jobs=n_batches,
-        n_workers=n_batches,
-        verbose=True
+        n_workers=n_batches
     )
     np.testing.assert_allclose(mcpi, math.pi, atol=big_tol)

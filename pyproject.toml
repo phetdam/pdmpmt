@@ -28,3 +28,6 @@ tests = ["pytest>=6.0.1"]
 
 [tool.setuptools.dynamic]
 version = {attr = "pdmpmt.__version__"}
+
+[tool.pytest.ini_options]
+addopts = "-rsxXP"
