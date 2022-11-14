@@ -27,7 +27,7 @@ namespace pdmpmt {
  *
  * @tparam Rng *UniformRandomBitGenerator* type
  *
- * @param n_samples `std::uintmax_t` number of samples to use
+ * @param n_samples `N_t` number of samples to use
  * @param rng `Rng` PRNG instance
  */
 template <typename N_t, typename Rng>
@@ -66,7 +66,7 @@ N_t unit_circle_samples(N_t n_samples, Rng rng)
  *
  * Uses the 64-bit Mersenne Twister implemented through `std::mt18837_64`.
  *
- * @param n_samples `std::uintmax_t` number of samples to use
+ * @param n_samples `N_t` number of samples to use
  * @param seed `std::uint_fast64_t` seed for the 64-bit Mersenne Twister
  */
 template <typename N_t>
@@ -102,7 +102,7 @@ inline N_t unit_circle_samples(N_t n_samples, std::uint_fast64_t seed)
  * @tparam T return type
  * @tparam Rng *UniformRandomBitGenerator* type
  *
- * @param n_samples `std::uintmax_t` number of samples to use
+ * @param n_samples `N_t` number of samples to use
  * @param rng `const Rng&` PRNG instance
  */
 template <typename T, typename N_t, typename Rng>
@@ -118,7 +118,7 @@ inline T mcpi(N_t n_samples, const Rng& rng)
  *
  * Uses the 64-bit Mersenne Twister implemented through `std::mt18837_64`.
  *
- * @param n_samples `std::uintmax_t` number of samples to use
+ * @param n_samples `N_t` number of samples to use
  * @param seed `std::uint_fast64_t` seed for the 64-bit Mersenne Twister
  */
 template <typename N_t>
@@ -132,7 +132,7 @@ inline double mcpi(N_t n_samples, std::uint_fast64_t seed)
  *
  * Uses the 64-bit Mersenne Twister implemented through `std::mt18837_64`.
  *
- * @param n_samples `std::uintmax_t` number of samples to use
+ * @param n_samples `N_t` number of samples to use
  */
 template <typename N_t>
 inline double mcpi(N_t n_samples)
