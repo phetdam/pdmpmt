@@ -31,6 +31,6 @@ def default_seed() -> int:
 def big_tol() -> float:
     """Largest tolerance used for checking pi estimates.
 
-    Requried since n_serial_samples is only accurate to 2 significant figures.
+    Required since n_serial_samples is only accurate to 2 significant figures.
     """
     return 1e-2
