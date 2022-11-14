@@ -11,3 +11,8 @@
 **/*.so
 # ignore Dask worker space
 dask-worker-space
+# ignore VS Code config
+.vscode
+# ignore CMake build directories
+build
+build_windows
