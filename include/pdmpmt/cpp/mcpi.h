@@ -47,10 +47,8 @@ N_t unit_circle_samples(N_t n_samples, Rng rng)
 #ifdef _MSC_VER
 #pragma warning (pop)
 #endif  // _MSC_VER
-  for (auto it = xs->begin(); it != xs->end(); it++)
-    *it = udist(rng);
-  for (auto it = ys->begin(); it != ys->end(); it++)
-    *it = udist(rng);
+  std::for_each(xs->begin(), xs->end(), [&](auto& x) { x = udist(rng); });
+  std::for_each(ys->begin(), ys->end(), [&](auto& x) { x = udist(rng); });
   // count number of points in the unit circle, i.e. 2-norm <= 1
   N_t n_inside = 0;
   for (N_t i = 0; i < n_samples; i++) {
