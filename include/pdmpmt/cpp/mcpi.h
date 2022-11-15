@@ -25,6 +25,7 @@ namespace pdmpmt {
  *
  * We make a copy of the PRNG instance, otherwise its state will be changed.
  *
+ * @tparam N_t integer type
  * @tparam Rng *UniformRandomBitGenerator* type
  *
  * @param n_samples `N_t` number of samples to use
@@ -64,6 +65,8 @@ N_t unit_circle_samples(N_t n_samples, Rng rng)
  *
  * Uses the 64-bit Mersenne Twister implemented through `std::mt18837_64`.
  *
+ * @tparam N_t integer type
+ *
  * @param n_samples `N_t` number of samples to use
  * @param seed `std::uint_fast64_t` seed for the 64-bit Mersenne Twister
  */
@@ -71,6 +74,39 @@ template <typename N_t>
 inline N_t unit_circle_samples(N_t n_samples, std::uint_fast64_t seed)
 {
   return unit_circle_samples(n_samples, std::mt19937_64{seed});
+}
+
+/**
+ * Return a `std::vector` of seed values for a specified PRNG instance's type.
+ *
+ * @tparam N_t integer type
+ * @tparam Rng *UniformRandomBitGenerator* type
+ *
+ * @param n_seeds `N_t` number of PRNG seeds to generate
+ * @param rng `Rng` PRNG instance for whose type seeds will be generated
+ */
+template <typename N_t, typename Rng>
+std::vector<typename Rng::result_type> generate_seeds(N_t n_seeds, Rng rng)
+{
+  std::vector<typename Rng::result_type> seeds(n_seeds);
+  std::for_each(seeds.begin(), seeds.end(), [&](auto& x) { x = rng(); });
+  return seeds;
+}
+
+/**
+ * Return a `std::vector` of seed values for the 64-bit Mersenne Twister.
+ *
+ * @tparam N_t integer type
+ *
+ * @param n_seeds `N_t` number of PRNG seeds to generate
+ * @param initial_seed `std::uint_fast64_t` starting seed for the
+ *    `std::mt19937_64` used to generate the seeds
+ */
+template <typename N_t>
+inline std::vector<std::uint_fast64_t> generate_seeds(
+  N_t n_seeds, std::uint_fast64_t initial_seed)
+{
+  return generate_seeds(n_seeds, std::mt19937_64{initial_seed});
 }
 
 // template <typename T, typename V_t>
@@ -98,6 +134,7 @@ inline N_t unit_circle_samples(N_t n_samples, std::uint_fast64_t seed)
  * Uses the standard "circle-filling" technique to estimate pi / 4.
  *
  * @tparam T return type
+ * @tparam N_t integer type
  * @tparam Rng *UniformRandomBitGenerator* type
  *
  * @param n_samples `N_t` number of samples to use
@@ -116,6 +153,8 @@ inline T mcpi(N_t n_samples, const Rng& rng)
  *
  * Uses the 64-bit Mersenne Twister implemented through `std::mt18837_64`.
  *
+ * @tparam N_t integer type
+ *
  * @param n_samples `N_t` number of samples to use
  * @param seed `std::uint_fast64_t` seed for the 64-bit Mersenne Twister
  */
@@ -129,6 +168,8 @@ inline double mcpi(N_t n_samples, std::uint_fast64_t seed)
  * Estimate pi using Monte Carlo.
  *
  * Uses the 64-bit Mersenne Twister implemented through `std::mt18837_64`.
+ *
+ * @tparam N_t integer type
  *
  * @param n_samples `N_t` number of samples to use
  */
