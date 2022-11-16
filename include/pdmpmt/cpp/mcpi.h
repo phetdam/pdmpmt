@@ -16,9 +16,9 @@
 #include <random>
 #include <vector>
 
-#include <iostream>
-
 namespace pdmpmt {
+
+namespace detail {
 
 /**
  * Return number of samples in [-1, 1] x [-1, 1] that fall in the unit circle.
@@ -128,6 +128,8 @@ inline std::vector<std::uint_fast64_t> generate_seeds(
 //   return mcpi_gather<double>(circle_counts, sample_counts);
 // }
 
+}  // namespace detail
+
 /**
  * Estimate pi using Monte Carlo.
  *
@@ -143,9 +145,8 @@ inline std::vector<std::uint_fast64_t> generate_seeds(
 template <typename T, typename N_t, typename Rng>
 inline T mcpi(N_t n_samples, const Rng& rng)
 {
-  T x = 4 * static_cast<T>(unit_circle_samples(n_samples, rng)) / n_samples;
-  std::cout << x << std::endl;
-  return x;
+  const auto uct{static_cast<T>(detail::unit_circle_samples(n_samples, rng))};
+  return 4 * (uct / n_samples);
 }
 
 /**
