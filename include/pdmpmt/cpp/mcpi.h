@@ -176,8 +176,8 @@ inline double mcpi_gather(const V_t& circle_counts, const V_t& sample_counts)
 template <typename T, typename N_t, typename Rng>
 inline T mcpi(N_t n_samples, const Rng& rng)
 {
-  const auto uct{static_cast<T>(detail::unit_circle_samples(n_samples, rng))};
-  return 4 * (uct / n_samples);
+  const auto uctd{static_cast<T>(detail::unit_circle_samples(n_samples, rng))};
+  return 4 * (uctd / n_samples);
 }
 
 /**
