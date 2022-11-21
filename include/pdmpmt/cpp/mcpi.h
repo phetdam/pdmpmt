@@ -1,5 +1,5 @@
 /**
- * @file mcpi.h
+ * @file cpp/mcpi.h
  * @author Derek Huang
  * @brief C++ template implementation for estimating pi using Monte Carlo
  * @copyright MIT License
@@ -41,27 +41,15 @@ template <typename N_t, typename Rng>
 N_t unit_circle_samples(N_t n_samples, Rng rng)
 {
   std::uniform_real_distribution udist{-1., 1.};
-  // we use the heap here as stack sizes are pretty small; ex. 7.4M for glibc.
-  // see https://softwareengineering.stackexchange.com/a/310659/413818 and
-  // https://stackoverflow.com/a/1826072/14227825 for some more details
-// MSVC will complain about possible loss of data
-#ifdef _MSC_VER
-#pragma warning (push)
-#pragma warning (disable: 4244)
-#endif  // _MSC_VER
-  auto xs = std::make_shared<std::vector<double>>(n_samples);
-  auto ys = std::make_shared<std::vector<double>>(n_samples);
-#ifdef _MSC_VER
-#pragma warning (pop)
-#endif  // _MSC_VER
-  std::for_each(xs->begin(), xs->end(), [&](auto& x) { x = udist(rng); });
-  std::for_each(ys->begin(), ys->end(), [&](auto& x) { x = udist(rng); });
   // count number of points in the unit circle, i.e. 2-norm <= 1
+  double x, y;
   N_t n_inside = 0;
+  // we can use a raw loop to avoid memory allocations
   for (N_t i = 0; i < n_samples; i++) {
+    x = udist(rng);
+    y = udist(rng);
     // no need for sqrt here since the target norm is 1
-    if (xs->at(i) * xs->at(i) + ys->at(i) * ys->at(i) <= 1.)
-      n_inside++;
+    if (x * x + y * y <= 1.) n_inside++;
   }
   return n_inside;
 }
