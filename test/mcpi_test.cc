@@ -20,14 +20,15 @@ class MonteCarloPiTest : public ::testing::Test {
 protected:
   // number of samples to use for estimating pi in a single process; produces a
   // very crude guess, so the tolerance we will need is relatively large.
-  static constexpr std::uintmax_t n_samples_ = 1000000;
+  static constexpr std::size_t n_samples_ = 1000000;
+  // default number of jobs to use at once
+  static constexpr std::size_t n_jobs_ = 2;
   // double pi, if using C++20 we can use std::numbers instead
   static constexpr auto pi_ = boost::math::constants::pi<double>();
-  // pi tolerance; using n_samples_ only gives accuracy to 5 sig figs.
-  // question: tol has to be 1e-2 in Python land, why is this? conversion?
-  static constexpr double pi_tol_ = 1e-5;
+  // pi tolerance; result can vary greatly so to be safe tol is pretty big
+  static constexpr double pi_tol_ = 1e-2;
   // PRNG seed
-  static constexpr unsigned int seed_ = 1900;
+  static constexpr unsigned int seed_ = 8888;
 };
 
 /**
@@ -36,6 +37,14 @@ protected:
 TEST_F(MonteCarloPiTest, SerialTest)
 {
   EXPECT_NEAR(pi_, pdmpmt::mcpi(n_samples_, seed_), pi_tol_);
+}
+
+/**
+ * Test that async estimation of pi using Monte Carlo works as expected.
+ */
+TEST_F(MonteCarloPiTest, AsyncTest)
+{
+  EXPECT_NEAR(pi_, pdmpmt::mcpi_async(n_samples_, seed_, n_jobs_), pi_tol_);
 }
 
 }  // namespace

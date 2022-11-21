@@ -11,14 +11,20 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <future>
 #include <memory>
+#include <numeric>
 #include <optional>
 #include <random>
+#include <type_traits>
 #include <vector>
 
 namespace pdmpmt {
 
 namespace detail {
+
+// default number of elements each job is responsible for at maximum
+inline const std::size_t job_elements_default = 50000000;
 
 /**
  * Return number of samples in [-1, 1] x [-1, 1] that fall in the unit circle.
@@ -63,7 +69,7 @@ N_t unit_circle_samples(N_t n_samples, Rng rng)
 /**
  * Return number of samples in [-1, 1] x [-1, 1] that fall in the unit circle.
  *
- * Uses the 64-bit Mersenne Twister implemented through `std::mt18837_64`.
+ * Uses the 64-bit Mersenne Twister implemented through `std::mt19937_64`.
  *
  * @tparam N_t integer type
  *
@@ -109,24 +115,61 @@ inline std::vector<std::uint_fast64_t> generate_seeds(
   return generate_seeds(n_seeds, std::mt19937_64{initial_seed});
 }
 
-// template <typename T, typename V_t>
-// T mcpi_gather(const V_t& circle_counts, const V_t& sample_counts)
-// {
-//   assert(circle_counts.size() == sample_counts.size());
-//   // number of samples inside the unit circle, total number of samples drawn
-//   std::uintmax_t n_inside = 0;
-//   std::uintmax_t n_total = 0;
-//   n_inside = std::accumulate(circle_counts.cbegin(), circle_counts.cend(), n_inside);
-//   n_total = std::accumulate(sample_counts.cebgin(), sample_counts.cend(), n_total);
-//   // do division first to reduce likelihood of overflow
-//   return 4 * (static_cast<T>(n_inside) / n_total);
-// }
+/**
+ * Given `n_jobs` jobs, divide `n_samples` sample to generate evenly.
+ *
+ * @tparam N_t integer type
+ *
+ * @param n_samples `N_t` total number of samples
+ * @param n_jobs `N_t` number of jobs to split sample generation across
+ */
+template <typename N_t>
+inline auto generate_sample_counts(N_t n_samples, N_t n_jobs)
+{
+  // sample counts, i.e. number of samples each job will generate
+  std::vector<N_t> sample_counts(n_jobs, n_samples / n_jobs);
+  // if there is a remainder, +1 count for the first n_rem jobs
+  N_t n_rem = n_samples % n_jobs;
+  std::for_each_n(sample_counts.begin(), n_rem, [](auto& n) { n++; });
+  return sample_counts;
+}
 
-// template <typename V_t>
-// inline double mcpi_gather(const V_t& circle_counts, const V_t& sample_counts)
-// {
-//   return mcpi_gather<double>(circle_counts, sample_counts);
-// }
+/**
+ * Gather `unit_circle_samples` results with sample counts to estimate pi.
+ *
+ * @tparam T return type
+ * @tparam V_t *Container*
+ *
+ * @param circle_counts `const V_t&` counts of samples falling in unit circle
+ * @param sample_counts `const V_t&` per-job total sample counts
+ */
+template <typename T, typename V_t>
+T mcpi_gather(const V_t& circle_counts, const V_t& sample_counts)
+{
+  using N_t = typename V_t::value_type;
+  assert(circle_counts.size() == sample_counts.size());
+  // number of samples inside the unit circle, total number of samples drawn
+  N_t n_inside = 0;
+  N_t n_total = 0;
+  n_inside = std::accumulate(circle_counts.cbegin(), circle_counts.cend(), n_inside);
+  n_total = std::accumulate(sample_counts.cbegin(), sample_counts.cend(), n_total);
+  // do division first to reduce likelihood of overflow
+  return 4 * (static_cast<T>(n_inside) / n_total);
+}
+
+/**
+ * Gather `unit_circle_samples` results with sample counts to estimate pi.
+ *
+ * @tparam V_t *Container*
+ *
+ * @param circle_counts `const V_t&` counts of samples falling in unit circle
+ * @param sample_counts `const V_t&` per-job total sample counts
+ */
+template <typename V_t>
+inline double mcpi_gather(const V_t& circle_counts, const V_t& sample_counts)
+{
+  return mcpi_gather<double>(circle_counts, sample_counts);
+}
 
 }  // namespace detail
 
@@ -152,7 +195,7 @@ inline T mcpi(N_t n_samples, const Rng& rng)
 /**
  * Estimate pi using Monte Carlo.
  *
- * Uses the 64-bit Mersenne Twister implemented through `std::mt18837_64`.
+ * Uses the 64-bit Mersenne Twister implemented through `std::mt19937_64`.
  *
  * @tparam N_t integer type
  *
@@ -168,7 +211,7 @@ inline double mcpi(N_t n_samples, std::uint_fast64_t seed)
 /**
  * Estimate pi using Monte Carlo.
  *
- * Uses the 64-bit Mersenne Twister implemented through `std::mt18837_64`.
+ * Uses the 64-bit Mersenne Twister implemented through `std::mt19937_64`.
  *
  * @tparam N_t integer type
  *
@@ -178,6 +221,85 @@ template <typename N_t>
 inline double mcpi(N_t n_samples)
 {
   return mcpi<double>(n_samples, std::random_device{}());
+}
+
+/**
+ * Parallel estimation of pi through Monte Carlo by launching async jobs.
+ *
+ * Simple map-reduce using `std::async` provided in `<future>`.
+ *
+ * @tparam T return type
+ * @tparam N_t integer type
+ * @tparam Rng *UniformRandomBitGenerator* type
+ *
+ * @param n_samples `N_t` number of samples to use
+ * @param rng `const Rng&` PRNG instance
+ * @param n_jobs `N_t` number of async jobs to split work over
+ */
+template <typename T, typename N_t, typename Rng>
+T mcpi_async(N_t n_samples, const Rng& rng, N_t n_jobs)
+{
+  // generate the seeds used by jobs for generate samples + the sample counts
+  const auto seeds{detail::generate_seeds(n_jobs, rng)};
+  const auto sample_counts{detail::generate_sample_counts(n_samples, n_jobs)};
+  // submit unit_circle_samples tasks asynchronously + block for results
+  std::vector<std::future<N_t>> circle_count_futures(n_jobs);
+  for (N_t i = 0; i < n_jobs; i++) {
+    circle_count_futures[i] = std::async(
+      std::launch::async,
+      detail::unit_circle_samples<N_t, Rng>,
+      sample_counts[i],
+      Rng{seeds[i]}
+    );
+  }
+  // need to remove the const from const auto
+  std::remove_const_t<decltype(sample_counts)> circle_counts(n_jobs);
+  std::transform(
+    circle_count_futures.begin(),
+    circle_count_futures.end(),
+    circle_counts.begin(),
+    [](auto& x) { return x.get(); }
+  );
+  return detail::mcpi_gather(circle_counts, sample_counts);
+}
+
+/**
+ * Parallel estimation of pi through Monte Carlo by launching async jobs.
+ *
+ * Uses the 64-bit Mersenne Twister implemented through `std::mt19937_64`.
+ *
+ * @tparam N_t integer type
+ *
+ * @param n_samples `N_t` number of samples to use
+ * @param seed `std::uint_fast64_t` seed for the 64-bit Mersenne Twister
+ * @param n_jobs `N_t` number of async jobs to split work over
+ */
+template <typename N_t>
+inline double mcpi_async(N_t n_samples, std::uint_fast64_t seed, N_t n_jobs)
+{
+  return mcpi_async<double>(n_samples, std::mt19937_64{seed}, n_jobs);
+}
+
+/**
+ * Parallel estimation of pi through Monte Carlo by launching async jobs.
+ *
+ * Uses the 64-bit Mersenne Twister implemented through `std::mt19937_64`, with
+ * the default number of jobs chosen to be such that each jobs will use at most
+ * 400 MB when generating samples from [-1, 1] x [-1, 1].
+ *
+ * @tparam N_t integer type
+ *
+ * @param n_samples `N_t` number of samples to use
+ * @param seed `std::uint_fast64_t` seed for the 64-bit Mersenne Twister
+ */
+template <typename N_t>
+inline double mcpi_async(
+  N_t n_samples, std::uint_fast64_t seed = std::random_device{}())
+{
+  N_t n_jobs = n_samples / detail::job_elements_default;
+  if (n_samples % detail::job_elements_default)
+    n_jobs++;
+  return mcpi_async(n_samples, seed, n_jobs);
 }
 
 }  // namespace
