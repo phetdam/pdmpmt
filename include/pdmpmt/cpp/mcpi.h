@@ -146,8 +146,8 @@ inline auto generate_sample_counts(N_t n_samples, N_t n_jobs)
 template <typename T, typename V_t>
 T mcpi_gather(const V_t& circle_counts, const V_t& sample_counts)
 {
-  using N_t = typename V_t::value_type;
   assert(circle_counts.size() == sample_counts.size());
+  using N_t = typename V_t::value_type;
   // number of samples inside the unit circle, total number of samples drawn
   N_t n_inside = 0;
   N_t n_total = 0;
@@ -297,8 +297,7 @@ inline double mcpi_async(
   N_t n_samples, std::uint_fast64_t seed = std::random_device{}())
 {
   N_t n_jobs = n_samples / detail::job_elements_default;
-  if (n_samples % detail::job_elements_default)
-    n_jobs++;
+  if (n_samples % detail::job_elements_default) n_jobs++;
   return mcpi_async(n_samples, seed, n_jobs);
 }
 
