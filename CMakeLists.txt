@@ -68,6 +68,8 @@ include_directories(
     SYSTEM ${GTEST_INCLUDE_DIRS}
 )
 
+add_subdirectory(src)
+
 # need to call this to enable test discovery!
 enable_testing()
 add_subdirectory(test)

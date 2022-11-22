@@ -5,8 +5,8 @@ add_executable(pdmpmt_test mcpi_test.cc)
 if(OpenMP_FOUND)
     target_link_libraries(pdmpmt_test OpenMP::OpenMP_CXX)
 endif()
-# link Google Test main for entry point
-target_link_libraries(pdmpmt_test GTest::gtest_main)
+# link C library + Google Test main for entry point
+target_link_libraries(pdmpmt_test pdmpmt_c GTest::gtest_main)
 
 # enable test discovery for Google Test
 include(GoogleTest)

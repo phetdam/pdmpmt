@@ -4,6 +4,7 @@
  * @brief Unit test for the C++ implementation of Monte Carlo pi estimation.
  */
 
+#include <pdmpmt/mcpi.h>
 #include <pdmpmt/cpp/mcpi.h>
 
 #include <cstdint>
@@ -31,10 +32,22 @@ protected:
   static constexpr unsigned int seed_ = 8888;
 };
 
+// aliases for C and C++ tests
+using MonteCarloPiTestC = MonteCarloPiTest;
+using MonteCarloPiTestCXX = MonteCarloPiTest;
+
 /**
- * Test that serial estimation of pi using Monte Carlo works as expected.
+ * Test that C serial estimation of pi using Monte Carlo works as expected.
  */
-TEST_F(MonteCarloPiTest, SerialTest)
+TEST_F(MonteCarloPiTestC, SerialTest)
+{
+  EXPECT_NEAR(pi_, pdmpmt_mt32_smcpi(n_samples_, seed_), pi_tol_);
+}
+
+/**
+ * Test that C++ serial estimation of pi using Monte Carlo works as expected.
+ */
+TEST_F(MonteCarloPiTestCXX, SerialTest)
 {
   EXPECT_NEAR(pi_, pdmpmt::mcpi(n_samples_, seed_), pi_tol_);
 }
@@ -42,7 +55,7 @@ TEST_F(MonteCarloPiTest, SerialTest)
 /**
  * Test that async estimation of pi using Monte Carlo works as expected.
  */
-TEST_F(MonteCarloPiTest, AsyncTest)
+TEST_F(MonteCarloPiTestCXX, AsyncTest)
 {
   EXPECT_NEAR(pi_, pdmpmt::mcpi_async(n_samples_, seed_, n_jobs_), pi_tol_);
 }
@@ -52,7 +65,7 @@ TEST_F(MonteCarloPiTest, AsyncTest)
  *
  * If the compiler does not support OpenMP, this test is skipped.
  */
-TEST_F(MonteCarloPiTest, OpenMPTest)
+TEST_F(MonteCarloPiTestCXX, OpenMPTest)
 {
 #ifdef _OPENMP
   EXPECT_NEAR(
