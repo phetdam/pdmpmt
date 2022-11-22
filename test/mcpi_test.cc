@@ -47,4 +47,20 @@ TEST_F(MonteCarloPiTest, AsyncTest)
   EXPECT_NEAR(pi_, pdmpmt::mcpi_async(n_samples_, seed_, n_jobs_), pi_tol_);
 }
 
+/**
+ * Test that OpenMP estimation of pi using Monte Carlo works as expected.
+ *
+ * If the compiler does not support OpenMP, this test is skipped.
+ */
+TEST_F(MonteCarloPiTest, OpenMPTest)
+{
+#ifdef _OPENMP
+  EXPECT_NEAR(
+    pi_, pdmpmt::mcpi_omp(n_samples_, seed_, n_jobs_, n_jobs_), pi_tol_
+  );
+#else
+  GTEST_SKIP() << "C++ compiler doesn't implement OpenMP";
+#endif
+}
+
 }  // namespace

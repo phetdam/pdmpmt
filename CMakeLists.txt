@@ -21,6 +21,15 @@ if(MSVC)
     if(NOT CMAKE_BUILD_TYPE STREQUAL Release)
         add_compile_options(/Od /DEBUG)
     endif()
+    # check OpenMP support. MSVC OpenMP support lags behind GCC's by a lot
+    find_package(OpenMP 2.0)
+    if(OpenMP_FOUND)
+        add_compile_options(/openmp)
+    else()
+        message(
+            WARNING "OpenMP 2.0 not supported by MSVC version ${MSVC_VERSION}"
+        )
+    endif()
 # options are also accepted by clang
 else()
     add_compile_options(-Wall)
@@ -29,12 +38,25 @@ else()
     else()
         add_compile_options(-O0 -ggdb)
     endif()
+    # check OpenMP support, GCC 9.x and clang 3.9+ implement 4.5
+    find_package(OpenMP 4.5)
+    if(OpenMP_FOUND)
+        add_compile_options(-fopenmp)
+    else()
+        message(
+            WARNING "OpenMP not supported by
+  C compiler ${CMAKE_C_COMPILER} ${CMAKE_C_COMPILER_VERSION}
+C++ compiler ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_VERSION}"
+        )
+    endif()
 endif()
 
 # base include for this repo (since "include" is reserved)
 set(PDMPMT_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
+# already checked for OpenMP on a per-compiler basis
 find_package(Boost 1.71 REQUIRED)
+find_package(GSL 2.7 REQUIRED)
 find_package(GTest 1.10 REQUIRED)
 
 # must add include directories if they are installed in non-standard locations
@@ -42,6 +64,7 @@ find_package(GTest 1.10 REQUIRED)
 include_directories(
     ${PDMPMT_INCLUDE}
     SYSTEM ${Boost_INCLUDE_DIRS}
+    SYSTEM ${GSL_INCLUDE_DIRS}
     SYSTEM ${GTEST_INCLUDE_DIRS}
 )
 

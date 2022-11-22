@@ -19,12 +19,34 @@
 #include <type_traits>
 #include <vector>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif  // _OPENMP
+
 namespace pdmpmt {
 
 namespace detail {
 
 // default number of elements each job is responsible for at maximum
 inline const std::size_t job_elements_default = 50000000;
+
+/**
+ * Return the default number of jobs to use given the number of samples.
+ *
+ * The default number of jobs is such that each job will use at most 400 MB
+ * when generating `double` samples from [-1, 1] x [-1, 1].
+ *
+ * @tparam N_t integer type
+ *
+ * @param n_samples `N_t` number of samples to use
+ */
+template <typename N_t>
+inline N_t n_jobs_default(N_t n_samples)
+{
+  N_t n_jobs = n_samples / detail::job_elements_default;
+  if (n_samples % detail::job_elements_default) n_jobs++;
+  return n_jobs;
+}
 
 /**
  * Return number of samples in [-1, 1] x [-1, 1] that fall in the unit circle.
@@ -271,9 +293,8 @@ inline double mcpi_async(N_t n_samples, std::uint_fast64_t seed, N_t n_jobs)
 /**
  * Parallel estimation of pi through Monte Carlo by launching async jobs.
  *
- * Uses the 64-bit Mersenne Twister implemented through `std::mt19937_64`, with
- * the default number of jobs chosen to be such that each jobs will use at most
- * 400 MB when generating samples from [-1, 1] x [-1, 1].
+ * Uses the 64-bit Mersenne Twister implemented through `std::mt19937_64` and
+ * the default number of jobs returned by `detail::n_jobs_default`.
  *
  * @tparam N_t integer type
  *
@@ -284,10 +305,116 @@ template <typename N_t>
 inline double mcpi_async(
   N_t n_samples, std::uint_fast64_t seed = std::random_device{}())
 {
-  N_t n_jobs = n_samples / detail::job_elements_default;
-  if (n_samples % detail::job_elements_default) n_jobs++;
-  return mcpi_async(n_samples, seed, n_jobs);
+  return mcpi_async(n_samples, seed, detail::n_jobs_default(n_samples));
 }
+
+#ifdef _OPENMP
+
+/**
+ * Parallel estimation of pi through Monte Carlo by using OpenMP directives.
+ *
+ * Implicit map-reduce using OpenMP to manage the thread pool. If the number of
+ * threads is not given, i.e. left as 0, then OpenMP chooses number of threads.
+ *
+ * @tparam T return type
+ * @tparam N_t integer type
+ * @tparam Rng *UniformRandomBitGenerator* type
+ *
+ * @param n_samples `N_t` number of samples to use
+ * @param rng `const Rng&` PRNG instance
+ * @param n_jobs `N_t` number of sync jobs to split work over
+ * @param n_threads `unsigned int` number of threads OpenMP should use
+ */
+template <typename T, typename N_t, typename Rng>
+T mcpi_omp(
+  N_t n_samples,
+  const Rng& rng,
+  N_t n_jobs,
+  unsigned int n_threads = 0)
+{
+  if (n_threads) omp_set_num_threads(n_threads);
+  // generate the seeds used by jobs for generate samples + the sample counts
+  const auto seeds{detail::generate_seeds(n_jobs, rng)};
+  const auto sample_counts{detail::generate_sample_counts(n_samples, n_jobs)};
+  // compute circle counts using multiple threads using OpenMP
+  std::vector<N_t> circle_counts(n_jobs);
+  #pragma omp parallel for
+// for MSVC, since its OpenMP version is quite old (2.0), must use signed var
+#ifdef _MSC_VER
+  for (std::intmax_t i = 0; i < static_cast<decltype(i)>(n_jobs); i++) {
+#else
+  for (N_t i = 0; i < n_jobs; i++) {
+#endif  // _MSC_VER
+    circle_counts[i] = detail::unit_circle_samples(
+      sample_counts[i], Rng{seeds[i]}
+    );
+  }
+  return detail::mcpi_gather(circle_counts, sample_counts);
+}
+
+/**
+ * Parallel estimation of pi through Monte Carlo by using OpenMP directives.
+ *
+ * Implicit map-reduce using OpenMP to manage the thread pool. If the number of
+ * threads is not given, i.e. left as 0, then OpenMP chooses number of threads.
+ *
+ * Uses the 64-bit Mersenne Twister implemented through `std::mt19937_64`.
+ *
+ * @tparam N_t integer type
+ *
+ * @param n_samples `N_t` number of samples to use
+ * @param seed `std::uint_fast64_t` seed for the 64-bit Mersenne Twister
+ * @param n_jobs `N_t` number of sync jobs to split work over
+ * @param n_threads `unsigned int` number of threads OpenMP should use
+ */
+template <typename N_t>
+inline double mcpi_omp(
+  N_t n_samples, std::uint_fast64_t seed, N_t n_jobs, unsigned int n_threads = 0)
+{
+  return mcpi_omp<double>(n_samples, std::mt19937_64{seed}, n_jobs, n_threads);
+}
+
+/**
+ * Parallel estimation of pi through Monte Carlo by using OpenMP directives.
+ *
+ * Implicit map-reduce using OpenMP to manage the thread pool. If the number of
+ * threads is not given, i.e. left as 0, then OpenMP chooses number of threads.
+ *
+ * Uses the 64-bit Mersenne Twister implemented through `std::mt19937_64`.
+ *
+ * @tparam N_t integer type
+ *
+ * @param n_samples `N_t` number of samples to use
+ * @param n_jobs `N_t` number of sync jobs to split work over
+ * @param n_threads `unsigned int` number of threads OpenMP should use
+ */
+template <typename N_t>
+inline double mcpi_omp(N_t n_samples, N_t n_jobs, unsigned int n_threads = 0)
+{
+  return mcpi_omp(n_samples, std::random_device{}(), n_threads);
+}
+
+/**
+ * Parallel estimation of pi through Monte Carlo by using OpenMP directives.
+ *
+ * Implicit map-reduce using OpenMP to manage the thread pool. If the number of
+ * threads is not given, i.e. left as 0, then OpenMP chooses number of threads.
+ *
+ * Uses the 64-bit Mersenne Twister implemented through `std::mt19937_64` and
+ * the default number of jobs returned by `detail::n_jobs_default`.
+ *
+ * @tparam N_t integer type
+ *
+ * @param n_samples `N_t` number of samples to use
+ * @param n_threads `unsigned int` number of threads OpenMP should use
+ */
+template <typename N_t>
+inline double mcpi_omp(N_t n_samples, unsigned int n_threads = 0)
+{
+  return mcpi_omp(n_samples, detail::n_jobs_default(n_samples), n_threads);
+}
+
+#endif  // _OPENMP
 
 }  // namespace
 
