@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.21)
 
 project(
     pdmpmt
@@ -7,6 +7,8 @@ project(
     HOMEPAGE_URL "https://github.com/phetdam/pdmpmt"
     LANGUAGES C CXX
 )
+
+option(BUILD_SHARED_LIBS "Build libraries as shared instead of static" ON)
 
 # build debug by default; we set -DCMAKE_BUILD_TYPE=Release for release
 if(NOT CMAKE_BUILD_TYPE)
@@ -30,6 +32,8 @@ if(MSVC)
             WARNING "OpenMP 2.0 not supported by MSVC version ${MSVC_VERSION}"
         )
     endif()
+    # if using shared GNU GSL, need to define this macro
+    add_compile_definitions(GSL_DLL)
 # options are also accepted by clang
 else()
     add_compile_options(-Wall)
@@ -67,6 +71,17 @@ include_directories(
     SYSTEM ${GSL_INCLUDE_DIRS}
     SYSTEM ${GTEST_INCLUDE_DIRS}
 )
+
+# on Windows, add DLL locations so that gtest_discover_tests can properly run
+# the test runner(s) to register the Google Test tests. unfortunately, on
+# ctest invocation, this setting is not known, so PATH must be manually set.
+# this is a TODO item that should be figured out
+if(WIN32)
+    set(CMAKE_PROGRAM_PATH ${GSL_ROOT_DIR}/bin;${CMAKE_PROGRAM_PATH})
+endif()
+
+# on Windows, export all DLL symbols
+set(WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 add_subdirectory(src)
 
