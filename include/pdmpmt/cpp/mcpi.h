@@ -156,6 +156,7 @@ inline auto generate_sample_counts(N_t n_samples, N_t n_jobs)
 template <typename T, typename V_t>
 T mcpi_gather(const V_t& circle_counts, const V_t& sample_counts)
 {
+  assert(circle_counts.size() && sample_counts.size());
   assert(circle_counts.size() == sample_counts.size());
   using N_t = typename V_t::value_type;
   // number of samples inside the unit circle, total number of samples drawn
