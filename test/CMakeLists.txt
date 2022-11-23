@@ -21,4 +21,10 @@ endif()
 
 # enable test discovery for Google Test
 include(GoogleTest)
-gtest_discover_tests(pdmpmt_test)
+
+# TODO: disable on Windows until we figure out better GSL integration
+if(WIN32)
+    message(STATUS "Test discovery disabled on Windows temporarily")
+else()
+    gtest_discover_tests(pdmpmt_test)
+endif()

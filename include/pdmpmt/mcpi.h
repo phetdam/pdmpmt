@@ -15,6 +15,7 @@ extern "C" {
 #include <stdint.h>
 #include <time.h>
 
+#include <gsl/gsl_block.h>
 #include <gsl/gsl_rng.h>
 
 #define PDMPMT_JOB_ELEMENTS_DEFAULT 50000000
@@ -30,9 +31,34 @@ pdmpmt_rng_unit_circle_samples(
  *
  * @param n_samples `size_t` number of samples to draw
  * @param seed `unsigned long` seed value for the PRNG
+ *
+ * @returns `size_t`
  */
 #define pdmpmt_mt32_unit_circle_samples(n_samples, seed) \
   pdmpmt_rng_unit_circle_samples(n_samples, gsl_rng_mt19937, seed)
+
+gsl_block_ulong *
+pdmpmt_rng_generate_seeds(
+  unsigned int n_seeds, const gsl_rng_type *rng_type, unsigned long seed);
+
+/**
+ * Return a block of `unsigned long` values usable as GSL PRNG seeds.
+ *
+ * @param n_jobs `unsigned int` number of seeds to generate
+ * @param rng_type `const gsl_rng_type *` GSL PRNG type pointer
+ * @param seed `unsigned long` seed value for the PRNG
+ *
+ * @returns `gsl_block_ulong *`
+ */
+#define pdmpmt_mt32_generate_seeds(n_seeds, seed) \
+  pdmpmt_rng_generate_seeds(n_seeds, gsl_rng_mt19937, seed)
+
+gsl_block_ulong *
+pdmpmt_generate_sample_counts(size_t n_samples, unsigned int n_jobs);
+
+double
+pdmpmt_mcpi_gather(
+  gsl_block_ulong *circle_counts, gsl_block_ulong *sample_counts);
 
 /**
  * Estimate pi using Monte Carlo.
@@ -56,6 +82,8 @@ pdmpmt_rng_smcpi(
  *
  * @param n_samples `size_t` number of samples to use
  * @param rng_type `const gsl_rng_type *` GSL PRNG type pointer
+ *
+ * @returns `double`
  */
 #define pdmpmt_rng_mcpi(n_samples, rng_type) \
   pdmpmt_rng_smcpi(n_samples, rng_type, (unsigned long) time(NULL))
@@ -67,6 +95,8 @@ pdmpmt_rng_smcpi(
  *
  * @param n_samples `size_t` number of samples to use
  * @param seed `unsigned long` seed value for the PRNG
+ *
+ * @returns `double`
  */
 #define pdmpmt_mt32_smcpi(n_samples, seed) \
   pdmpmt_rng_smcpi(n_samples, gsl_rng_mt19937, seed)
@@ -78,6 +108,8 @@ pdmpmt_rng_smcpi(
  * Uses the 32-bit GSL Mersenne Twister implementation as its PRNG.
  *
  * @param n_samples `size_t` number of samples to use
+ *
+ * @returns `double`
  */
 #define pdmpmt_mt32_mcpi(n_samples) \
   pdmpmt_mt32_smcpi(n_samples, (unsigned long) time(NULL))
