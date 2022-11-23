@@ -14,7 +14,8 @@ Examples
    Monte Carlo estimation of pi by repeated sampling points in [-1, 1] x [-1, 1]
    and then counting the points that fall in the unit circle. Multiplying the
    ratio of number of points in the unit circle to the total sample count by 4
-   results in an estimation of pi.
+   results in an estimation of pi. However, this estimate tends to be very
+   rough.
 
 Implementations
 ---------------
@@ -38,7 +39,8 @@ single-core, single-thread implementation.
 .. _OpenMP: https://www.openmp.org/
 
 .. [#] ``std::async`` from ``<future>`` was used for asynchronous
-   multithreading, in contrast to multithreading through OpenMP_.
+   multithreading, in contrast to synchronous multithreading through OpenMP_
+   via ``#pragma omp`` directives.
 
 Building from source
 --------------------
