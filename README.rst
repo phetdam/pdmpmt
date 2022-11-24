@@ -75,9 +75,11 @@ CMake configuration command line
    cmake -S . -B build_windows_x86_2.7_shared -A Win32 ^
        -DGSL_INSTALL_MULTI_CONFIG=1 -DBUILD_SHARED_LIBS=1 -DNO_AMPL_BINDINGS=1
 
-To build x64 DLLs, just replace ``-A Win32`` with ``-A x64``. Note that I have
-separated source and build directories, and at time of writing was using GSL
-2.7. Then, one can build the respective Debug and Release configurations with
+To build x64 DLLs, just replace ``-A Win32`` with ``-A x64``, and to build
+static libraries instead, simply omit the ``-DBUILD_SHARED_LIBS=1``. Note that
+I have separated source and build directories, and at time of writing was using
+GSL 2.7. Then, one can build the respective Debug and Release configurations
+with
 
 .. code:: batch
 
