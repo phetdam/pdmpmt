@@ -334,7 +334,7 @@ T mcpi_omp(
   unsigned int n_threads = 0)
 {
   if (n_threads) omp_set_num_threads(n_threads);
-  // generate the seeds used by jobs for generate samples + the sample counts
+  // generate seeds used by jobs for generating samples + the sample counts
   const auto seeds{detail::generate_seeds(n_jobs, rng)};
   const auto sample_counts{detail::generate_sample_counts(n_samples, n_jobs)};
   // compute circle counts using multiple threads using OpenMP
