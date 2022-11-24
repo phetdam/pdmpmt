@@ -9,6 +9,8 @@ project(
 )
 
 option(BUILD_SHARED_LIBS "Build libraries as shared instead of static" ON)
+# this option is mostly important on Windows
+option(PDMPMT_GSL_SHARED "Use GNU GSL shared libraries" ON)
 
 # build debug by default; we set -DCMAKE_BUILD_TYPE=Release for release
 if(NOT CMAKE_BUILD_TYPE)
@@ -21,50 +23,24 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED TRUE)
 
-if(MSVC)
-    # CMake adds /O2 by default for release version
-    if(NOT CMAKE_BUILD_TYPE STREQUAL Release)
-        add_compile_options(/Od /DEBUG)
-    endif()
-    # check OpenMP support. MSVC OpenMP support lags behind GCC's by a lot
-    find_package(OpenMP 2.0)
-    if(OpenMP_FOUND)
-        add_compile_options(/openmp)
-    else()
-        message(
-            WARNING "OpenMP 2.0 not supported by MSVC version ${MSVC_VERSION}"
-        )
-    endif()
-    # if using shared GNU GSL, need to define this macro
-    add_compile_definitions(GSL_DLL)
-# options are also accepted by clang
-else()
-    add_compile_options(-Wall)
-    if(CMAKE_BUILD_TYPE STREQUAL Release)
-        add_compile_options(-O3)
-    else()
-        add_compile_options(-O0 -ggdb)
-    endif()
-    # check OpenMP support, GCC 9.x and clang 3.9+ implement 4.5
-    find_package(OpenMP 4.5)
-    if(OpenMP_FOUND)
-        add_compile_options(-fopenmp)
-    else()
-        message(
-            WARNING "OpenMP not supported by
-  C compiler ${CMAKE_C_COMPILER} ${CMAKE_C_COMPILER_VERSION}
-C++ compiler ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_VERSION}"
-        )
-    endif()
-endif()
+# update module search path to find our CMake scripts
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH})
 
-# base include for this repo (since "include" is reserved)
-set(PDMPMT_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+# set compiler-specific configuration options
+include(ConfigCompile)
+# check compiler OpenMP support and add correct OpenMP compile option
+include(ConfigOpenMP)
 
 # already checked for OpenMP on a per-compiler basis
 find_package(Boost 1.71 REQUIRED)
 find_package(GSL 2.7 REQUIRED)
 find_package(GTest 1.10 REQUIRED)
+
+# include extra GSL configuration
+include(ConfigGSL)
+
+# base include for this repo (since "include" is reserved)
+set(PDMPMT_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 # must add include directories if they are installed in non-standard locations
 # that were specified by BOOST_ROOT, GTEST_ROOT, etc.
@@ -74,14 +50,6 @@ include_directories(
     SYSTEM ${GSL_INCLUDE_DIRS}
     SYSTEM ${GTEST_INCLUDE_DIRS}
 )
-
-# on Windows, add DLL locations so that gtest_discover_tests can properly run
-# the test runner(s) to register the Google Test tests. unfortunately, on
-# ctest invocation, this setting is not known, so PATH must be manually set.
-# this is a TODO item that should be figured out
-if(WIN32)
-    set(CMAKE_PROGRAM_PATH ${GSL_ROOT_DIR}/bin;${CMAKE_PROGRAM_PATH})
-endif()
 
 # on Windows, export all DLL symbols
 set(WINDOWS_EXPORT_ALL_SYMBOLS ON)
