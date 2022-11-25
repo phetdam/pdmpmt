@@ -114,6 +114,78 @@ pdmpmt_rng_smcpi(
 #define pdmpmt_mt32_mcpi(n_samples) \
   pdmpmt_mt32_smcpi(n_samples, (unsigned long) time(NULL))
 
+#ifdef _OPENMP
+
+// macro to indicate the OpenMP should manage the thread count itself
+#define PDMPMT_AUTO_OMP_THREADS 0
+
+// macro to indicate that number of jobs should equal number of OpenMP threads
+#define PDMPMT_AUTO_OMP_JOBS 0
+
+double
+pdmpmt_rng_smcpi_ompm(
+  size_t n_samples,
+  const gsl_rng_type *rng_type,
+  unsigned int n_jobs,
+  unsigned int n_threads,
+  unsigned long seed);
+
+/**
+ * Parallel estimation of pi through Monte Carlo by using OpenMP directives.
+ *
+ * Implicit map-reduce using OpenMP to manage the thread pool and thread count.
+ *
+ * @param n_samples `size_t` number of samples to draw
+ * @param rng_type `const gsl_rng_type *` GSL PRNG type pointer
+ * @param n_jobs `unsigned int` number of jobs to split work over
+ * @param seed `unsigned long` seed value for the PRNG
+ */
+#define pdmpmt_rng_smcpi_omp(n_samples, rng_type, n_jobs, seed) \
+  pdmpmt_rng_smcpi_ompm( \
+    n_samples, rng_type, n_jobs, PDMPMT_AUTO_OMP_THREADS, seed \
+  )
+
+/**
+ * Parallel estimation of pi through Monte Carlo by using OpenMP directives.
+ *
+ * Implicit map-reduce using OpenMP to manage the thread pool and thread count.
+ * Seed is determined using the value of `time(NULL)` cast to `unsigned long`.
+ *
+ * @param n_samples `size_t` number of samples to draw
+ * @param rng_type `const gsl_rng_type *` GSL PRNG type pointer
+ * @param n_jobs `unsigned int` number of jobs to split work over
+ */
+#define pdmpmt_rng_mcpi_omp(n_samples, rng_type, n_jobs) \
+  pdmpmt_rng_smcpi_omp(n_samples, rng_type, n_jobs, (unsigned long) time(NULL))
+
+/**
+ * Parallel estimation of pi through Monte Carlo by using OpenMP directives.
+ *
+ * Implicit map-reduce using OpenMP to manage the thread pool and thread count.
+ * Uses the 32-bit GSL Mersenne Twister implementation as its PRNG.
+ *
+ * @param n_samples `size_t` number of samples to draw
+ * @param n_jobs `unsigned int` number of jobs to split work over
+ * @param seed `unsigned long` seed value for the PRNG
+ */
+#define pdmpmt_mt32_smcpi_omp(n_samples, n_jobs, seed) \
+  pdmpmt_rng_smcpi_omp(n_samples, gsl_rng_mt19937, n_jobs, seed)
+
+/**
+ * Parallel estimation of pi through Monte Carlo by using OpenMP directives.
+ *
+ * Implicit map-reduce using OpenMP to manage the thread pool and thread count.
+ * Seed is determined using the value of `time(NULL)` cast to `unsigned long`.
+ * Uses the 32-bit GSL Mersenne Twister implementation as its PRNG.
+ *
+ * @param n_samples `size_t` number of samples to draw
+ * @param n_jobs `unsigned int` number of jobs to split work over
+ */
+#define pdmpmt_mt32_mcpi_omp(n_samples, n_jobs) \
+  pdmpmt_mt32_smcpi_omp(n_samples, n_jobs, (unsigned long) time(NULL))
+
+#endif  // _OPENMP
+
 #ifdef __cplusplus
 }
 #endif  // __cplusplus
