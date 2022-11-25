@@ -128,38 +128,38 @@ pdmpmt_mcpi_gather(
 /**
  * Parallel estimation of pi through Monte Carlo by using OpenMP directives.
  *
- * Implicit map-reduce using OpenMP to manage the thread pool. If `n_jobs`
+ * Implicit map-reduce using OpenMP to manage the thread pool. If `n_threads`
  * is set to `PDMPMT_AUTO_OMP_JOBS`, i.e. 0, OpenMP sets the thread count.
  *
  * @param n_samples `size_t` number of samples to draw
  * @param rng_type `const gsl_rng_type *` GSL PRNG type pointer
- * @param n_jobs `unsigned int` number of OpenMP threads to split work over
+ * @param n_threads `unsigned int` number of OpenMP threads to split work over
  * @param seed `unsigned long` seed value for the PRNG
  */
 double
 pdmpmt_rng_smcpi_ompm(
   size_t n_samples,
   const gsl_rng_type *rng_type,
-  unsigned int n_jobs,
+  unsigned int n_threads,
   unsigned long seed)
 {
-  if (n_jobs) omp_set_num_threads(n_jobs);
+  if (n_threads) omp_set_num_threads(n_threads);
   // generate seeds used by jobs for generating samples + the sample counts
   gsl_block_ulong *seeds, *sample_counts;
-  seeds = pdmpmt_rng_generate_seeds(n_jobs, rng_type, seed);
-  sample_counts = pdmpmt_generate_sample_counts(n_samples, n_jobs);
+  seeds = pdmpmt_rng_generate_seeds(n_threads, rng_type, seed);
+  sample_counts = pdmpmt_generate_sample_counts(n_samples, n_threads);
   // compute circle counts with OpenMP
-  gsl_block_ulong *circle_counts = gsl_block_ulong_alloc(n_jobs);
+  gsl_block_ulong *circle_counts = gsl_block_ulong_alloc(n_threads);
 // for MSVC, since its OpenMP version is quite old (2.0), must use signed var.
 // furthermore, unlike when compiling C++ code, cannot use C99-style loop, even
 // with C11 language specification (/std:c11) passed to compiler
 #ifdef _MSC_VER
   int i;
   #pragma omp parallel for
-  for (i = 0; i < n_jobs; i++) {
+  for (i = 0; i < n_threads; i++) {
 #else
   #pragma omp parallel for
-  for (unsigned int i = 0; i < n_jobs; i++) {
+  for (unsigned int i = 0; i < n_threads; i++) {
 #endif  // _MSC_VER
     circle_counts->data[i] = pdmpmt_rng_unit_circle_samples(
       sample_counts->data[i], rng_type, seeds->data[i]

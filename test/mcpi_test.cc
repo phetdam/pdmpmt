@@ -69,7 +69,7 @@ TEST_F(MonteCarloPiTestCXX, OpenMPTest)
 {
 #ifdef _OPENMP
   EXPECT_NEAR(
-    pi_, pdmpmt::mcpi_omp(n_samples_, seed_, n_jobs_, n_jobs_), pi_tol_
+    pi_, pdmpmt::mcpi_omp(n_samples_, seed_, n_jobs_), pi_tol_
   );
 #else
   GTEST_SKIP() << "C++ compiler doesn't implement OpenMP";

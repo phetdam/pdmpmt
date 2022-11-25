@@ -18,8 +18,6 @@ extern "C" {
 #include <gsl/gsl_block.h>
 #include <gsl/gsl_rng.h>
 
-#define PDMPMT_JOB_ELEMENTS_DEFAULT 50000000
-
 size_t
 pdmpmt_rng_unit_circle_samples(
   size_t n_samples, const gsl_rng_type *rng_type, unsigned long seed);
@@ -123,7 +121,7 @@ double
 pdmpmt_rng_smcpi_ompm(
   size_t n_samples,
   const gsl_rng_type *rng_type,
-  unsigned int n_jobs,
+  unsigned int n_threads,
   unsigned long seed);
 
 /**
