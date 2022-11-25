@@ -148,6 +148,7 @@ pdmpmt_rng_smcpi_ompm(
   unsigned long seed)
 {
   if (n_threads) omp_set_num_threads(n_threads);
+  if (!n_jobs) n_jobs = n_threads;
   // generate seeds used by jobs for generating samples + the sample counts
   gsl_block_ulong *seeds, *sample_counts;
   seeds = pdmpmt_rng_generate_seeds(n_jobs, rng_type, seed);
