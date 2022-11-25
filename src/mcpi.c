@@ -155,12 +155,12 @@ pdmpmt_rng_smcpi_ompm(
 // with C11 language specification (/std:c11) passed to compiler
 #ifdef _MSC_VER
   int i;
+// could use C99 loop for GCC/Clang, but this is less typing
+#else
+  unsigned int i;
+#endif  // _MSC_VER
   #pragma omp parallel for
   for (i = 0; i < n_threads; i++) {
-#else
-  #pragma omp parallel for
-  for (unsigned int i = 0; i < n_threads; i++) {
-#endif  // _MSC_VER
     circle_counts->data[i] = pdmpmt_rng_unit_circle_samples(
       sample_counts->data[i], rng_type, seeds->data[i]
     );
