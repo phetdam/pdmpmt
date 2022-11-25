@@ -28,19 +28,21 @@ single-core, single-thread implementation.
 | Example  | Language | Hardware | Implementations     |
 +==========+==========+==========+=====================+
 | ``mcpi`` | C        | CPU      | serial              |
+|          |          |          +---------------------+
+|          |          |          | OpenMP              |
 +          +----------+----------+---------------------+
 |          | C++      | CPU      | serial              |
 |          |          |          +---------------------+
 |          |          |          | ``std::async`` [#]_ |
 |          |          |          +---------------------+
-|          |          |          | `OpenMP`_           |
+|          |          |          | OpenMP              |
 +----------+----------+----------+---------------------+
-
-.. _OpenMP: https://www.openmp.org/
 
 .. [#] ``std::async`` from ``<future>`` was used for asynchronous
    multithreading, in contrast to synchronous multithreading through OpenMP_
    via ``#pragma omp`` directives.
+
+.. _OpenMP: https://www.openmp.org/
 
 Building from source
 --------------------
