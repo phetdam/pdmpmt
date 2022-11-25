@@ -116,9 +116,6 @@ pdmpmt_rng_smcpi(
 
 #ifdef _OPENMP
 
-// macro to indicate the OpenMP should manage the thread count itself
-#define PDMPMT_AUTO_OMP_THREADS 0
-
 // macro to indicate that number of jobs should equal number of OpenMP threads
 #define PDMPMT_AUTO_OMP_JOBS 0
 
@@ -127,7 +124,6 @@ pdmpmt_rng_smcpi_ompm(
   size_t n_samples,
   const gsl_rng_type *rng_type,
   unsigned int n_jobs,
-  unsigned int n_threads,
   unsigned long seed);
 
 /**
@@ -137,13 +133,10 @@ pdmpmt_rng_smcpi_ompm(
  *
  * @param n_samples `size_t` number of samples to draw
  * @param rng_type `const gsl_rng_type *` GSL PRNG type pointer
- * @param n_jobs `unsigned int` number of jobs to split work over
  * @param seed `unsigned long` seed value for the PRNG
  */
-#define pdmpmt_rng_smcpi_omp(n_samples, rng_type, n_jobs, seed) \
-  pdmpmt_rng_smcpi_ompm( \
-    n_samples, rng_type, n_jobs, PDMPMT_AUTO_OMP_THREADS, seed \
-  )
+#define pdmpmt_rng_smcpi_omp(n_samples, rng_type, seed) \
+  pdmpmt_rng_smcpi_ompm(n_samples, rng_type, PDMPMT_AUTO_OMP_JOBS, seed)
 
 /**
  * Parallel estimation of pi through Monte Carlo by using OpenMP directives.
@@ -153,10 +146,9 @@ pdmpmt_rng_smcpi_ompm(
  *
  * @param n_samples `size_t` number of samples to draw
  * @param rng_type `const gsl_rng_type *` GSL PRNG type pointer
- * @param n_jobs `unsigned int` number of jobs to split work over
  */
-#define pdmpmt_rng_mcpi_omp(n_samples, rng_type, n_jobs) \
-  pdmpmt_rng_smcpi_omp(n_samples, rng_type, n_jobs, (unsigned long) time(NULL))
+#define pdmpmt_rng_mcpi_omp(n_samples, rng_type) \
+  pdmpmt_rng_smcpi_omp(n_samples, rng_type, (unsigned long) time(NULL))
 
 /**
  * Parallel estimation of pi through Monte Carlo by using OpenMP directives.
@@ -165,11 +157,10 @@ pdmpmt_rng_smcpi_ompm(
  * Uses the 32-bit GSL Mersenne Twister implementation as its PRNG.
  *
  * @param n_samples `size_t` number of samples to draw
- * @param n_jobs `unsigned int` number of jobs to split work over
  * @param seed `unsigned long` seed value for the PRNG
  */
-#define pdmpmt_mt32_smcpi_omp(n_samples, n_jobs, seed) \
-  pdmpmt_rng_smcpi_omp(n_samples, gsl_rng_mt19937, n_jobs, seed)
+#define pdmpmt_mt32_smcpi_omp(n_samples, seed) \
+  pdmpmt_rng_smcpi_omp(n_samples, gsl_rng_mt19937, seed)
 
 /**
  * Parallel estimation of pi through Monte Carlo by using OpenMP directives.
@@ -179,10 +170,9 @@ pdmpmt_rng_smcpi_ompm(
  * Uses the 32-bit GSL Mersenne Twister implementation as its PRNG.
  *
  * @param n_samples `size_t` number of samples to draw
- * @param n_jobs `unsigned int` number of jobs to split work over
  */
-#define pdmpmt_mt32_mcpi_omp(n_samples, n_jobs) \
-  pdmpmt_mt32_smcpi_omp(n_samples, n_jobs, (unsigned long) time(NULL))
+#define pdmpmt_mt32_mcpi_omp(n_samples) \
+  pdmpmt_mt32_smcpi_omp(n_samples, (unsigned long) time(NULL))
 
 #endif  // _OPENMP
 
