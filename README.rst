@@ -24,25 +24,38 @@ The following table summarizes the available language/hardware implementations
 for each example from `Examples`_. Here "serial" refers to a standard
 single-core, single-thread implementation.
 
-+----------+----------+----------+---------------------+
-| Example  | Language | Hardware | Implementations     |
-+==========+==========+==========+=====================+
-| ``mcpi`` | C        | CPU      | serial              |
-|          |          |          +---------------------+
-|          |          |          | OpenMP              |
-+          +----------+----------+---------------------+
-|          | C++      | CPU      | serial              |
-|          |          |          +---------------------+
-|          |          |          | ``std::async`` [#]_ |
-|          |          |          +---------------------+
-|          |          |          | OpenMP              |
-+----------+----------+----------+---------------------+
++----------+----------+----------+---------------------------+
+| Example  | Language | Hardware | Implementations           |
++==========+==========+==========+===========================+
+| ``mcpi`` | C        | CPU      | serial                    |
+|          |          |          +---------------------------+
+|          |          |          | OpenMP                    |
++          +----------+----------+---------------------------+
+|          | C++      | CPU      | serial                    |
+|          |          |          +---------------------------+
+|          |          |          | ``std::async`` [#]_       |
+|          |          |          +---------------------------+
+|          |          |          | OpenMP                    |
+|          +----------+----------+---------------------------+
+|          | Python   | CPU      | serial                    |
+|          |          |          +---------------------------+
+|          |          |          | ``dask.distributed`` [#]_ |
++----------+----------+----------+---------------------------+
 
 .. [#] ``std::async`` from ``<future>`` was used for asynchronous
    multithreading, in contrast to synchronous multithreading through OpenMP_
    via ``#pragma omp`` directives.
 
+.. [#] ``dask.distributed`` from Dask_ was used for asynchronous
+   multiprocessing, as parallel execution through multithreading with Python
+   objects in CPython is not possible due to the infamous
+   `global interpreter lock`_ used to enforce reference counting consistency.
+
+.. _Dask: https://docs.dask.org/en/stable/
+
 .. _OpenMP: https://www.openmp.org/
+
+.. _global interpreter lock: https://docs.python.org/3/glossary.html#term-global-interpreter-lock
 
 Building from source
 --------------------
