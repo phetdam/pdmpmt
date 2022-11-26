@@ -12,6 +12,12 @@
 #include <boost/math/constants/constants.hpp>
 #include <gtest/gtest.h>
 
+/**
+ * Macro for test skipping when compiler does not implement OpenMP.
+ */
+#define PDMPMT_NO_OMP_GTEST_SKIP() \
+  GTEST_SKIP() << "C++ compiler doesn't implement OpenMP"
+
 namespace {
 
 /**
@@ -45,6 +51,20 @@ TEST_F(MonteCarloPiTestC, SerialTest)
 }
 
 /**
+ * Test that C OpenMP estimation of pi using Monte Carlo works as expected.
+ *
+ * If the compiler does not support OpenMP, this test is skipped.
+ */
+TEST_F(MonteCarloPiTestC, OpenMPTest)
+{
+#ifdef _OPENMP
+  EXPECT_NEAR(pi_, pdmpmt_mt32_smcpi_ompm(n_samples_, n_jobs_, seed_), pi_tol_);
+#else
+  PDMPMT_NO_OMP_GTEST_SKIP();
+#endif  // _OPENMP
+}
+
+/**
  * Test that C++ serial estimation of pi using Monte Carlo works as expected.
  */
 TEST_F(MonteCarloPiTestCXX, SerialTest)
@@ -53,7 +73,7 @@ TEST_F(MonteCarloPiTestCXX, SerialTest)
 }
 
 /**
- * Test that async estimation of pi using Monte Carlo works as expected.
+ * Test that C++ async estimation of pi using Monte Carlo works as expected.
  */
 TEST_F(MonteCarloPiTestCXX, AsyncTest)
 {
@@ -61,7 +81,7 @@ TEST_F(MonteCarloPiTestCXX, AsyncTest)
 }
 
 /**
- * Test that OpenMP estimation of pi using Monte Carlo works as expected.
+ * Test that C++ OpenMP estimation of pi using Monte Carlo works as expected.
  *
  * If the compiler does not support OpenMP, this test is skipped.
  */
@@ -72,8 +92,8 @@ TEST_F(MonteCarloPiTestCXX, OpenMPTest)
     pi_, pdmpmt::mcpi_omp(n_samples_, seed_, n_jobs_), pi_tol_
   );
 #else
-  GTEST_SKIP() << "C++ compiler doesn't implement OpenMP";
-#endif
+  PDMPMT_NO_OMP_GTEST_SKIP();
+#endif  // _OPENMP
 }
 
 }  // namespace
