@@ -49,7 +49,7 @@ single-core, single-thread implementation.
 .. [#] ``dask.distributed`` from Dask_ was used for asynchronous
    multiprocessing, as parallel execution through multithreading with Python
    objects in CPython is not possible due to the infamous
-   `global interpreter lock`_ used to enforce reference counting consistency.
+   `global interpreter lock`_.
 
 .. _Dask: https://docs.dask.org/en/stable/
 
