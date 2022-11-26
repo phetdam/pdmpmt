@@ -55,7 +55,8 @@ single-core, single-thread implementation.
 
 .. _OpenMP: https://www.openmp.org/
 
-.. _global interpreter lock: https://docs.python.org/3/glossary.html#term-global-interpreter-lock
+.. _global interpreter lock: https://docs.python.org/3/glossary.html#
+   term-global-interpreter-lock
 
 Building from source
 --------------------
