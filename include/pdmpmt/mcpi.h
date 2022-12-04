@@ -2,6 +2,7 @@
  * @file mcpi.h
  * @author Derek Huang
  * @brief C header for estimating pi with Monte Carlo
+ * @copyright MIT License
  */
 
 #ifndef PDMPMT_MCPI_H_
