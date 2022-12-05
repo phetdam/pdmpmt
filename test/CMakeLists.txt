@@ -3,9 +3,9 @@ cmake_minimum_required(VERSION 3.21)
 add_executable(pdmpmt_test mcpi_test.cc)
 # link OpenMP if OpenMP is available (only need C++ target)
 if(OpenMP_FOUND)
-    target_link_libraries(pdmpmt_test OpenMP::OpenMP_CXX)
+    target_link_libraries(pdmpmt_test PRIVATE OpenMP::OpenMP_CXX)
 endif()
-target_link_libraries(pdmpmt_test pdmpmt_c GTest::gtest_main)
+target_link_libraries(pdmpmt_test PRIVATE pdmpmt_c GTest::gtest_main)
 
 # on Windows, copy all DLLs in the project pdmpmt_test depends on is if they
 # have changed. however, note that this DOES NOT copy in DLLs of targets that

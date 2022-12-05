@@ -4,7 +4,7 @@ if(MSVC)
     # check OpenMP support. MSVC OpenMP support lags behind GCC's by a lot
     find_package(OpenMP 2.0)
     if(OpenMP_FOUND)
-        add_compile_options(/openmp)
+        add_compile_options(${OpenMP_C_FLAGS} ${OpenMP_CXX_FLAGS})
     else()
         message(
             WARNING "OpenMP 2.0 not supported by MSVC version ${MSVC_VERSION}"
@@ -15,7 +15,7 @@ else()
     # check OpenMP support, GCC 9.x and clang 3.9+ implement 4.5
     find_package(OpenMP 4.5)
     if(OpenMP_FOUND)
-        add_compile_options(-fopenmp)
+        add_compile_options(${OpenMP_C_FLAGS} ${OpenMP_CXX_FLAGS})
     else()
         message(
             WARNING "OpenMP not supported by

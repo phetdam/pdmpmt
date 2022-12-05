@@ -52,7 +52,7 @@ include_directories(
 )
 
 # on Windows, export all DLL symbols
-set(WINDOWS_EXPORT_ALL_SYMBOLS ON)
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 add_subdirectory(src)
 
