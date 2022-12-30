@@ -124,7 +124,6 @@ pdmpmt_mcpi_gather(
 }
 
 #ifdef _OPENMP
-
 /**
  * Parallel estimation of pi through Monte Carlo by using OpenMP directives.
  *
@@ -172,5 +171,4 @@ pdmpmt_rng_smcpi_ompm(
   gsl_block_ulong_free(sample_counts);
   return pi_hat;
 }
-
 #endif  // _OPENMP
