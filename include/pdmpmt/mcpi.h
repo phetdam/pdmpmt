@@ -114,7 +114,6 @@ pdmpmt_rng_smcpi(
   pdmpmt_mt32_smcpi(n_samples, (unsigned long) time(NULL))
 
 #ifdef _OPENMP
-
 // macro to indicate that number of jobs should equal number of OpenMP threads
 #define PDMPMT_AUTO_OMP_JOBS 0
 
@@ -215,7 +214,6 @@ pdmpmt_rng_smcpi_ompm(
  */
 #define pdmpmt_mt32_mcpi_omp(n_samples) \
   pdmpmt_mt32_smcpi_omp(n_samples, (unsigned long) time(NULL))
-
 #endif  // _OPENMP
 
 #ifdef __cplusplus

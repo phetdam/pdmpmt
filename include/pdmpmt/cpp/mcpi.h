@@ -295,7 +295,6 @@ inline double mcpi_async(
 }
 
 #ifdef _OPENMP
-
 /**
  * Parallel estimation of pi through Monte Carlo by using OpenMP directives.
  *
@@ -378,7 +377,6 @@ inline double mcpi_omp(N_t n_samples, unsigned int n_threads = 0)
 {
   return mcpi_omp(n_samples, std::random_device{}(), n_threads);
 }
-
 #endif  // _OPENMP
 
 }  // namespace
