@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION ${CMAKE_MINIMUM_REQUIRED_VERSION})
 
 if(MSVC)
     # check OpenMP support. MSVC OpenMP support lags behind GCC's by a lot
@@ -8,7 +8,6 @@ if(MSVC)
             WARNING "OpenMP 2.0 not supported by MSVC version ${MSVC_VERSION}"
         )
     endif()
-# options are also accepted by clang
 else()
     # check OpenMP support, GCC 9.x and clang 3.9+ implement 4.5
     find_package(OpenMP 4.5 COMPONENTS C CXX)
