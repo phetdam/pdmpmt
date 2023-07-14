@@ -8,16 +8,16 @@
 #ifndef PDMPMT_MCPI_H_
 #define PDMPMT_MCPI_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif  // __cplusplus
-
 #include <stddef.h>
 #include <stdint.h>
 #include <time.h>
 
 #include <gsl/gsl_block.h>
 #include <gsl/gsl_rng.h>
+
+#include "pdmpmt/common.h"
+
+PDMPMT_EXTERN_C_BEGIN
 
 size_t
 pdmpmt_rng_unit_circle_samples(
@@ -216,8 +216,6 @@ pdmpmt_rng_smcpi_ompm(
   pdmpmt_mt32_smcpi_omp(n_samples, (unsigned long) time(NULL))
 #endif  // _OPENMP
 
-#ifdef __cplusplus
-}
-#endif  // __cplusplus
+PDMPMT_EXTERN_C_END
 
 #endif  // PDMPMT_MCPI_H_
