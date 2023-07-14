@@ -2,6 +2,7 @@
  * @file mcpi_test.cc
  * @author Derek Huang
  * @brief Unit test for the C++ implementation of Monte Carlo pi estimation.
+ * @copyright MIT License
  */
 
 #include "pdmpmt/mcpi.h"

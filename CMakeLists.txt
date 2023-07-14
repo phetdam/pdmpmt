@@ -8,6 +8,7 @@ project(
     LANGUAGES C CXX
 )
 
+# TODO: consider only allowing building as shared
 option(BUILD_SHARED_LIBS "Build libraries as shared instead of static" ON)
 # this option is mostly important on Windows
 option(PDMPMT_GSL_SHARED "Use GNU GSL shared libraries" ON)
@@ -34,6 +35,7 @@ include(ConfigOpenMP)
 # already checked for OpenMP on a per-compiler basis
 find_package(GSL 2.7 REQUIRED)
 find_package(GTest 1.10 REQUIRED)
+find_package(CUDAToolkit 11.7)
 
 # include extra GSL configuration
 include(ConfigGSL)
