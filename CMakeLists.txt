@@ -32,7 +32,6 @@ include(ConfigCompile)
 include(ConfigOpenMP)
 
 # already checked for OpenMP on a per-compiler basis
-find_package(Boost 1.71 REQUIRED)
 find_package(GSL 2.7 REQUIRED)
 find_package(GTest 1.10 REQUIRED)
 

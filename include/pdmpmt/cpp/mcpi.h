@@ -67,7 +67,7 @@ N_t unit_circle_samples(N_t n_samples, Rng rng)
  * @param seed `std::uint_fast64_t` seed for the 64-bit Mersenne Twister
  */
 template <typename N_t>
-inline N_t unit_circle_samples(N_t n_samples, std::uint_fast64_t seed)
+inline auto unit_circle_samples(N_t n_samples, std::uint_fast64_t seed)
 {
   return unit_circle_samples(n_samples, std::mt19937_64{seed});
 }
@@ -82,7 +82,7 @@ inline N_t unit_circle_samples(N_t n_samples, std::uint_fast64_t seed)
  * @param rng `Rng` PRNG instance for whose type seeds will be generated
  */
 template <typename N_t, typename Rng>
-std::vector<typename Rng::result_type> generate_seeds(N_t n_seeds, Rng rng)
+auto generate_seeds(N_t n_seeds, Rng rng)
 {
   std::vector<typename Rng::result_type> seeds(n_seeds);
   std::for_each(seeds.begin(), seeds.end(), [&](auto& x) { x = rng(); });
@@ -99,8 +99,7 @@ std::vector<typename Rng::result_type> generate_seeds(N_t n_seeds, Rng rng)
  *    `std::mt19937_64` used to generate the seeds
  */
 template <typename N_t>
-inline std::vector<std::uint_fast64_t> generate_seeds(
-  N_t n_seeds, std::uint_fast64_t initial_seed)
+inline auto generate_seeds(N_t n_seeds, std::uint_fast64_t initial_seed)
 {
   return generate_seeds(n_seeds, std::mt19937_64{initial_seed});
 }
@@ -114,7 +113,7 @@ inline std::vector<std::uint_fast64_t> generate_seeds(
  * @param n_jobs `N_t` number of jobs to split sample generation across
  */
 template <typename N_t>
-inline auto generate_sample_counts(N_t n_samples, N_t n_jobs)
+auto generate_sample_counts(N_t n_samples, N_t n_jobs)
 {
   // sample counts, i.e. number of samples each job will generate
   std::vector<N_t> sample_counts(n_jobs, n_samples / n_jobs);
@@ -157,7 +156,7 @@ T mcpi_gather(const V_t& circle_counts, const V_t& sample_counts)
  * @param sample_counts `const V_t&` per-job total sample counts
  */
 template <typename V_t>
-inline double mcpi_gather(const V_t& circle_counts, const V_t& sample_counts)
+inline auto mcpi_gather(const V_t& circle_counts, const V_t& sample_counts)
 {
   return mcpi_gather<double>(circle_counts, sample_counts);
 }
