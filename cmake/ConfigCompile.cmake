@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION ${CMAKE_MINIMUM_REQUIRED_VERSION})
 if(MSVC)
     # CMake adds /O2 by default for release version
     if(NOT CMAKE_BUILD_TYPE STREQUAL Release)
-        add_compile_options(/Od /DEBUG)
+        add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:/DEBUG>)
     endif()
     # needed for global variables that have to be exported
     add_compile_definitions(GSL_DLL)
