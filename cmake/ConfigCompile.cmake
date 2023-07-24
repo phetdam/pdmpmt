@@ -3,17 +3,27 @@ cmake_minimum_required(VERSION ${CMAKE_MINIMUM_REQUIRED_VERSION})
 # add MSVC-specific compile options
 if(MSVC)
     # CMake adds /O2 by default for release version
-    if(NOT CMAKE_BUILD_TYPE STREQUAL Release)
-        add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:/DEBUG>)
-    endif()
-    # needed for global variables that have to be exported
+    add_compile_options(
+        $<$<COMPILE_LANGUAGE:C,CXX>:/Wall>
+        # pplwi.h: 'this' used in base member initializer list
+        $<$<COMPILE_LANGUAGE:C,CXX>:/wd4355>
+        # Google Test: implicitly deleted copy ctor, copy assignment
+        $<$<COMPILE_LANGUAGE:C,CXX>:/wd4625>
+        $<$<COMPILE_LANGUAGE:C,CXX>:/wd4626>
+        # Google Test: implicitly deleted move ctor, move assignment
+        $<$<COMPILE_LANGUAGE:C,CXX>:/wd5026>
+        $<$<COMPILE_LANGUAGE:C,CXX>:/wd5027>
+        # disable note on Spectre mitigiation insertion if using /QSpectre
+        $<$<COMPILE_LANGUAGE:C,CXX>:/wd5045>
+        # pplwin.h: class with virtual functions has non-virtual dtor
+        $<$<COMPILE_LANGUAGE:C,CXX>:/wd5204>
+    )
+    # needed for GSL global variables that have to be exported
     add_compile_definitions(GSL_DLL)
-# options are also accepted by clang
+# options are also accepted by Clang
 else()
-    add_compile_options(-Wall)
-    if(CMAKE_BUILD_TYPE STREQUAL Release)
-        add_compile_options(-O3)
-    else()
-        add_compile_options(-O0 -ggdb)
-    endif()
+    add_compile_options(
+        $<$<COMPILE_LANGUAGE:C,CXX>:-Wall>
+        $<$<COMPILE_LANGUAGE:C,CXX>:$<IF:$<CONFIG:Release>,-O3,-g>>
+    )
 endif()
