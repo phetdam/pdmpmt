@@ -29,16 +29,13 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH})
 
 # set compiler-specific configuration options
 include(ConfigCompile)
-# check compiler OpenMP support and add correct OpenMP compile option
+# check compiler OpenMP support and add correct OpenMP compile options
 include(ConfigOpenMP)
+# check for GSL and include extra GSL configuration
+include(ConfigGSL)
 
-# already checked for OpenMP on a per-compiler basis
-find_package(GSL 2.7 REQUIRED)
 find_package(GTest 1.10 REQUIRED)
 find_package(CUDAToolkit 11.7)
-
-# include extra GSL configuration
-include(ConfigGSL)
 
 # base include for this repo (since "include" is reserved)
 set(PDMPMT_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include")

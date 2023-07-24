@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION ${CMAKE_MINIMUM_REQUIRED_VERSION})
 
+find_package(GSL 2.7 REQUIRED)
 # get extensionless file names of the GSL and GSL CBLAS DLLs
 get_filename_component(PDMPMT_GSL_STEM ${GSL_LIBRARY} NAME_WE)
 get_filename_component(PDMPMT_GSL_CBLAS_STEM ${GSL_CBLAS_LIBRARY} NAME_WE)
