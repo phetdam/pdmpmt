@@ -29,6 +29,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH})
 
 # set compiler-specific configuration options
 include(ConfigCompile)
+# check for optional CUDA Toolkit and configure
+include(ConfigCUDA)
 # check compiler OpenMP support and add correct OpenMP compile options
 include(ConfigOpenMP)
 # check for GSL and include extra GSL configuration
