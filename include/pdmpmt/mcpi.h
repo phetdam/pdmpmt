@@ -25,9 +25,9 @@ PDMPMT_EXTERN_C_BEGIN
  *
  * Uses the GSL PRNG library to generate the random values.
  *
- * @param n_samples `size_t` number of samples to draw
- * @param rng_type `const gsl_rng_type *` GSL PRNG type pointer
- * @param seed `unsigned long` seed value for the PRNG
+ * @param n_samples Number of samples to draw
+ * @param rng_type Address to a GSL PRNG
+ * @param seed Seed value for the PRNG
  */
 PDMPMT_PUBLIC
 size_t
@@ -39,10 +39,8 @@ pdmpmt_rng_unit_circle_samples(
  *
  * Uses the 32-bit GSL Mersenne Twister implementation as its PRNG.
  *
- * @param n_samples `size_t` number of samples to draw
- * @param seed `unsigned long` seed value for the PRNG
- *
- * @returns `size_t`
+ * @param n_samples Number of samples to draw
+ * @param seed Seed value for the PRNG
  */
 PDMPMT_INLINE size_t
 pdmpmt_mt32_unit_circle_samples(size_t n_samples, unsigned long seed)
@@ -53,9 +51,9 @@ pdmpmt_mt32_unit_circle_samples(size_t n_samples, unsigned long seed)
 /**
  * Return a new block of `unsigned long` values usable as GSL PRNG seeds.
  *
- * @param n_jobs `unsigned int` number of seeds to generate
- * @param rng_type `const gsl_rng_type *` GSL PRNG type pointer
- * @param seed `unsigned long` seed value for the PRNG
+ * @param n_jobs Number of seeds to generate
+ * @param rng_type Address to a GSL PRNG
+ * @param seed Seed value for the PRNG
  */
 PDMPMT_PUBLIC
 gsl_block_ulong *
@@ -65,11 +63,9 @@ pdmpmt_rng_generate_seeds(
 /**
  * Return a block of `unsigned long` values usable as GSL PRNG seeds.
  *
- * @param n_jobs `unsigned int` number of seeds to generate
- * @param rng_type `const gsl_rng_type *` GSL PRNG type pointer
- * @param seed `unsigned long` seed value for the PRNG
- *
- * @returns `gsl_block_ulong *`
+ * @param n_jobs Number of seeds to generate
+ * @param rng_type Address to a GSL PRNG
+ * @param seed Seed value for the PRNG
  */
 PDMPMT_INLINE gsl_block_ulong *
 pdmpmt_mt32_generate_seeds(unsigned int n_seeds, unsigned long seed)
@@ -80,8 +76,8 @@ pdmpmt_mt32_generate_seeds(unsigned int n_seeds, unsigned long seed)
 /**
  * Return a new block of `unsigned long` sample counts assigned to each job.
  *
- * @param n_samples `size_t` total number of samples
- * @param n_jobs `unsigned int` number of jobs to split samples over
+ * @param n_samples Total number of samples
+ * @param n_jobs Number of jobs to split samples over
  */
 PDMPMT_PUBLIC
 gsl_block_ulong *
@@ -93,8 +89,8 @@ pdmpmt_generate_sample_counts(size_t n_samples, unsigned int n_jobs);
  * We sum all the counts of samples that fell in the unit circle, divide this
  * by the sum of the sample counts, and multiply by 4.
  *
- * @param circle_counts `gsl_block_ulong *` counts of samples in unit circle
- * @param sample_counts `gsl_block_ulong *` per-job total sample counts
+ * @param circle_counts Block with counts of samples in unit circle
+ * @param sample_counts Block with per-job total sample counts
  */
 PDMPMT_PUBLIC
 double
@@ -104,9 +100,9 @@ pdmpmt_mcpi_gather(
 /**
  * Estimate pi using Monte Carlo.
  *
- * @param n_samples `size_t` number of samples to use
- * @param rng_type `const gsl_rng_type *` GSL PRNG type pointer
- * @param seed `unsigned long` seed value for the PRNG
+ * @param n_samples Number of samples to use
+ * @param rng_type Address to a GSL PRNG
+ * @param seed Seed value for the PRNG
  */
 PDMPMT_INLINE double
 pdmpmt_rng_smcpi(
@@ -121,10 +117,8 @@ pdmpmt_rng_smcpi(
  *
  * Seed is determined using the value of `time(NULL)` cast to `unsigned long`.
  *
- * @param n_samples `size_t` number of samples to use
- * @param rng_type `const gsl_rng_type *` GSL PRNG type pointer
- *
- * @returns `double`
+ * @param n_samples Number of samples to use
+ * @param rng_type Address to a GSL PRNG
  */
 PDMPMT_INLINE double
 pdmpmt_rng_mcpi(size_t n_samples, const gsl_rng_type *rng_type)
@@ -137,10 +131,8 @@ pdmpmt_rng_mcpi(size_t n_samples, const gsl_rng_type *rng_type)
  *
  * Uses the 32-bit GSL Mersenne Twister implementation as its PRNG.
  *
- * @param n_samples `size_t` number of samples to use
- * @param seed `unsigned long` seed value for the PRNG
- *
- * @returns `double`
+ * @param n_samples Number of samples to use
+ * @param seed Seed value for the PRNG
  */
 PDMPMT_INLINE double
 pdmpmt_mt32_smcpi(size_t n_samples, unsigned long seed)
@@ -154,9 +146,7 @@ pdmpmt_mt32_smcpi(size_t n_samples, unsigned long seed)
  * Seed is determined using the value of `time(NULL)` cast to `unsigned long`.
  * Uses the 32-bit GSL Mersenne Twister implementation as its PRNG.
  *
- * @param n_samples `size_t` number of samples to use
- *
- * @returns `double`
+ * @param n_samples Number of samples to use
  */
 PDMPMT_INLINE double
 pdmpmt_mt32_mcpi(size_t n_samples)
@@ -174,10 +164,10 @@ pdmpmt_mt32_mcpi(size_t n_samples)
  * Implicit map-reduce using OpenMP to manage the thread pool. If `n_threads`
  * is set to `PDMPMT_AUTO_OMP_JOBS`, i.e. 0, OpenMP sets the thread count.
  *
- * @param n_samples `size_t` number of samples to draw
- * @param rng_type `const gsl_rng_type *` GSL PRNG type pointer
- * @param n_threads `unsigned int` number of OpenMP threads to split work over
- * @param seed `unsigned long` seed value for the PRNG
+ * @param n_samples Number of samples to draw
+ * @param rng_type Address to a GSL PRNG
+ * @param n_threads Number of OpenMP threads to split work over
+ * @param seed Seed value for the PRNG
  */
 PDMPMT_PUBLIC
 double
@@ -194,9 +184,9 @@ pdmpmt_rng_smcpi_ompm(
  * is set to `PDMPMT_AUTO_OMP_JOBS`, i.e. 0, OpenMP sets the thread count. Seed
  * is determined using the value of `time(NULL)` cast to `unsigned long`.
  *
- * @param n_samples `size_t` number of samples to draw
- * @param rng_type `const gsl_rng_type *` GSL PRNG type pointer
- * @param n_threads `unsigned int` number of OpenMP threads to split work over
+ * @param n_samples Number of samples to draw
+ * @param rng_type Address to a GSL PRNG
+ * @param n_threads Number of OpenMP threads to split work over
  */
 PDMPMT_INLINE double
 pdmpmt_rng_mcpi_ompm(
@@ -212,9 +202,9 @@ pdmpmt_rng_mcpi_ompm(
  *
  * Implicit map-reduce using OpenMP to manage the thread pool and thread count.
  *
- * @param n_samples `size_t` number of samples to draw
- * @param rng_type `const gsl_rng_type *` GSL PRNG type pointer
- * @param seed `unsigned long` seed value for the PRNG
+ * @param n_samples Number of samples to draw
+ * @param rng_type Address to a GSL PRNG
+ * @param seed Seed value for the PRNG
  */
 PDMPMT_INLINE double
 pdmpmt_rng_smcpi_omp(
@@ -229,8 +219,8 @@ pdmpmt_rng_smcpi_omp(
  * Implicit map-reduce using OpenMP to manage the thread pool and thread count.
  * Seed is determined using the value of `time(NULL)` cast to `unsigned long`.
  *
- * @param n_samples `size_t` number of samples to draw
- * @param rng_type `const gsl_rng_type *` GSL PRNG type pointer
+ * @param n_samples Number of samples to draw
+ * @param rng_type Address to a GSL PRNG
  */
 PDMPMT_INLINE double
 pdmpmt_rng_mcpi_omp(size_t n_samples, const gsl_rng_type *rng_type)
@@ -245,9 +235,9 @@ pdmpmt_rng_mcpi_omp(size_t n_samples, const gsl_rng_type *rng_type)
  * is set to `PDMPMT_AUTO_OMP_JOBS`, i.e. 0, OpenMP sets the thread count. Uses
  * the 32-bit GSL Mersenne Twister implementation as its PRNG.
  *
- * @param n_samples `size_t` number of samples to draw
- * @param n_threads `unsigned int` number of OpenMP threads to split work over
- * @param seed `unsigned long` seed value for the PRNG
+ * @param n_samples Number of samples to draw
+ * @param n_threads Number of OpenMP threads to split work over
+ * @param seed Seed value for the PRNG
  */
 PDMPMT_INLINE double
 pdmpmt_mt32_smcpi_ompm(
@@ -263,8 +253,8 @@ pdmpmt_mt32_smcpi_ompm(
  * determined using the value of `time(NULL)` cast to `unsigned long`. Uses the
  * 32-bit GSL Mersenne Twister implementation as its PRNG.
  *
- * @param n_samples `size_t` number of samples to draw
- * @param n_threads `unsigned int` number of OpenMP threads to split work over
+ * @param n_samples Number of samples to draw
+ * @param n_threads Number of OpenMP threads to split work over
  */
 PDMPMT_INLINE double
 pdmpmt_mt32_mcpi_ompm(size_t n_samples, unsigned int n_threads)
@@ -278,8 +268,8 @@ pdmpmt_mt32_mcpi_ompm(size_t n_samples, unsigned int n_threads)
  * Implicit map-reduce using OpenMP to manage the thread pool and thread count.
  * Uses the 32-bit GSL Mersenne Twister implementation as its PRNG.
  *
- * @param n_samples `size_t` number of samples to draw
- * @param seed `unsigned long` seed value for the PRNG
+ * @param n_samples Number of samples to draw
+ * @param seed Seed value for the PRNG
  */
 PDMPMT_INLINE double
 pdmpmt_mt32_smcpi_omp(size_t n_samples, unsigned long seed)
@@ -294,7 +284,7 @@ pdmpmt_mt32_smcpi_omp(size_t n_samples, unsigned long seed)
  * Seed is determined using the value of `time(NULL)` cast to `unsigned long`.
  * Uses the 32-bit GSL Mersenne Twister implementation as its PRNG.
  *
- * @param n_samples `size_t` number of samples to draw
+ * @param n_samples Number of samples to draw
  */
 PDMPMT_INLINE double
 pdmpmt_mt32_mcpi_omp(size_t n_samples)

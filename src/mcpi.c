@@ -23,9 +23,9 @@
  *
  * Uses the GSL PRNG library to generate the random values.
  *
- * @param n_samples `size_t` number of samples to draw
- * @param rng_type `const gsl_rng_type *` GSL PRNG type pointer
- * @param seed `unsigned long` seed value for the PRNG
+ * @param n_samples Number of samples to draw
+ * @param rng_type Address to a GSL PRNG
+ * @param seed Seed value for the PRNG
  */
 size_t
 pdmpmt_rng_unit_circle_samples(
@@ -52,9 +52,9 @@ pdmpmt_rng_unit_circle_samples(
 /**
  * Return a new block of `unsigned long` values usable as GSL PRNG seeds.
  *
- * @param n_jobs `unsigned int` number of seeds to generate
- * @param rng_type `const gsl_rng_type *` GSL PRNG type pointer
- * @param seed `unsigned long` seed value for the PRNG
+ * @param n_jobs Number of seeds to generate
+ * @param rng_type Address to a GSL PRNG
+ * @param seed Seed value for the PRNG
  */
 gsl_block_ulong *
 pdmpmt_rng_generate_seeds(
@@ -76,8 +76,8 @@ pdmpmt_rng_generate_seeds(
 /**
  * Return a new block of `unsigned long` sample counts assigned to each job.
  *
- * @param n_samples `size_t` total number of samples
- * @param n_jobs `unsigned int` number of jobs to split samples over
+ * @param n_samples Total number of samples
+ * @param n_jobs Number of jobs to split samples over
  */
 gsl_block_ulong *
 pdmpmt_generate_sample_counts(size_t n_samples, unsigned int n_jobs)
@@ -104,8 +104,8 @@ pdmpmt_generate_sample_counts(size_t n_samples, unsigned int n_jobs)
  * We sum all the counts of samples that fell in the unit circle, divide this
  * by the sum of the sample counts, and multiply by 4.
  *
- * @param circle_counts `gsl_block_ulong *` counts of samples in unit circle
- * @param sample_counts `gsl_block_ulong *` per-job total sample counts
+ * @param circle_counts Block with counts of samples in unit circle
+ * @param sample_counts Block with per-job total sample counts
  */
 double
 pdmpmt_mcpi_gather(
@@ -131,10 +131,10 @@ pdmpmt_mcpi_gather(
  * Implicit map-reduce using OpenMP to manage the thread pool. If `n_threads`
  * is set to `PDMPMT_AUTO_OMP_JOBS`, i.e. 0, OpenMP sets the thread count.
  *
- * @param n_samples `size_t` number of samples to draw
- * @param rng_type `const gsl_rng_type *` GSL PRNG type pointer
- * @param n_threads `unsigned int` number of OpenMP threads to split work over
- * @param seed `unsigned long` seed value for the PRNG
+ * @param n_samples Number of samples to draw
+ * @param rng_type Address to a GSL PRNG
+ * @param n_threads Number of OpenMP threads to split work over
+ * @param seed Seed value for the PRNG
  */
 double
 pdmpmt_rng_smcpi_ompm(
