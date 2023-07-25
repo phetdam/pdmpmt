@@ -66,9 +66,6 @@ include_directories(
     SYSTEM ${GTEST_INCLUDE_DIRS}
 )
 
-# on Windows, export all DLL symbols
-set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-
 add_subdirectory(src)
 
 # need to call this to enable test discovery!

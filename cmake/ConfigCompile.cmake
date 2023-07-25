@@ -27,3 +27,7 @@ else()
         $<$<COMPILE_LANGUAGE:C,CXX>:$<IF:$<CONFIG:Release>,-O3,-g>>
     )
 endif()
+# if building as shared, define relevant macro
+if(BUILD_SHARED_LIBS)
+    add_compile_definitions(PDMPMT_BUILD_DLL)
+endif()
