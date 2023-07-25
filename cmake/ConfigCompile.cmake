@@ -7,6 +7,8 @@ if(MSVC)
         $<$<COMPILE_LANGUAGE:C,CXX>:/Wall>
         # pplwi.h: 'this' used in base member initializer list
         $<$<COMPILE_LANGUAGE:C,CXX>:/wd4355>
+        # ignore removal of unused inline functions
+        $<$<COMPILE_LANGUAGE:C,CXX>:/wd4514>
         # Google Test: implicitly deleted copy ctor, copy assignment
         $<$<COMPILE_LANGUAGE:C,CXX>:/wd4625>
         $<$<COMPILE_LANGUAGE:C,CXX>:/wd4626>
@@ -26,8 +28,4 @@ else()
         $<$<COMPILE_LANGUAGE:C,CXX>:-Wall>
         $<$<COMPILE_LANGUAGE:C,CXX>:$<IF:$<CONFIG:Release>,-O3,-g>>
     )
-endif()
-# if building as shared, define relevant macro
-if(BUILD_SHARED_LIBS)
-    add_compile_definitions(PDMPMT_BUILD_DLL)
 endif()
