@@ -17,6 +17,7 @@
 
 #include "pdmpmt/common.h"
 #include "pdmpmt/dllexport.h"
+#include "pdmpmt/warnings.h"
 
 PDMPMT_EXTERN_C_BEGIN
 
@@ -108,8 +109,12 @@ PDMPMT_INLINE double
 pdmpmt_rng_smcpi(
   size_t n_samples, const gsl_rng_type *rng_type, unsigned long seed)
 {
+// MSVC complains that size_t to double may lose data
+PDMPMT_MSVC_WARNING_PUSH()
+PDMPMT_MSVC_WARNING_DISABLE(4244 5219)
   double uctd = pdmpmt_rng_unit_circle_samples(n_samples, rng_type, seed);
   return 4 * uctd / n_samples;
+PDMPMT_MSVC_WARNING_POP()
 }
 
 /**

@@ -5,7 +5,7 @@
  * @copyright MIT License
  */
 
-#include <pdmpmt/mcpi.h>
+#include "pdmpmt/mcpi.h"
 
 #include <assert.h>
 #include <stdint.h>
@@ -13,6 +13,8 @@
 #include <gsl/gsl_block.h>
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_rng.h>
+
+#include "pdmpmt/warnings.h"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -159,11 +161,16 @@ pdmpmt_rng_smcpi_ompm(
 #else
   unsigned int i;
 #endif  // _MSC_VER
+// MSVC complains about signed/unsigned mismatch in the loop condition and
+// that the circle_counts->data[i] assignment of size_t to ulong loses data
+PDMPMT_MSVC_WARNING_PUSH()
+PDMPMT_MSVC_WARNING_DISABLE(4018 4267)
   #pragma omp parallel for
   for (i = 0; i < n_threads; i++) {
     circle_counts->data[i] = pdmpmt_rng_unit_circle_samples(
       sample_counts->data[i], rng_type, seeds->data[i]
     );
+PDMPMT_MSVC_WARNING_POP()
   }
   // get pi estimate, clean up, and return
   double pi_hat = pdmpmt_mcpi_gather(circle_counts, sample_counts);
