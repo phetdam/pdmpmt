@@ -38,8 +38,8 @@ namespace detail {
  * @tparam N_t integer type
  * @tparam Rng *UniformRandomBitGenerator* type
  *
- * @param n_samples `N_t` number of samples to use
- * @param rng `Rng` PRNG instance
+ * @param n_samples Number of samples to use
+ * @param rng PRNG instance
  */
 template <typename N_t, typename Rng>
 N_t unit_circle_samples(N_t n_samples, Rng rng)
@@ -65,8 +65,8 @@ N_t unit_circle_samples(N_t n_samples, Rng rng)
  *
  * @tparam N_t integer type
  *
- * @param n_samples `N_t` number of samples to use
- * @param seed `std::uint_fast64_t` seed for the 64-bit Mersenne Twister
+ * @param n_samples Number of samples to use
+ * @param seed Seed for the 64-bit Mersenne Twister
  */
 template <typename N_t>
 inline auto unit_circle_samples(N_t n_samples, std::uint_fast64_t seed)
@@ -80,8 +80,8 @@ inline auto unit_circle_samples(N_t n_samples, std::uint_fast64_t seed)
  * @tparam N_t integer type
  * @tparam Rng *UniformRandomBitGenerator* type
  *
- * @param n_seeds `N_t` number of PRNG seeds to generate
- * @param rng `Rng` PRNG instance for whose type seeds will be generated
+ * @param n_seeds Number of PRNG seeds to generate
+ * @param rng PRNG instance for whose type seeds will be generated
  */
 template <typename N_t, typename Rng>
 auto generate_seeds(N_t n_seeds, Rng rng)
@@ -96,9 +96,8 @@ auto generate_seeds(N_t n_seeds, Rng rng)
  *
  * @tparam N_t integer type
  *
- * @param n_seeds `N_t` number of PRNG seeds to generate
- * @param initial_seed `std::uint_fast64_t` starting seed for the
- *    `std::mt19937_64` used to generate the seeds
+ * @param n_seeds Number of PRNG seeds to generate
+ * @param initial_seed Starting seed for the `std::mt19937_64` seed generator
  */
 template <typename N_t>
 inline auto generate_seeds(N_t n_seeds, std::uint_fast64_t initial_seed)
@@ -111,8 +110,8 @@ inline auto generate_seeds(N_t n_seeds, std::uint_fast64_t initial_seed)
  *
  * @tparam N_t integer type
  *
- * @param n_samples `N_t` total number of samples
- * @param n_jobs `N_t` number of jobs to split sample generation across
+ * @param n_samples Total number of samples
+ * @param n_jobs Number of jobs to split generation across
  */
 template <typename N_t>
 auto generate_sample_counts(N_t n_samples, N_t n_jobs)
@@ -131,8 +130,8 @@ auto generate_sample_counts(N_t n_samples, N_t n_jobs)
  * @tparam T return type
  * @tparam V_t *Container*
  *
- * @param circle_counts `const V_t&` counts of samples falling in unit circle
- * @param sample_counts `const V_t&` per-job total sample counts
+ * @param circle_counts Counts of samples falling in unit circle
+ * @param sample_counts Per-job total sample counts
  */
 template <typename T, typename V_t>
 T mcpi_gather(const V_t& circle_counts, const V_t& sample_counts)
@@ -158,8 +157,8 @@ PDMPMT_MSVC_WARNING_POP()
  *
  * @tparam V_t *Container*
  *
- * @param circle_counts `const V_t&` counts of samples falling in unit circle
- * @param sample_counts `const V_t&` per-job total sample counts
+ * @param circle_counts Counts of samples falling in unit circle
+ * @param sample_counts Per-job total sample counts
  */
 template <typename V_t>
 inline auto mcpi_gather(const V_t& circle_counts, const V_t& sample_counts)
@@ -178,8 +177,8 @@ inline auto mcpi_gather(const V_t& circle_counts, const V_t& sample_counts)
  * @tparam N_t integer type
  * @tparam Rng *UniformRandomBitGenerator* type
  *
- * @param n_samples `N_t` number of samples to use
- * @param rng `const Rng&` PRNG instance
+ * @param n_samples Number of samples to use
+ * @param rng PRNG instance
  */
 template <typename T, typename N_t, typename Rng>
 inline T mcpi(N_t n_samples, const Rng& rng)
@@ -199,8 +198,8 @@ PDMPMT_MSVC_WARNING_POP()
  *
  * @tparam N_t integer type
  *
- * @param n_samples `N_t` number of samples to use
- * @param seed `std::uint_fast64_t` seed for the 64-bit Mersenne Twister
+ * @param n_samples Number of samples to use
+ * @param seed Seed for the 64-bit Mersenne Twister
  */
 template <typename N_t>
 inline double mcpi(N_t n_samples, std::uint_fast64_t seed)
@@ -215,7 +214,7 @@ inline double mcpi(N_t n_samples, std::uint_fast64_t seed)
  *
  * @tparam N_t integer type
  *
- * @param n_samples `N_t` number of samples to use
+ * @param n_samples Number of samples to use
  */
 template <typename N_t>
 inline double mcpi(N_t n_samples)
@@ -232,9 +231,9 @@ inline double mcpi(N_t n_samples)
  * @tparam N_t integer type
  * @tparam Rng *UniformRandomBitGenerator* type
  *
- * @param n_samples `N_t` number of samples to use
- * @param rng `const Rng&` PRNG instance
- * @param n_jobs `N_t` number of async jobs to split work over
+ * @param n_samples Number of samples to use
+ * @param rng PRNG instance
+ * @param n_jobs Number of async jobs to split work over
  */
 template <typename T, typename N_t, typename Rng>
 T mcpi_async(N_t n_samples, const Rng& rng, N_t n_jobs)
@@ -270,9 +269,9 @@ T mcpi_async(N_t n_samples, const Rng& rng, N_t n_jobs)
  *
  * @tparam N_t integer type
  *
- * @param n_samples `N_t` number of samples to use
- * @param seed `std::uint_fast64_t` seed for the 64-bit Mersenne Twister
- * @param n_jobs `N_t` number of async jobs to split work over
+ * @param n_samples Number of samples to use
+ * @param seed Seed for the 64-bit Mersenne Twister
+ * @param n_jobs Number of async jobs to split work over
  */
 template <typename N_t>
 inline double mcpi_async(N_t n_samples, std::uint_fast64_t seed, N_t n_jobs)
@@ -289,8 +288,8 @@ inline double mcpi_async(N_t n_samples, std::uint_fast64_t seed, N_t n_jobs)
  *
  * @tparam N_t integer type
  *
- * @param n_samples `N_t` number of samples to use
- * @param seed `std::uint_fast64_t` seed for the 64-bit Mersenne Twister
+ * @param n_samples Number of samples to use
+ * @param seed Seed for the 64-bit Mersenne Twister
  */
 template <typename N_t>
 inline double mcpi_async(
@@ -314,9 +313,9 @@ inline double mcpi_async(
  * @tparam N_t integer type
  * @tparam Rng *UniformRandomBitGenerator* type
  *
- * @param n_samples `N_t` number of samples to use
- * @param rng `const Rng&` PRNG instance
- * @param n_threads `unsigned int` number of OpenMP threads to split work over
+ * @param n_samples Number of samples to use
+ * @param rng PRNG instance
+ * @param n_threads Number of OpenMP threads to split work over
  */
 template <typename T, typename N_t, typename Rng>
 T mcpi_omp(
@@ -365,9 +364,9 @@ PDMPMT_MSVC_WARNING_POP()
  *
  * @tparam N_t integer type
  *
- * @param n_samples `N_t` number of samples to use
- * @param seed `std::uint_fast64_t` seed for the 64-bit Mersenne Twister
- * @param n_threads `unsigned int` number of threads OpenMP should use
+ * @param n_samples Number of samples to use
+ * @param seed Seed for the 64-bit Mersenne Twister
+ * @param n_threads Number of OpenMP threads to split work over
  */
 template <typename N_t>
 inline double mcpi_omp(
@@ -386,8 +385,8 @@ inline double mcpi_omp(
  *
  * @tparam N_t integer type
  *
- * @param n_samples `N_t` number of samples to use
- * @param n_threads `unsigned int` number of threads OpenMP should use
+ * @param n_samples Number of samples to use
+ * @param n_threads Number of OpenMP threads to split work over
  */
 template <typename N_t>
 inline double mcpi_omp(N_t n_samples, unsigned int n_threads = 0)
