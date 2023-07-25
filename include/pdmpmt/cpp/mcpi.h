@@ -20,6 +20,8 @@
 #include <type_traits>
 #include <vector>
 
+#include "pdmpmt/warnings.h"
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif  // _OPENMP
@@ -144,7 +146,11 @@ T mcpi_gather(const V_t& circle_counts, const V_t& sample_counts)
   n_inside = std::accumulate(circle_counts.cbegin(), circle_counts.cend(), n_inside);
   n_total = std::accumulate(sample_counts.cbegin(), sample_counts.cend(), n_total);
   // do division first to reduce likelihood of overflow
+// MSVC complains of possible loss of data converting size_t to doublE
+PDMPMT_MSVC_WARNING_PUSH()
+PDMPMT_MSVC_WARNING_DISABLE(5219)
   return 4 * (static_cast<T>(n_inside) / n_total);
+PDMPMT_MSVC_WARNING_POP()
 }
 
 /**
@@ -178,8 +184,12 @@ inline auto mcpi_gather(const V_t& circle_counts, const V_t& sample_counts)
 template <typename T, typename N_t, typename Rng>
 inline T mcpi(N_t n_samples, const Rng& rng)
 {
+  // MSVC complains about size_t to double loss of data
+PDMPMT_MSVC_WARNING_PUSH()
+PDMPMT_MSVC_WARNING_DISABLE(4244 5219)
   const auto uctd{static_cast<T>(detail::unit_circle_samples(n_samples, rng))};
   return 4 * (uctd / n_samples);
+PDMPMT_MSVC_WARNING_POP()
 }
 
 /**
@@ -312,9 +322,13 @@ template <typename T, typename N_t, typename Rng>
 T mcpi_omp(
   N_t n_samples,
   const Rng& rng,
-  unsigned int n_threads = 0)
+  unsigned int n_threads = 0U)
 {
+  // MSVC complains about signed/unsigned mismatch
+PDMPMT_MSVC_WARNING_PUSH()
+PDMPMT_MSVC_WARNING_DISABLE(4365)
   if (n_threads) omp_set_num_threads(n_threads);
+PDMPMT_MSVC_WARNING_POP()
   // generate seeds used by jobs for generating samples + the sample counts
   const auto seeds{detail::generate_seeds(n_threads, rng)};
   // to use template deduction, would have to static_cast n_threads to N_t
@@ -330,9 +344,13 @@ T mcpi_omp(
 #else
   for (N_t i = 0; i < n_threads; i++) {
 #endif  // _MSC_VER
+// MSVC complains of signed/unsigned mismatch as i is intmax_t
+PDMPMT_MSVC_WARNING_PUSH()
+PDMPMT_MSVC_WARNING_DISABLE(4365)
     circle_counts[i] = detail::unit_circle_samples(
       sample_counts[i], Rng{seeds[i]}
     );
+PDMPMT_MSVC_WARNING_POP()
   }
   return detail::mcpi_gather(circle_counts, sample_counts);
 }
