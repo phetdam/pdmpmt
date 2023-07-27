@@ -1,0 +1,3 @@
+# batch files should always be CRLF, can run into some weird errors with
+# labels if they are stored using LF as the line ending
+*.bat text eol=crlf
