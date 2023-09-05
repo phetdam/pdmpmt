@@ -13,7 +13,7 @@
 
 #include <gtest/gtest.h>
 
-#include "pdmpmt/cpp/common.h"
+#include "pdmpmt/common.h"
 
 // can use <numbers> for pi
 #if PDMPMT_HAS_CPP20
