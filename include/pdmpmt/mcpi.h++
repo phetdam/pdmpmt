@@ -1,5 +1,5 @@
 /**
- * @file cpp/mcpi.h
+ * @file mcpi.h++
  * @author Derek Huang
  * @brief C++ template implementation for estimating pi using Monte Carlo
  * @copyright MIT License

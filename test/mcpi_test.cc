@@ -6,7 +6,7 @@
  */
 
 #include "pdmpmt/mcpi.h"
-#include "pdmpmt/cpp/mcpi.h"
+#include "pdmpmt/mcpi.h++"
 
 #include <cmath>
 #include <cstdint>
