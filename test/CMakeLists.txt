@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION ${CMAKE_MINIMUM_REQUIRED_VERSION})
 
 add_executable(pdmpmt_test mcpi_test.cc)
 # link OpenMP if OpenMP is available (only need C++ target)
