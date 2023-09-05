@@ -5,7 +5,7 @@ add_executable(pdmpmt_test mcpi_test.cc)
 if(OpenMP_FOUND)
     target_link_libraries(pdmpmt_test PRIVATE OpenMP::OpenMP_CXX)
 endif()
-target_link_libraries(pdmpmt_test PRIVATE pdmpmt_c GTest::gtest_main)
+target_link_libraries(pdmpmt_test PRIVATE pdmpmt GTest::gtest_main)
 
 # on Windows, copy all DLLs in the project pdmpmt_test depends on is if they
 # have changed. however, note that this DOES NOT copy in DLLs of targets that
