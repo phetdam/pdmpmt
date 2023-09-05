@@ -26,6 +26,10 @@
 #include <omp.h>
 #endif  // _OPENMP
 
+#ifdef __CUDACC__
+#include <thrust/random/uniform_real_distribution.h>
+#endif  // __CUDACC__
+
 namespace pdmpmt {
 
 namespace detail {
@@ -44,7 +48,11 @@ namespace detail {
 template <typename N_t, typename Rng>
 N_t unit_circle_samples(N_t n_samples, Rng rng)
 {
+#if defined(__CUDACC__)
+  thrust::random::uniform_real_distribution{-1., 1.};
+#else
   std::uniform_real_distribution udist{-1., 1.};
+#endif  // !defined(__CUDACC__)
   // count number of points in the unit circle, i.e. 2-norm <= 1
   double x, y;
   N_t n_inside = 0;
