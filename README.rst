@@ -30,7 +30,7 @@ single-core, single-thread implementation.
 | ``mcpi`` | C        | CPU      | serial                    |
 |          |          |          +---------------------------+
 |          |          |          | OpenMP                    |
-+          +----------+----------+---------------------------+
+|          +----------+----------+---------------------------+
 |          | C++      | CPU      | serial                    |
 |          |          |          +---------------------------+
 |          |          |          | ``std::async`` [#]_       |
@@ -74,6 +74,10 @@ Building GSL from source
 
 Windows
 ~~~~~~~
+
+   Note: CUDA Toolkit versions 12.0 and later remove support for compiling to
+   32-bit applications. If you have CUDA Toolkit 12.0+ on your system, you
+   *must* build GSL as 64-bit.
 
 Working with DLLs on Windows is a huge pain, especially because any DLL must
 have its directory present in the ``PATH`` variable in order to be found at
