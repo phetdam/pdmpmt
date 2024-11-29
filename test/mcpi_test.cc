@@ -114,9 +114,7 @@ TEST_F(MonteCarloPiTestCXX, AsyncTest)
 TEST_F(MonteCarloPiTestCXX, OpenMPTest)
 {
 #ifdef _OPENMP
-  EXPECT_NEAR(
-    pi_, pdmpmt::mcpi_omp(n_samples_, seed_, n_jobs_), pi_tol_
-  );
+  EXPECT_NEAR(pi_, pdmpmt::mcpi_omp(n_samples_, seed_, n_jobs_), pi_tol_);
 #else
   PDMPMT_NO_OMP_GTEST_SKIP();
 #endif  // _OPENMP
