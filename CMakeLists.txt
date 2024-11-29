@@ -59,6 +59,13 @@ include(ConfigOpenMP)
 
 # TODO: maybe make Google Test not required?
 find_package(GTest 1.10 REQUIRED)
+# find Python (note: may add Development component later)
+find_package(Python3 COMPONENTS Interpreter)
+if(Python3_FOUND)
+    message(STATUS "Python version: ${Python3_VERSION}")
+else()
+    message(STATUS "Python version: None")
+endif()
 
 # base include for this repo (since "include" is reserved)
 set(PDMPMT_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include")
