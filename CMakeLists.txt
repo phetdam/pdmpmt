@@ -55,7 +55,7 @@ include(ConfigCUDA)
 # check compiler OpenMP support and add correct OpenMP compile options
 include(ConfigOpenMP)
 # check for GSL and include extra GSL configuration
-include(ConfigGSL)
+# include(ConfigGSL)
 
 # TODO: maybe make Google Test not required?
 find_package(GTest 1.10 REQUIRED)
