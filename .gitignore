@@ -1,18 +1,18 @@
 # ignore Python cache and build files
 **/__pycache__
-**/*.egg-info
-**/*.tar.gz
-**/*.whl
+*.egg-info
+*.tar.gz
+*.whl
 # ignore shared objects + C/C++ build artifacts
-**/*.dll
-**/*.exe
-**/*.ilk
-**/*.pdb
-**/*.so
+*.dll
+*.exe
+*.ilk
+*.pdb
+*.so
 # ignore Dask worker space
 dask-worker-space
 # ignore VS Code config
 .vscode
 # ignore CMake build directories
-build
-build_windows
+/build
+/build_windows*
