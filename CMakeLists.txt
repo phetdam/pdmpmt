@@ -11,6 +11,7 @@ project(
 # TODO: consider only allowing building as shared
 option(BUILD_SHARED_LIBS "Build libraries as shared instead of static" ON)
 # this option is mostly important on Windows
+# TODO: remove, we don't want to use GPL'd code
 option(PDMPMT_GSL_SHARED "Use GNU GSL shared libraries" ON)
 # build tests
 option(PDMPMT_BUILD_TESTS "Build test programs" ON)

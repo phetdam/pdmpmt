@@ -5,7 +5,8 @@
  * @copyright MIT License
  */
 
-#include "pdmpmt/mcpi.h"
+// FIXME: include again when we are using non-GPL code
+// #include "pdmpmt/mcpi.h"
 #include "pdmpmt/mcpi.h++"
 
 #include <cmath>
@@ -25,6 +26,12 @@
  */
 #define PDMPMT_NO_OMP_GTEST_SKIP() \
   GTEST_SKIP() << "C++ compiler doesn't implement OpenMP"
+
+/**
+ * Macro for test skipping because those tests used to use GPL code.
+ */
+#define PDMPMT_GPL_GTEST_SKIP() \
+  GTEST_SKIP() << "Skipped while code is rewritten to use non-GPL code"
 
 namespace {
 
@@ -60,7 +67,10 @@ using MonteCarloPiTestCXX = MonteCarloPiTest;
  */
 TEST_F(MonteCarloPiTestC, SerialTest)
 {
+  GTEST_SKIP() << "Skipped while code is rewritten to use non-GPL code";
+#if 0
   EXPECT_NEAR(pi_, pdmpmt_mt32_smcpi(n_samples_, seed_), pi_tol_);
+#endif  // 0
 }
 
 /**
@@ -70,11 +80,14 @@ TEST_F(MonteCarloPiTestC, SerialTest)
  */
 TEST_F(MonteCarloPiTestC, OpenMPTest)
 {
+  GTEST_SKIP() << "Skipped while code is rewritten to use non-GPL code";
+#if 0
 #ifdef _OPENMP
   EXPECT_NEAR(pi_, pdmpmt_mt32_smcpi_ompm(n_samples_, n_jobs_, seed_), pi_tol_);
 #else
   PDMPMT_NO_OMP_GTEST_SKIP();
 #endif  // _OPENMP
+#endif  // 0
 }
 
 /**
