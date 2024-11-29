@@ -7,7 +7,7 @@
 
 // FIXME: include again when we are using non-GPL code
 // #include "pdmpmt/mcpi.h"
-#include "pdmpmt/mcpi.h++"
+#include "pdmpmt/mcpi.hh"
 
 #include <cmath>
 #include <cstdint>

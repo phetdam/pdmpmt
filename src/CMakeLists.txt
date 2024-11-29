@@ -7,5 +7,6 @@ cmake_minimum_required(VERSION ${CMAKE_MINIMUM_REQUIRED_VERSION})
 # target_link_libraries(pdmpmt PUBLIC GSL::gsl PRIVATE OpenMP::OpenMP_C)
 
 if(CUDAToolkit_FOUND)
-    add_executable(cuda_test mcpi.cu)
+    add_executable(thrust_demo thrust_demo.cu)
+    add_test(NAME thrust_demo COMMAND thrust_demo)
 endif()

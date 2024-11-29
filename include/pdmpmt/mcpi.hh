@@ -1,12 +1,12 @@
 /**
- * @file mcpi.h++
+ * @file mcpi.hh
  * @author Derek Huang
  * @brief C++ template implementation for estimating pi using Monte Carlo
  * @copyright MIT License
  */
 
-#ifndef PDMPMT_CPP_MCPI_H_
-#define PDMPMT_CPP_MCPI_H_
+#ifndef PDMPMT_MCPI_HH_
+#define PDMPMT_MCPI_HH_
 
 #include <algorithm>
 #include <cassert>
@@ -405,4 +405,4 @@ inline double mcpi_omp(N_t n_samples, unsigned int n_threads = 0)
 
 }  // namespace
 
-#endif  // PDMPMT_CPP_MCPI_H_
+#endif  // PDMPMT_MCPI_HH_
