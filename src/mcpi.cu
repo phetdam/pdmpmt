@@ -12,9 +12,11 @@
 #include <thrust/reduce.h>
 #include <thrust/sequence.h>
 
+#include "pdmpmt/type_traits.hh"
+
 namespace {
 
-template <typename T, typename A>
+template <typename T, typename A, typename = pdmpmt::ostreamable_t<T>>
 auto& operator<<(std::ostream& out, const thrust::device_vector<T, A>& vec)
 {
   out << '[';
