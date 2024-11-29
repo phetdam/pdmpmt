@@ -16,11 +16,8 @@ if(CUDAToolkit_FOUND)
         STATUS
         "ConfigCUDA: Using CMAKE_CUDA_COMPILER ${CMAKE_CUDA_COMPILER}"
     )
+    message(STATUS "CUDA version: ${CUDAToolkit_VERSION}")
     enable_language(CUDA)
 else()
-    message(
-        WARNING
-        "CUDA Toolkit ${PDMPMT_CUDA_TOOLKIT_VERSION} not found, \
-CUDA compilation will be skipped"
-    )
+    message(STATUS "CUDA version: None")
 endif()
