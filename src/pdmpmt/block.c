@@ -6,9 +6,13 @@
  */
 
 #include "pdmpmt/block.h"
+#include "pdmpmt/warnings.h"
 
 #include <stddef.h>
 #include <stdlib.h>
+
+PDMPMT_MSVC_WARNING_PUSH()
+PDMPMT_MSVC_WARNING_DISABLE(4706)  // C4706: assignment in conditional expr
 
 pdmpmt_block_ulong
 pdmpmt_block_ulong_alloc(size_t size)
@@ -22,10 +26,14 @@ pdmpmt_block_ulong_alloc(size_t size)
   // attempt malloc (NULL on error)
   if (!(block.data = malloc(sizeof(*block.data) * size)))
     return block;
+PDMPMT_MSVC_WARNING_POP()
   // otherwise, fill in size and return
   block.size = size;
   return block;
 }
+
+PDMPMT_MSVC_WARNING_PUSH()
+PDMPMT_MSVC_WARNING_DISABLE(4706)  // C4706: assignment in conditional expr
 
 pdmpmt_block_ulong
 pdmpmt_block_ulong_calloc(size_t size)
@@ -39,6 +47,7 @@ pdmpmt_block_ulong_calloc(size_t size)
   // attempt calloc (NULL on error)
   if (!(block.data = calloc(size, sizeof(*block.data))))
     return block;
+PDMPMT_MSVC_WARNING_POP()
   // otherwise, fill in size and return
   block.size = size;
   return block;
