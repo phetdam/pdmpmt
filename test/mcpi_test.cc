@@ -17,9 +17,9 @@
 #include "pdmpmt/common.h"
 
 // can use <numbers> for pi
-#if PDMPMT_HAS_CPP20
+#if PDMPMT_HAS_CC20
 #include <numbers>
-#endif  // !PDMPMT_HAS_CPP20
+#endif  // !PDMPMT_HAS_CC20
 
 /**
  * Macro for test skipping when compiler does not implement OpenMP.
@@ -47,11 +47,11 @@ protected:
   static constexpr std::size_t n_jobs_ = 2;
   // double pi, if using C++20 we can use std::numbers instead
   // static constexpr auto pi_ = boost::math::constants::pi<double>();
-#if PDMPMT_HAS_CPP20
+#if PDMPMT_HAS_CC20
   static inline constexpr auto pi_ = std::numbers::pi;
 #else
   static inline const auto pi_ = 4 * std::atan(1);
-#endif  // !PDMPMT_HAS_CPP20
+#endif  // !PDMPMT_HAS_CC20
   // pi tolerance; result can vary greatly so to be safe tol is pretty big
   static constexpr double pi_tol_ = 1e-2;
   // PRNG seed

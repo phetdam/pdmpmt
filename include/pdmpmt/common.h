@@ -38,22 +38,8 @@
 // correct __cplusplus for MSVC without compiling with /Zc:__cplusplus
 #if defined(_MSVC_LANG)
 #define PDMPMT_CPLUSPLUS _MSVC_LANG
-#else
+#elif defined(__cplusplus)
 #define PDMPMT_CPLUSPLUS __cplusplus
-#endif  // !defined(_MSC_VER)
-
-// indicate if we are compiling under C++20 or above
-#if PDMPMT_CPLUSPLUS >= 202002L
-#define PDMPMT_HAS_CPP20 1
-#else
-#define PDMPMT_HAS_CPP20 0
-#endif  // PDMPMT_CPLUSPLUS < 202002L
-
-// indicate if we are compiling using exactly C++20
-#if PDMPMT_CPLUSPLUS == 202002L
-#define PDMPMT_CPP20_EXACT 1
-#else
-#define PDMPMT_CPP20_EXACT 0
-#endif  // PDMPMT_CPLUSPLUS != 202002L
+#endif  // !defined(_MSC_VER) && !defined(__cplusplus)
 
 #endif  // PDMPMT_COMMON_H_
