@@ -20,7 +20,10 @@ pdmpmt_block_ulong_alloc(size_t size)
   if (!size)
     return block;
   // attempt malloc (NULL on error)
-  block.data = malloc(sizeof(*block.data) * size);
+  if (!(block.data = malloc(sizeof(*block.data) * size)))
+    return block;
+  // otherwise, fill in size and return
+  block.size = size;
   return block;
 }
 
@@ -34,7 +37,10 @@ pdmpmt_block_ulong_calloc(size_t size)
   if (!size)
     return block;
   // attempt calloc (NULL on error)
-  block.data = calloc(size, sizeof(*block.data));
+  if (!(block.data = calloc(size, sizeof(*block.data))))
+    return block;
+  // otherwise, fill in size and return
+  block.size = size;
   return block;
 }
 
