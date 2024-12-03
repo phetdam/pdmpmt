@@ -17,4 +17,8 @@
 #endif  // PDMPMT_CPLUSPLUS >= 202002L
 #endif  // PDMPMT_CPLUSPLUS
 
+#ifndef PDMPMT_HAS_CC20
+#define PDMPMT_HAS_CC20 0
+#endif  // PDMPMT_HAS_CC20
+
 #endif  // PDMPMT_FEATURES_H_
