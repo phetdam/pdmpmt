@@ -35,6 +35,17 @@ pdmpmt_block_ulong
 pdmpmt_block_ulong_alloc(size_t size) PDMPMT_NOEXCEPT;
 
 /**
+ * Allocate a new ulong block filled with zeros.
+ *
+ * On error the `data` pointer of the block will be `NULL`.
+ *
+ * @param size Number of elements in the block to request
+ */
+PDMPMT_PUBLIC
+pdmpmt_block_ulong
+pdmpmt_block_ulong_calloc(size_t size) PDMPMT_NOEXCEPT;
+
+/**
  * Free an allocated ulong block.
  *
  * The data pointer is set to `NULL` so it is clear tha block is invalid.

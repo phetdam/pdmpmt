@@ -24,6 +24,20 @@ pdmpmt_block_ulong_alloc(size_t size)
   return block;
 }
 
+pdmpmt_block_ulong
+pdmpmt_block_ulong_calloc(size_t size)
+{
+  // new block (invalid as data is NULL)
+  pdmpmt_block_ulong block;
+  block.data = NULL;
+  // size must be nonzero
+  if (!size)
+    return block;
+  // attempt calloc (NULL on error)
+  block.data = calloc(size, sizeof(*block.data));
+  return block;
+}
+
 void
 pdmpmt_block_ulong_free(pdmpmt_block_ulong *block)
 {
