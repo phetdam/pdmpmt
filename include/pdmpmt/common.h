@@ -42,4 +42,15 @@
 #define PDMPMT_CPLUSPLUS __cplusplus
 #endif  // !defined(_MSC_VER) && !defined(__cplusplus)
 
+// C++11 noexcept macro
+#ifdef PDMPMT_CPLUSPLUS
+#if PDMPMT_CPLUSPLUS >= 201103L
+#define PDMPMT_NOEXCEPT noexcept
+#endif  // PDMPMT_CPLUSPLUS >= 201103L
+#endif  // PDMPMT_CPLUSPLUS
+
+#ifndef PDMPMT_NOEXCEPT
+#define PDMPMT_NOEXCEPT
+#endif  // PDMPMT_NOEXCEPT
+
 #endif  // PDMPMT_COMMON_H_
