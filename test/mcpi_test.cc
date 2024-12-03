@@ -15,6 +15,7 @@
 #include <gtest/gtest.h>
 
 #include "pdmpmt/common.h"
+#include "pdmpmt/features.h"
 
 // can use <numbers> for pi
 #if PDMPMT_HAS_CC20

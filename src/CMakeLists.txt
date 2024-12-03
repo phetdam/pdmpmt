@@ -1,11 +1,9 @@
 cmake_minimum_required(VERSION ${CMAKE_MINIMUM_REQUIRED_VERSION})
 
-# build the C library component
-# TODO: rewrite to not use GPL code
-# add_library(pdmpmt mcpi.c)
-# set_target_properties(pdmpmt PROPERTIES DEFINE_SYMBOL PDMPMT_BUILD_DLL)
-# target_link_libraries(pdmpmt PUBLIC GSL::gsl PRIVATE OpenMP::OpenMP_C)
+# build pdmpmt libraries
+add_subdirectory(pdmpmt)
 
+# CUDA Thrust toy program
 if(CUDAToolkit_FOUND)
     add_executable(thrust_demo thrust_demo.cu)
     add_test(NAME thrust_demo COMMAND thrust_demo)
