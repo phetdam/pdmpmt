@@ -12,6 +12,7 @@
 #include <thrust/device_vector.h>
 #include <thrust/reduce.h>
 #include <thrust/sequence.h>
+#include <thrust/version.h>
 
 #include "pdmpmt/type_traits.hh"
 
@@ -25,7 +26,7 @@ namespace {
 void cuda_check(cudaError_t err)
 {
   // success
-  if (err != cudaSuccess)
+  if (err == cudaSuccess)
     return;
   // failure
   std::cerr << "CUDA error: " << cudaGetErrorName(err) << ": " <<
@@ -76,6 +77,9 @@ int main()
   cuda_check();
   std::cout << "CUDA runtime version: " <<
     (rt_ver / 1000) << "." << (rt_ver % 100 / 10) << std::endl;
+  // print the Thrust version
+  std::cout << "Thrust version: " << THRUST_MAJOR_VERSION << "." <<
+    THRUST_MINOR_VERSION << "." << THRUST_SUBMINOR_VERSION << std::endl;
   // create device vector ascending sequence
   thrust::device_vector<double> values(4);
   thrust::sequence(values.begin(), values.end());
