@@ -1,11 +1,12 @@
 cmake_minimum_required(VERSION ${CMAKE_MINIMUM_REQUIRED_VERSION})
 
-add_executable(pdmpmt_test mcpi_test.cc)
+# pdmpmt_test: C++ unit test program
+add_executable(pdmpmt_test block_test.cc mcpi_test.cc)
 # link OpenMP if OpenMP is available (only need C++ target)
 if(OpenMP_FOUND)
     target_link_libraries(pdmpmt_test PRIVATE OpenMP::OpenMP_CXX)
 endif()
-target_link_libraries(pdmpmt_test PRIVATE GTest::gtest_main)
+target_link_libraries(pdmpmt_test PRIVATE GTest::gtest_main pdmpmt)
 
 # on Windows, copy all DLLs in the project pdmpmt_test depends on is if they
 # have changed. however, note that this DOES NOT copy in DLLs of targets that

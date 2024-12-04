@@ -48,7 +48,8 @@ pdmpmt_block_ulong_calloc(size_t size) PDMPMT_NOEXCEPT;
 /**
  * Free an allocated ulong block.
  *
- * The data pointer is set to `NULL` so it is clear tha block is invalid.
+ * The data pointer is set to `NULL` so it is clear the block is invalid. If
+ * the block alreadty has a `NULL` data pointer, then nothing is done.
  *
  * @param block Address of block to free
  */
