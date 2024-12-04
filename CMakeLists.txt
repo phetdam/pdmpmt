@@ -48,8 +48,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 # update module search path to find our CMake scripts
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-# set compiler-specific configuration options
-include(ConfigCompile)
 # check for optional CUDA Toolkit and configure
 include(ConfigCUDA)
 # check compiler OpenMP support and add correct OpenMP compile options
@@ -66,6 +64,10 @@ if(Python3_FOUND)
 else()
     message(STATUS "Python version: None")
 endif()
+
+# set compiler-specific configuration options. this is done after finding all
+# dependencies so there is no possible interference with upstream compile flags
+include(ConfigCompile)
 
 # base include for this repo (since "include" is reserved)
 set(PDMPMT_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include")
