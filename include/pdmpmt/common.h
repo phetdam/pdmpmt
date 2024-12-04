@@ -53,4 +53,15 @@
 #define PDMPMT_NOEXCEPT
 #endif  // PDMPMT_NOEXCEPT
 
+// CUDA C++ function attributes
+#if defined(__CUDACC__)
+#define PDMPMT_CUDA_HOST __host__
+#define PDMPMT_CUDA_DEVICE __device__
+#define PDMPMT_CUDA_KERNEL __global__
+#else
+#define PDMPMT_CUDA_HOST
+#define PDMPMT_CUDA_DEVICE
+#define PDMPMT_CUDA_KERNEL
+#endif  // !defined(__CUDACC__)
+
 #endif  // PDMPMT_COMMON_H_
