@@ -14,33 +14,10 @@
 #include <thrust/sequence.h>
 #include <thrust/version.h>
 
+#include "pdmpmt/cuda_runtime.hh"
 #include "pdmpmt/type_traits.hh"
 
 namespace {
-
-/**
- * Exit with error if the CUDA error code indicates failure.
- *
- * @param err CUDA error code
- */
-void cuda_check(cudaError_t err)
-{
-  // success
-  if (err == cudaSuccess)
-    return;
-  // failure
-  std::cerr << "CUDA error: " << cudaGetErrorName(err) << ": " <<
-    cudaGetErrorString(err) << std::endl;
-  std::exit(EXIT_FAILURE);
-}
-
-/**
- * Exit with error if the last CUDA runtime API call failed.
- */
-void cuda_check()
-{
-  cuda_check(cudaGetLastError());
-}
 
 /**
  * Insert the contents of a device vector into the stream.
@@ -67,16 +44,10 @@ auto& operator<<(std::ostream& out, const thrust::device_vector<T, A>& vec)
 
 int main()
 {
-  // print some version info
-  int dr_ver, rt_ver;
-  cudaDriverGetVersion(&dr_ver);
-  cuda_check();
-  std::cout << "CUDA driver version: " <<
-    (dr_ver / 1000) << "." << (dr_ver % 100 / 10) << std::endl;
-  cudaRuntimeGetVersion(&rt_ver);
-  cuda_check();
-  std::cout << "CUDA runtime version: " <<
-    (rt_ver / 1000) << "." << (rt_ver % 100 / 10) << std::endl;
+  // print driver and runtime versions
+  std::cout <<
+    "CUDA driver version: " << pdmpmt::cuda_driver_version() << '\n' <<
+    "CUDA runtime version: " << pdmpmt::cuda_runtime_version() << std::endl;
   // print the Thrust version
   std::cout << "Thrust version: " << THRUST_MAJOR_VERSION << "." <<
     THRUST_MINOR_VERSION << "." << THRUST_SUBMINOR_VERSION << std::endl;
