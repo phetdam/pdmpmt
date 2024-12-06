@@ -12,7 +12,6 @@
 #include <string_view>
 
 #include "pdmpmt/cuda_runtime.hh"
-#include "pdmpmt/warnings.h"
 
 namespace {
 
