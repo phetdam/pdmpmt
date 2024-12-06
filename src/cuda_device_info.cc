@@ -85,7 +85,18 @@ int main(int argc, char* argv[])
   // TODO: add actual logic to loop through and get device props
   std::cout <<
     "CUDA driver version: " << pdmpmt::cuda_driver_version() << '\n' <<
-    "CUDA runtime version: " << pdmpmt::cuda_runtime_version() << '\n' <<
-    "CUDA device count: " << pdmpmt::cuda_device_count() << std::endl;;
+    "CUDA runtime version: " << pdmpmt::cuda_runtime_version() << std::endl;
+  // number of devices
+  auto n_devices = pdmpmt::cuda_device_count();
+  // for all available devices
+  for (auto i = 0; i < n_devices; i++) {
+    auto props = pdmpmt::cuda_get_device_props(i);
+    std::cout << "device " << i << ":\n" <<
+      "    name: " << props.name << '\n' <<
+      "    memory: " << props.totalGlobalMem / (1 << 30) << "G\n" <<
+      "    registers per block: " << props.regsPerBlock << '\n' <<
+      "    max threads per block: " << props.maxThreadsPerBlock << '\n' <<
+      "    warp size: " << props.warpSize << std::endl;
+  }
   return EXIT_SUCCESS;
 }

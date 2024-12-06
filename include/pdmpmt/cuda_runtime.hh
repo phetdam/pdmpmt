@@ -159,14 +159,47 @@ inline cuda_major_minor_ver cuda_runtime_version()
 
 /**
  * Return the number of available CUDA devices.
+ *
+ * @note For compatibility with the CUDA runtime API the return type is signed.
  */
-inline auto cuda_device_count()
+inline int cuda_device_count()
 {
   int n;
   cudaGetDeviceCount(&n);
   PDMPMT_CUDA_THROW_IF_ERROR();
-  // we want this as an unsigned type
-  return static_cast<unsigned>(n);
+  return n;
+}
+
+/**
+ * Return the current CUDA device.
+ *
+ * If there is no available device an exception will be thrown. Therefore, to
+ * check if there are available CUDA devices, check that `cuda_device_count()`
+ * is a nonzero value before calling this function.
+ *
+ * @note Originally we wanted to return an empty `std::optional<>` in the case
+ *  that the CUDA error code is `cudaErrorDeviceUnavailable` but this is not
+ *  a valid enumerator value for `cudaError_t`.
+ */
+inline int cuda_get_device()
+{
+  int dev;
+  cudaGetDevice(&dev);
+  PDMPMT_CUDA_THROW_IF_ERROR();
+  return dev;
+}
+
+/**
+ * Return the property structure for the specified CUDA device.
+ *
+ * @param device CUDA device ID
+ */
+inline auto cuda_get_device_props(int device)
+{
+  cudaDeviceProp props;
+  cudaGetDeviceProperties(&props, device);
+  PDMPMT_CUDA_THROW_IF_ERROR();
+  return props;
 }
 
 }  // namespace pdmpmt
