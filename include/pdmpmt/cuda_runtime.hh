@@ -157,6 +157,18 @@ inline cuda_major_minor_ver cuda_runtime_version()
   return ver;
 }
 
+/**
+ * Return the number of available CUDA devices.
+ */
+inline auto cuda_device_count()
+{
+  int n;
+  cudaGetDeviceCount(&n);
+  PDMPMT_CUDA_THROW_IF_ERROR();
+  // we want this as an unsigned type
+  return static_cast<unsigned>(n);
+}
+
 }  // namespace pdmpmt
 
 #endif  // PDMPMT_CUDA_RUNTIME_HH_
