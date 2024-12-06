@@ -19,12 +19,13 @@ namespace {
 // program name and usage
 const auto program_name = std::filesystem::path{__FILE__}.stem().string();
 const std::string program_usage{
-  "Usage: " + program_name + " [-h]\n"
+  "Usage: " + program_name + " [-h] [-a]\n"
   "\n"
   "Print info on the system's available CUDA devices.\n"
   "\n"
   "Options:\n"
-  "  -h, --help      Print this usage"
+  "  -h, --help      Print this usage\n"
+  "  -a, --all       Print all device properties"
 };
 
 /**
@@ -32,18 +33,9 @@ const std::string program_usage{
  */
 struct cli_options {
   bool print_usage = false;
+  bool all_info = false;
 };
 
-//
-// note:
-//
-// this will be removed later when we add more command-line options. MSVC
-// reports that the i++ is unreachable because -h, --help always results in the
-// loop being broken before increment and -h, --help is the only allowed option
-// currently. C4702 will go away once more options are added.
-//
-PDMPMT_MSVC_WARNING_PUSH()
-PDMPMT_MSVC_WARNING_DISABLE(4702)  // C4702: unreachable code
 /**
  * Parse incoming command-line arguments.
  *
@@ -56,7 +48,6 @@ bool parse_args(cli_options& opts, int argc, char* argv[])
 {
   // iterate through arguments
   for (int i = 1; i < argc; i++) {
-PDMPMT_MSVC_WARNING_POP()
     // string view for convenience
     std::string_view arg{argv[i]};
     // help option (break early)
@@ -64,6 +55,9 @@ PDMPMT_MSVC_WARNING_POP()
       opts.print_usage = true;
       return true;
     }
+    // all option
+    else if (arg == "-a" || arg == "--all")
+      opts.all_info = true;
     // unknown
     else {
       std::cerr << "Error: Unknown argument " << arg << ". Try " <<
