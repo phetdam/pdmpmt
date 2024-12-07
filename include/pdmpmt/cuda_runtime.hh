@@ -9,8 +9,11 @@
 #define PDMPMT_CUDA_RUNTIME_HH_
 
 #include <cstdlib>
+#include <iomanip>
+#include <ios>
 #include <iostream>
 #include <ostream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 
@@ -203,5 +206,31 @@ inline auto cuda_get_device_props(int device)
 }
 
 }  // namespace pdmpmt
+
+/**
+ * Insertion operator for a CUDA UUID type.
+ *
+ * The bytes are printed in hexadecimal.
+ *
+ * @note This is defined in the top-level namespace to allow ADL to work.
+ *
+ * @param out Stream to write to
+ * @param uuid CUDA UUID struct
+ */
+inline auto& operator<<(std::ostream& out, const cudaUUID_t& uuid)
+{
+  // stream to take formatting
+  std::stringstream ss;
+  // cycle through array as if they were raw bytes
+  for (unsigned i = 0; i < sizeof uuid.bytes; i++) {
+    // add padding to distinguish bytes
+    if (i)
+      ss << ' ';
+    // print byte with zero fill
+    ss << std::setw(2) << std::hex << std::setfill('0') << (uuid.bytes[i] & 0xFF);
+  }
+  // stream result
+  return out << ss.str();
+}
 
 #endif  // PDMPMT_CUDA_RUNTIME_HH_
