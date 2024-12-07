@@ -12,6 +12,8 @@ if(MSVC)
         # Google Test: implicitly deleted copy ctor, copy assignment
         $<$<COMPILE_LANGUAGE:C,CXX>:/wd4625>
         $<$<COMPILE_LANGUAGE:C,CXX>:/wd4626>
+        # C4820: 'n' bytes of padding added after data member
+        $<$<COMPILE_LANGUAGE:C,CXX>:/wd4820>
         # Google Test: implicitly deleted move ctor, move assignment
         $<$<COMPILE_LANGUAGE:C,CXX>:/wd5026>
         $<$<COMPILE_LANGUAGE:C,CXX>:/wd5027>
