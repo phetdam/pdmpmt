@@ -227,11 +227,6 @@ int main(int argc, char* argv[])
     std::cout << program_usage << std::endl;
     return EXIT_SUCCESS;
   }
-  // print some info
-  // TODO: add actual logic to loop through and get device props
-  std::cout <<
-    "CUDA driver version: " << pdmpmt::cuda_driver_version() << '\n' <<
-    "CUDA runtime version: " << pdmpmt::cuda_runtime_version() << std::endl;
   // number of devices
   auto n_devices = pdmpmt::cuda_device_count();
   // display options
