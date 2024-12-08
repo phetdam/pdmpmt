@@ -26,8 +26,9 @@ PDMPMT_EXTERN_C_BEGIN
  *  These may change if the backing implementation changes.
  */
 typedef enum {
-  PDMPMT_RNG_MT19937 = 1,  // 32-bit Mersenne Twister
-  PDMPMT_RNG_COUNT         // available methods
+  PDMPMT_RNG_MRG32K3A = 0,  // MRG32k3a
+  PDMPMT_RNG_MT19937 = 1,   // 32-bit Mersenne Twister
+  PDMPMT_RNG_COUNT          // available methods
 } pdmpmt_rng_type;
 
 /**

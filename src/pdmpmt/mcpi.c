@@ -50,30 +50,19 @@ pdmpmt_rng_unit_circle_samples(
   unsigned seed)
 {
   assert(n_samples && "n_samples must be positive");
-  // initialize PRNG (note: on error, GSL functions invoke GSL error handler)
-#if 0
-  gsl_rng *rng = gsl_rng_alloc(rng_type);
-  gsl_rng_set(rng, seed);
-#endif  // 0
+  // initialize PRNG
   prand_t *rng = make_prand(rng_type, seed);
   // count number of samples that fall in unit circle, i.e. 2-norm <= 1
   size_t n_inside = 0;
   double x, y;
   // raw loop avoids memory allocations
   for (size_t i = 0; i < n_samples; i++) {
-#if 0
-    x = gsl_ran_flat(rng, -1, 1);
-    y = gsl_ran_flat(rng, -1, 1);
-#endif  // 0
     x = 2 * rng->get_double_pos(rng->state) - 1;
     y = 2 * rng->get_double_pos(rng->state) - 1;
     if (x * x + y * y <= 1)
       n_inside++;
   }
   // free and return
-#if 0
-  gsl_rng_free(rng);
-#endif  // 0
   prand_destroy(rng);
   return n_inside;
 }
@@ -95,21 +84,16 @@ pdmpmt_rng_generate_seeds(
   // allocate new block and seeded PRNG
   pdmpmt_block_ulong seeds = pdmpmt_block_ulong_alloc(n_seeds);
   assert(seeds.data && "block memory must be allocated");
-#if 0
-  gsl_rng *rng = gsl_rng_alloc(rng_type);
-  gsl_rng_set(rng, seed);
-#endif  // 0
   prand_t *rng = make_prand(rng_type, seed);
   // fill block with PRNG values to use as seeds
   // FIXME: have a more mathematically appropriate way to handle the reduction
   // in type width from uint64_t to unsigned long for 32-bit systems
+PDMPMT_MSVC_WARNING_PUSH()
+PDMPMT_MSVC_WARNING_DISABLE(4242 4244)  // C4242, C4244: narrowing conversion
   for (unsigned int i = 0; i < n_seeds; i++)
-    // seeds->data[i] = gsl_rng_get(rng);
     seeds.data[i] = rng->get(rng->state);
+PDMPMT_MSVC_WARNING_POP()
   // clean up and return
-#if 0
-  gsl_rng_free(rng);
-#endif  // 0
   prand_destroy(rng);
   return seeds;
 }
