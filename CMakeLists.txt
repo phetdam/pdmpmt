@@ -88,3 +88,6 @@ add_subdirectory(src)
 if(PDMPMT_BUILD_TESTS)
     add_subdirectory(test)
 endif()
+
+# also build third-party dependencies
+add_subdirectory(third_party)
