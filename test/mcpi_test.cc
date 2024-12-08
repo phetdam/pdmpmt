@@ -32,7 +32,7 @@ namespace {
 /**
  * Test fixture for tests on estimating pi using Monte Carlo.
  */
-class MonteCarloPiTest : public ::testing::Test {
+class MCPiTest : public ::testing::Test {
 protected:
   // number of samples to use for estimating pi in a single process; produces a
   // very crude guess, so the tolerance we will need is relatively large.
@@ -53,15 +53,29 @@ protected:
 };
 
 // aliases for C and C++ tests
-using MonteCarloPiTestC = MonteCarloPiTest;
-using MonteCarloPiTestCXX = MonteCarloPiTest;
+using MCPiTestC = MCPiTest;
+using MCPiTestCXX = MCPiTest;
 
 /**
  * Test that C serial estimation of pi using Monte Carlo works as expected.
  */
-TEST_F(MonteCarloPiTestC, SerialTest)
+TEST_F(MCPiTestC, SerialTest)
 {
   EXPECT_NEAR(pi_, pdmpmt_mt32_smcpi(n_samples_, seed_), pi_tol_);
+}
+
+/**
+ * Test that C serial Monte Carlo pi estimation works with MRG32k3a.
+ *
+ * @note Should use `TEST_P` for this with `PDMPMT_RNG_MT19937`.
+ */
+TEST_F(MCPiTestC, SerialMRG32k3aTest)
+{
+  EXPECT_NEAR(
+    pi_,
+    pdmpmt_rng_smcpi(n_samples_, PDMPMT_RNG_MRG32K3A, seed_),
+    pi_tol_
+  );
 }
 
 /**
@@ -69,7 +83,7 @@ TEST_F(MonteCarloPiTestC, SerialTest)
  *
  * If the compiler does not support OpenMP, this test is skipped.
  */
-TEST_F(MonteCarloPiTestC, OpenMPTest)
+TEST_F(MCPiTestC, OpenMPTest)
 {
 #ifdef _OPENMP
   EXPECT_NEAR(pi_, pdmpmt_mt32_smcpi_ompm(n_samples_, n_jobs_, seed_), pi_tol_);
@@ -81,7 +95,7 @@ TEST_F(MonteCarloPiTestC, OpenMPTest)
 /**
  * Test that C++ serial estimation of pi using Monte Carlo works as expected.
  */
-TEST_F(MonteCarloPiTestCXX, SerialTest)
+TEST_F(MCPiTestCXX, SerialTest)
 {
   EXPECT_NEAR(pi_, pdmpmt::mcpi(n_samples_, seed_), pi_tol_);
 }
@@ -89,7 +103,7 @@ TEST_F(MonteCarloPiTestCXX, SerialTest)
 /**
  * Test that C++ async estimation of pi using Monte Carlo works as expected.
  */
-TEST_F(MonteCarloPiTestCXX, AsyncTest)
+TEST_F(MCPiTestCXX, AsyncTest)
 {
   EXPECT_NEAR(pi_, pdmpmt::mcpi_async(n_samples_, seed_, n_jobs_), pi_tol_);
 }
@@ -99,7 +113,7 @@ TEST_F(MonteCarloPiTestCXX, AsyncTest)
  *
  * If the compiler does not support OpenMP, this test is skipped.
  */
-TEST_F(MonteCarloPiTestCXX, OpenMPTest)
+TEST_F(MCPiTestCXX, OpenMPTest)
 {
 #ifdef _OPENMP
   EXPECT_NEAR(pi_, pdmpmt::mcpi_omp(n_samples_, seed_, n_jobs_), pi_tol_);
