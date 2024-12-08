@@ -61,7 +61,8 @@ N_t unit_circle_samples(N_t n_samples, Rng rng)
     x = udist(rng);
     y = udist(rng);
     // no need for sqrt here since the target norm is 1
-    if (x * x + y * y <= 1.) n_inside++;
+    if (x * x + y * y <= 1.)
+      n_inside++;
   }
   return n_inside;
 }
@@ -329,34 +330,36 @@ template <typename T, typename N_t, typename Rng>
 T mcpi_omp(
   N_t n_samples,
   const Rng& rng,
-  unsigned int n_threads = 0U)
+  unsigned n_threads = 0u)
 {
   // MSVC complains about signed/unsigned mismatch
 PDMPMT_MSVC_WARNING_PUSH()
 PDMPMT_MSVC_WARNING_DISABLE(4365)
-  if (n_threads) omp_set_num_threads(n_threads);
+  if (n_threads)
+    omp_set_num_threads(n_threads);
 PDMPMT_MSVC_WARNING_POP()
   // generate seeds used by jobs for generating samples + the sample counts
-  const auto seeds{detail::generate_seeds(n_threads, rng)};
+  auto seeds = detail::generate_seeds(n_threads, rng);
   // to use template deduction, would have to static_cast n_threads to N_t
-  const auto sample_counts{
-    detail::generate_sample_counts<N_t>(n_samples, n_threads)
-  };
+  auto sample_counts = detail::generate_sample_counts<N_t>(n_samples, n_threads);
   // compute circle counts using multiple threads using OpenMP
   std::vector<N_t> circle_counts(n_threads);
   #pragma omp parallel for
 // for MSVC, since its OpenMP version is quite old (2.0), must use signed var
+  for (
 #ifdef _MSC_VER
-  for (std::intmax_t i = 0; i < static_cast<decltype(i)>(n_threads); i++) {
+  std::intmax_t i = 0;
+  i < static_cast<decltype(i)>(n_threads);
 #else
-  for (N_t i = 0; i < n_threads; i++) {
+  N_t i = 0;
+  i < n_threads;
 #endif  // _MSC_VER
+  i++) {
 // MSVC complains of signed/unsigned mismatch as i is intmax_t
 PDMPMT_MSVC_WARNING_PUSH()
 PDMPMT_MSVC_WARNING_DISABLE(4365)
-    circle_counts[i] = detail::unit_circle_samples(
-      sample_counts[i], Rng{seeds[i]}
-    );
+    circle_counts[i] = detail::
+      unit_circle_samples(sample_counts[i], Rng{seeds[i]});
 PDMPMT_MSVC_WARNING_POP()
   }
   return detail::mcpi_gather(circle_counts, sample_counts);
@@ -377,8 +380,8 @@ PDMPMT_MSVC_WARNING_POP()
  * @param n_threads Number of OpenMP threads to split work over
  */
 template <typename N_t>
-inline double mcpi_omp(
-  N_t n_samples, std::uint_fast64_t seed, unsigned int n_threads = 0)
+inline auto mcpi_omp(
+  N_t n_samples, std::uint_fast64_t seed, unsigned n_threads = 0u)
 {
   return mcpi_omp<double>(n_samples, std::mt19937_64{seed}, n_threads);
 }
@@ -397,7 +400,7 @@ inline double mcpi_omp(
  * @param n_threads Number of OpenMP threads to split work over
  */
 template <typename N_t>
-inline double mcpi_omp(N_t n_samples, unsigned int n_threads = 0)
+inline auto mcpi_omp(N_t n_samples, unsigned n_threads = 0u)
 {
   return mcpi_omp(n_samples, std::random_device{}(), n_threads);
 }
