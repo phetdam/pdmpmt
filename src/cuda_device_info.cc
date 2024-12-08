@@ -159,10 +159,10 @@ private:
  *
  * - name
  * - uuid
- * - major + minor (compute capability)
  * - totalGlobalMem (in G)
  * - sharedMemPerBlock (in K)
  * - regsPerBlock
+ * - maxThreadPerBlock
  * - warpSize
  *
  * Additional properties are printed as determined by the display options.
