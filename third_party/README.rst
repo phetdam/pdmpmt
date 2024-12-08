@@ -20,8 +20,8 @@ prand_ repo at commit ``37c5bba`` and has not been modified.
 For ease of integration into the project, a simple CMake configuration has been
 added that builds libprand as a static library for ingestion by downstream
 targets in this project. On ELF systems, if ``BUILD_SHARED_LIBS`` is ``ON``,
-then the object code emitted is position-independent (no effect for COFF/PE32)
-to allow linking into shared libraries.
+then the object code emitted is position-independent (no effect for COFF/PE32
+due to relocation differences) to allow linking into shared libraries.
 
 .. _prand: https://github.com/cheng-zhao/prand/
 
