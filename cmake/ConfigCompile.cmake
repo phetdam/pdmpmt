@@ -5,6 +5,8 @@ if(MSVC)
     # CMake adds /O2 by default for release version
     add_compile_options(
         $<$<COMPILE_LANGUAGE:C,CXX>:/Wall>
+        # C4061: no enum value handled in switch with default case
+        $<$<COMPILE_LANGUAGE:C,CXX>:/wd4061>
         # pplwin.h: 'this' used in base member initializer list
         $<$<COMPILE_LANGUAGE:C,CXX>:/wd4355>
         # ignore removal of unused inline functions
