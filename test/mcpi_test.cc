@@ -10,6 +10,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <string>
 
 #include <gtest/gtest.h>
 
@@ -52,17 +53,40 @@ protected:
   static constexpr unsigned int seed_ = 8888;
 };
 
-// aliases for C and C++ tests
-using MCPiTestC = MCPiTest;
+/**
+ * Parametrized testing fixture for the C tests.
+ */
+class MCPiTestC
+  : public MCPiTest, public ::testing::WithParamInterface<pdmpmt_rng_type> {};
+
+// type alias for the C++ tests
 using MCPiTestCXX = MCPiTest;
 
 /**
  * Test that C serial estimation of pi using Monte Carlo works as expected.
  */
-TEST_F(MCPiTestC, SerialTest)
+TEST_P(MCPiTestC, SerialTest)
 {
-  EXPECT_NEAR(pi_, pdmpmt_mt32_smcpi(n_samples_, seed_), pi_tol_);
+  EXPECT_NEAR(pi_, pdmpmt_rng_smcpi(n_samples_, GetParam(), seed_), pi_tol_);
 }
+
+INSTANTIATE_TEST_SUITE_P(
+  Rng,
+  MCPiTestC,
+  ::testing::Values(PDMPMT_RNG_MRG32K3A, PDMPMT_RNG_MT19937),
+  // test name generator for easier identification of inputs
+  [](const ::testing::TestParamInfo<pdmpmt_rng_type>& info) -> std::string
+  {
+    switch (info.param) {
+      case PDMPMT_RNG_MRG32K3A:
+        return "MRG32k3a";
+      case PDMPMT_RNG_MT19937:
+        return "MT19937";
+      default:
+        return "UnknownRng" + std::to_string(info.index);
+    }
+  }
+);
 
 /**
  * Test that C serial Monte Carlo pi estimation works with MRG32k3a.
