@@ -348,13 +348,14 @@ PDMPMT_MSVC_WARNING_POP()
 // for MSVC, since its OpenMP version is quite old (2.0), must use signed var
   for (
 #ifdef _MSC_VER
-  std::intmax_t i = 0;
-  i < static_cast<decltype(i)>(n_threads);
+    std::intmax_t i = 0;
+    i < static_cast<decltype(i)>(n_threads);
 #else
-  N_t i = 0;
-  i < n_threads;
+    N_t i = 0;
+    i < n_threads;
 #endif  // _MSC_VER
-  i++) {
+    i++
+  ) {
 // MSVC complains of signed/unsigned mismatch as i is intmax_t
 PDMPMT_MSVC_WARNING_PUSH()
 PDMPMT_MSVC_WARNING_DISABLE(4365)
