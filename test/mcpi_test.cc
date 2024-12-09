@@ -39,7 +39,7 @@ protected:
   // very crude guess, so the tolerance we will need is relatively large.
   static constexpr std::size_t n_samples_ = 1000000;
   // default number of jobs to use at once
-  static constexpr std::size_t n_jobs_ = 2;
+  static constexpr std::size_t n_jobs_ = 8;
   // double pi, if using C++20 we can use std::numbers instead
   // static constexpr auto pi_ = boost::math::constants::pi<double>();
 #if PDMPMT_HAS_CC20

@@ -169,8 +169,12 @@ pdmpmt_rng_smcpi_ompm(
   unsigned int n_threads,
   unsigned long seed)
 {
+  // if nonzero, set number of threads
   if (n_threads)
     omp_set_num_threads(n_threads);
+  // otherwise set to current number of threads
+  else
+    n_threads = omp_get_num_threads();
   // generate seeds used by jobs for generating samples + the sample counts
   pdmpmt_block_ulong seeds, sample_counts;
   seeds = pdmpmt_rng_generate_seeds(n_threads, rng_type, seed);
