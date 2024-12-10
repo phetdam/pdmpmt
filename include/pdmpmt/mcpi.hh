@@ -147,12 +147,9 @@ T mcpi_gather(const V_t& circle_counts, const V_t& sample_counts)
 {
   assert(circle_counts.size() && sample_counts.size());
   assert(circle_counts.size() == sample_counts.size());
-  using N_t = typename V_t::value_type;
   // number of samples inside the unit circle, total number of samples drawn
-  N_t n_inside = 0;
-  N_t n_total = 0;
-  n_inside = std::accumulate(circle_counts.cbegin(), circle_counts.cend(), n_inside);
-  n_total = std::accumulate(sample_counts.cbegin(), sample_counts.cend(), n_total);
+  auto n_inside = std::reduce(circle_counts.cbegin(), circle_counts.cend());
+  auto n_total = std::reduce(sample_counts.cbegin(), sample_counts.cend());
   // do division first to reduce likelihood of overflow
 // MSVC complains of possible loss of data converting size_t to doublE
 PDMPMT_MSVC_WARNING_PUSH()
