@@ -40,7 +40,7 @@ namespace detail {
  *
  * We make a copy of the PRNG instance, otherwise its state will be changed.
  *
- * @tparam N_t integer type
+ * @tparam N_t Integral type
  * @tparam Rng *UniformRandomBitGenerator* type
  *
  * @param n_samples Number of samples to use
@@ -73,7 +73,7 @@ N_t unit_circle_samples(N_t n_samples, Rng rng)
  *
  * Uses the 64-bit Mersenne Twister implemented through `std::mt19937_64`.
  *
- * @tparam N_t integer type
+ * @tparam N_t Integral type
  *
  * @param n_samples Number of samples to use
  * @param seed Seed for the 64-bit Mersenne Twister
@@ -87,7 +87,7 @@ inline auto unit_circle_samples(N_t n_samples, std::uint_fast64_t seed)
 /**
  * Return a `std::vector` of seed values for a specified PRNG instance's type.
  *
- * @tparam N_t integer type
+ * @tparam N_t Integral type
  * @tparam Rng *UniformRandomBitGenerator* type
  *
  * @param n_seeds Number of PRNG seeds to generate
@@ -104,7 +104,7 @@ auto generate_seeds(N_t n_seeds, Rng rng)
 /**
  * Return a `std::vector` of seed values for the 64-bit Mersenne Twister.
  *
- * @tparam N_t integer type
+ * @tparam N_t Integral type
  *
  * @param n_seeds Number of PRNG seeds to generate
  * @param initial_seed Starting seed for the `std::mt19937_64` seed generator
@@ -118,7 +118,7 @@ inline auto generate_seeds(N_t n_seeds, std::uint_fast64_t initial_seed)
 /**
  * Given `n_jobs` jobs, divide `n_samples` sample to generate evenly.
  *
- * @tparam N_t integer type
+ * @tparam N_t Integral type
  *
  * @param n_samples Total number of samples
  * @param n_jobs Number of jobs to split generation across
@@ -137,7 +137,7 @@ auto generate_sample_counts(N_t n_samples, N_t n_jobs)
 /**
  * Gather `unit_circle_samples` results with sample counts to estimate pi.
  *
- * @tparam T return type
+ * @tparam T Return type
  * @tparam V_t *Container*
  *
  * @param circle_counts Counts of samples falling in unit circle
@@ -180,8 +180,8 @@ inline auto mcpi_gather(const V_t& circle_counts, const V_t& sample_counts)
  *
  * Uses the standard "circle-filling" technique to estimate pi / 4.
  *
- * @tparam T return type
- * @tparam N_t integer type
+ * @tparam T Return type
+ * @tparam N_t Integral type
  * @tparam Rng *UniformRandomBitGenerator* type
  *
  * @param n_samples Number of samples to use
@@ -203,7 +203,7 @@ PDMPMT_MSVC_WARNING_POP()
  *
  * Uses the 64-bit Mersenne Twister implemented through `std::mt19937_64`.
  *
- * @tparam N_t integer type
+ * @tparam N_t Integral type
  *
  * @param n_samples Number of samples to use
  * @param seed Seed for the 64-bit Mersenne Twister
@@ -219,7 +219,7 @@ inline double mcpi(N_t n_samples, std::uint_fast64_t seed)
  *
  * Uses the 64-bit Mersenne Twister implemented through `std::mt19937_64`.
  *
- * @tparam N_t integer type
+ * @tparam N_t Integral type
  *
  * @param n_samples Number of samples to use
  */
@@ -234,8 +234,8 @@ inline double mcpi(N_t n_samples)
  *
  * Simple map-reduce using `std::async` provided in `<future>`.
  *
- * @tparam T return type
- * @tparam N_t integer type
+ * @tparam T Return type
+ * @tparam N_t Integral type
  * @tparam Rng *UniformRandomBitGenerator* type
  *
  * @param n_samples Number of samples to use
@@ -274,7 +274,7 @@ T mcpi_async(N_t n_samples, const Rng& rng, N_t n_jobs)
  *
  * Uses the 64-bit Mersenne Twister implemented through `std::mt19937_64`.
  *
- * @tparam N_t integer type
+ * @tparam N_t Integral type
  *
  * @param n_samples Number of samples to use
  * @param seed Seed for the 64-bit Mersenne Twister
@@ -293,7 +293,7 @@ inline double mcpi_async(N_t n_samples, std::uint_fast64_t seed, N_t n_jobs)
  * the number of jobs given by `std::thread::hardware_concurrency()`, unless
  * the returned value is 0, in which case only 1 job will be used.
  *
- * @tparam N_t integer type
+ * @tparam N_t Integral type
  *
  * @param n_samples Number of samples to use
  * @param seed Seed for the 64-bit Mersenne Twister
@@ -316,8 +316,8 @@ inline double mcpi_async(
  * Implicit map-reduce using OpenMP to manage the thread pool. If the number of
  * threads is not given, i.e. left as 0, then OpenMP chooses number of threads.
  *
- * @tparam T return type
- * @tparam N_t integer type
+ * @tparam T Return type
+ * @tparam N_t Integral type
  * @tparam Rng *UniformRandomBitGenerator* type
  *
  * @param n_samples Number of samples to use
@@ -372,7 +372,7 @@ PDMPMT_MSVC_WARNING_POP()
  *
  * Uses the 64-bit Mersenne Twister implemented through `std::mt19937_64`.
  *
- * @tparam N_t integer type
+ * @tparam N_t Integral type
  *
  * @param n_samples Number of samples to use
  * @param seed Seed for the 64-bit Mersenne Twister
@@ -393,7 +393,7 @@ inline auto mcpi_omp(
  *
  * Uses the 64-bit Mersenne Twister implemented through `std::mt19937_64`.
  *
- * @tparam N_t integer type
+ * @tparam N_t Integral type
  *
  * @param n_samples Number of samples to use
  * @param n_threads Number of OpenMP threads to split work over
