@@ -12,6 +12,7 @@
 #include <cassert>
 #include <cstdint>
 #include <future>
+#include <iterator>
 #include <memory>
 #include <numeric>
 #include <optional>
@@ -145,13 +146,13 @@ auto generate_sample_counts(N_t n_samples, N_t n_jobs)
 template <typename T, typename V_t>
 T mcpi_gather(const V_t& circle_counts, const V_t& sample_counts)
 {
-  assert(circle_counts.size() && sample_counts.size());
-  assert(circle_counts.size() == sample_counts.size());
+  assert(std::size(circle_counts) && std::size(sample_counts));
+  assert(std::size(circle_counts) == std::size(sample_counts));
   // number of samples inside the unit circle, total number of samples drawn
-  auto n_inside = std::reduce(circle_counts.cbegin(), circle_counts.cend());
-  auto n_total = std::reduce(sample_counts.cbegin(), sample_counts.cend());
+  auto n_inside = std::reduce(std::begin(circle_counts), std::end(circle_counts));
+  auto n_total = std::reduce(std::begin(sample_counts), std::end(sample_counts));
   // do division first to reduce likelihood of overflow
-// MSVC complains of possible loss of data converting size_t to doublE
+// MSVC complains of possible loss of data converting size_t to double
 PDMPMT_MSVC_WARNING_PUSH()
 PDMPMT_MSVC_WARNING_DISABLE(5219)
   return 4 * (static_cast<T>(n_inside) / n_total);
