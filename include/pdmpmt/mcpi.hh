@@ -304,8 +304,10 @@ template <typename N_t>
 inline double mcpi_async(
   N_t n_samples, std::uint_fast64_t seed = std::random_device{}())
 {
-  unsigned int n_threads = std::thread::hardware_concurrency();
-  if (!n_threads) n_threads = 1;
+  auto n_threads = std::thread::hardware_concurrency();
+  // can be zero if not well defined or not computable
+  if (!n_threads)
+    n_threads = 1;
   // if not explicitly specifying the template parameter, n_threads must be
   // static_cast to N_t in order for template deduction to work correctly
   return mcpi_async<N_t>(n_samples, seed, n_threads);
