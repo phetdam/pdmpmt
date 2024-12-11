@@ -138,13 +138,14 @@ auto generate_sample_counts(N_t n_samples, N_t n_jobs)
  * Gather `unit_circle_samples` results with sample counts to estimate pi.
  *
  * @tparam T Return type
- * @tparam V_t *Container*
+ * @tparam C1 *Container* with integral value type
+ * @tparam C2 *Container* with integral value type
  *
  * @param circle_counts Counts of samples falling in unit circle
  * @param sample_counts Per-job total sample counts
  */
-template <typename T, typename V_t>
-T mcpi_gather(const V_t& circle_counts, const V_t& sample_counts)
+template <typename T, typename C1, typename C2>
+T mcpi_gather(const C1& circle_counts, const C2& sample_counts)
 {
   assert(std::size(circle_counts) && std::size(sample_counts));
   assert(std::size(circle_counts) == std::size(sample_counts));
@@ -162,13 +163,14 @@ PDMPMT_MSVC_WARNING_POP()
 /**
  * Gather `unit_circle_samples` results with sample counts to estimate pi.
  *
- * @tparam V_t *Container*
+ * @tparam C1 *Container* with integral value type
+ * @tparam C2 *Container* with integral value type
  *
  * @param circle_counts Counts of samples falling in unit circle
  * @param sample_counts Per-job total sample counts
  */
-template <typename V_t>
-inline auto mcpi_gather(const V_t& circle_counts, const V_t& sample_counts)
+template <typename C1, typename C2>
+inline auto mcpi_gather(const C1& circle_counts, const C2& sample_counts)
 {
   return mcpi_gather<double>(circle_counts, sample_counts);
 }
