@@ -327,16 +327,16 @@ inline double mcpi_async(
  * @param n_threads Number of OpenMP threads to split work over
  */
 template <typename T, typename N_t, typename Rng>
-T mcpi_omp(
-  N_t n_samples,
-  const Rng& rng,
-  unsigned n_threads = 0u)
+T mcpi_omp(N_t n_samples, const Rng& rng, unsigned n_threads = 0u)
 {
   // MSVC complains about signed/unsigned mismatch
 PDMPMT_MSVC_WARNING_PUSH()
 PDMPMT_MSVC_WARNING_DISABLE(4365)
+  // set number of threads if nonzero else use default
   if (n_threads)
     omp_set_num_threads(n_threads);
+  else
+    n_threads = omp_get_num_threads();
 PDMPMT_MSVC_WARNING_POP()
   // generate seeds used by jobs for generating samples + the sample counts
   auto seeds = detail::generate_seeds(n_threads, rng);
