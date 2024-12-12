@@ -21,8 +21,6 @@
 #include <type_traits>
 #include <vector>
 
-#include "pdmpmt/warnings.h"
-
 #ifdef _OPENMP
 #include <omp.h>
 #endif  // _OPENMP
@@ -30,6 +28,8 @@
 #ifdef __CUDACC__
 #include <thrust/random/uniform_real_distribution.h>
 #endif  // __CUDACC__
+
+#include "pdmpmt/warnings.h"
 
 namespace pdmpmt {
 
