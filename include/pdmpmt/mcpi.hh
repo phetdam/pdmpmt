@@ -13,9 +13,7 @@
 #include <cstdint>
 #include <future>
 #include <iterator>
-#include <memory>
 #include <numeric>
-#include <optional>
 #include <random>
 #include <thread>
 #include <type_traits>
