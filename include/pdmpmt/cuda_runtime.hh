@@ -51,6 +51,8 @@ public:
 
 /**
  * Macro to throw a `cuda_runtime_exception` if there is a runtime API error.
+ *
+ * @note This is thread-safe since `cudaGetLastError()` is per-thread.
  */
 #define PDMPMT_CUDA_THROW_IF_ERROR() \
   do { \
