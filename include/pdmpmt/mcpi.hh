@@ -24,6 +24,9 @@
 #endif  // _OPENMP
 
 #ifdef __CUDACC__
+#include <thrust/device_vector.h>
+#include <thrust/execution_policy.h>
+#include <thrust/random.h>
 #include <thrust/random/uniform_real_distribution.h>
 #endif  // __CUDACC__
 
@@ -45,10 +48,11 @@ namespace detail {
  * @param rng PRNG instance
  */
 template <typename N_t, typename Rng>
+PDMPMT_XPU_FUNC
 N_t unit_circle_samples(N_t n_samples, Rng rng)
 {
 #if defined(__CUDACC__)
-  thrust::random::uniform_real_distribution{-1., 1.};
+  thrust::random::uniform_real_distribution udist{-1., 1.};
 #else
   std::uniform_real_distribution udist{-1., 1.};
 #endif  // !defined(__CUDACC__)
@@ -71,19 +75,33 @@ N_t unit_circle_samples(N_t n_samples, Rng rng)
  *
  * Uses the 64-bit Mersenne Twister implemented through `std::mt19937_64`.
  *
+ * If compiled as CUDA C++, Thrust's RANLUX48 is the entropy source.
+ *
  * @tparam N_t Integral type
  *
  * @param n_samples Number of samples to use
  * @param seed Seed for the 64-bit Mersenne Twister
  */
 template <typename N_t>
-inline auto unit_circle_samples(N_t n_samples, std::uint_fast64_t seed)
+PDMPMT_XPU_FUNC
+auto unit_circle_samples(N_t n_samples, std::uint_fast64_t seed)
 {
+#if defined(__CUDACC__)
+  return unit_circle_samples(n_samples, thrust::random::ranlux48{seed});
+#else
   return unit_circle_samples(n_samples, std::mt19937_64{seed});
+#endif  // !defined(__CUDACC__)
 }
 
 /**
- * Return a `std::vector` of seed values for a specified PRNG instance's type.
+ * Return a vector of seed values for a specified PRNG instance's type.
+ *
+ * If compiled as standard C++, a `std::vector` is returned, while if compiled
+ * as CUDA C++, a `thrust::device_vector` is returned instead.
+ *
+ * @todo When compiling as CUDA C++ this can only be used from host code.
+ *
+ * @todo Possibility of overly aggressive template matching so add constraint.
  *
  * @tparam N_t Integral type
  * @tparam Rng *UniformRandomBitGenerator* type
@@ -94,13 +112,22 @@ inline auto unit_circle_samples(N_t n_samples, std::uint_fast64_t seed)
 template <typename N_t, typename Rng>
 auto generate_seeds(N_t n_seeds, Rng rng)
 {
+#if defined(__CUDACC__)
+  thrust::device_vector<typename Rng::result_type> seeds(n_seeds);
+#else
   std::vector<typename Rng::result_type> seeds(n_seeds);
+#endif  // !defined(__CUDACC__)
   std::for_each(seeds.begin(), seeds.end(), [&](auto& x) { x = rng(); });
   return seeds;
 }
 
 /**
- * Return a `std::vector` of seed values for the 64-bit Mersenne Twister.
+ * Return a vector of seed values for the 64-bit Mersenne Twister.
+ *
+ * If compiled as standard C++, a `std::vector` is returned, while if compiled
+ * as CUDA C++, a `thrust::device_vector` is returned instead.
+ *
+ * @todo When compiling as CUDA C++ this can only be used from host code.
  *
  * @tparam N_t Integral type
  *
@@ -108,9 +135,13 @@ auto generate_seeds(N_t n_seeds, Rng rng)
  * @param initial_seed Starting seed for the `std::mt19937_64` seed generator
  */
 template <typename N_t>
-inline auto generate_seeds(N_t n_seeds, std::uint_fast64_t initial_seed)
+auto generate_seeds(N_t n_seeds, std::uint_fast64_t initial_seed)
 {
+#if defined(__CUDACC__)
+  return generate_seeds(n_seeds, thrust::random::ranlux48{initial_seed});
+#else
   return generate_seeds(n_seeds, std::mt19937_64{initial_seed});
+#endif  // !defined(__CUDACC__)
 }
 
 /**
