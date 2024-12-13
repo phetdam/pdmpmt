@@ -53,15 +53,20 @@
 #define PDMPMT_NOEXCEPT
 #endif  // PDMPMT_NOEXCEPT
 
-// CUDA C++ function attributes
+// CUDA/HIP C++ extensions
+// note: only tested for CUDA only so no extra defined(__HIPCC__) guard
 #if defined(__CUDACC__)
-#define PDMPMT_CUDA_HOST __host__
-#define PDMPMT_CUDA_DEVICE __device__
-#define PDMPMT_CUDA_KERNEL __global__
+#define PDMPMT_HOST __host__
+#define PDMPMT_DEVICE __device__
+#define PDMPMT_KERNEL_FUNC __global__
 #else
-#define PDMPMT_CUDA_HOST
-#define PDMPMT_CUDA_DEVICE
-#define PDMPMT_CUDA_KERNEL
+#define PDMPMT_HOST
+#define PDMPMT_DEVICE
+#define PDMPMT_KERNEL_FUNC
 #endif  // !defined(__CUDACC__)
+
+// CUDA/HIP C++ function attributes (device only, host + device)
+#define PDMPMT_GPU_FUNC PDMPMT_DEVICE
+#define PDMPMT_XPU_FUNC PDMPMT_HOST PDMPMT_DEVICE
 
 #endif  // PDMPMT_COMMON_H_
