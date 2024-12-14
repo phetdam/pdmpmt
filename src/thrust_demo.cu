@@ -14,32 +14,7 @@
 #include <thrust/version.h>
 
 #include "pdmpmt/cuda_runtime.hh"
-#include "pdmpmt/type_traits.hh"
-
-namespace {
-
-/**
- * Insert the contents of a device vector into the stream.
- *
- * @tparam T Streamable type
- * @tparam A Allocator
- *
- * @param out Output stream
- * @param vec Device vector to write
- */
-template <typename T, typename A, typename = pdmpmt::ostreamable_t<T>>
-auto& operator<<(std::ostream& out, const thrust::device_vector<T, A>& vec)
-{
-  out << '[';
-  for (auto it = vec.begin(); it != vec.end(); it++) {
-    if (it != vec.begin())
-      out << ", ";
-    out << *it;
-  }
-  return out << ']';
-}
-
-}  // namespace
+#include "pdmpmt/thrust.hh"  // for device_vector operator<<
 
 int main()
 {
