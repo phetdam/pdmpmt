@@ -42,7 +42,7 @@ template <typename T>
 constexpr bool is_ostreamable_v = is_ostreamable<T>::value;
 
 /**
- * SFINAE helper for types that can be stream to a `std::ostream`.
+ * SFINAE helper for types that can be streamed to a `std::ostream`.
  *
  * @tparam T type
  */
@@ -164,6 +164,16 @@ struct is_uniform_random_bit_generator<
 template <typename T>
 constexpr bool
 is_uniform_random_bit_generator_v = is_uniform_random_bit_generator<T>::value;
+
+/**
+ * SFINAE helper for *UniformRandomBitGenerator* types.
+ *
+ * @tparam T type
+ */
+template <typename T>
+using uniform_random_bit_generator_t = std::enable_if_t<
+  is_uniform_random_bit_generator_v<T>
+>;
 
 }  // namespace pdmpmt
 
