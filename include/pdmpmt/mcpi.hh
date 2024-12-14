@@ -37,19 +37,52 @@ namespace pdmpmt {
 namespace detail {
 
 /**
+ * Traits class for a callable that returns an unsigned value on invocation.
+ *
+ * This is a weaker requirement than the `is_uniform_random_bit_generator<T>`
+ * traits and allows interop with Thrust PRNG classes (which do not satisfy
+ * this traits concept) or use with generic callables.
+ *
+ * @tparam T type
+ */
+template <typename T, typename = void>
+struct is_entropy_source : std::false_type {};
+
+/**
+ * True specialization for callables that can serve as an entropy source.
+ *
+ * @tparam T type
+ */
+template <typename T>
+struct is_entropy_source<
+  T,
+  std::enable_if_t<
+    std::is_invocable_v<T> &&
+    std::is_unsigned_v<decltype(std::declval<T>()())>
+  >
+> : std::true_type {};
+
+/**
+ * SFINAE helper for callables that can serve as an entropy source.
+ *
+ * @tparam T type
+ */
+template <typename T>
+using entropy_source_t = std::enable_if_t<is_entropy_source<T>::value>;
+
+/**
  * Return number of samples in [-1, 1] x [-1, 1] that fall in the unit circle.
  *
  * We make a copy of the PRNG instance, otherwise its state will be changed.
  *
- * @tparam N_t Integral type
- * @tparam Rng *UniformRandomBitGenerator* type
+ * @tparam Rng *UniformRandomBitGenerator* or other entropy source
  *
  * @param n_samples Number of samples to use
  * @param rng PRNG instance
  */
-template <typename N_t, typename Rng>
+template <typename Rng, typename = entropy_source_t<Rng>>
 PDMPMT_XPU_FUNC
-N_t unit_circle_samples(N_t n_samples, Rng rng)
+auto unit_circle_samples(std::size_t n_samples, Rng rng)
 {
 #if defined(__CUDACC__)
   thrust::random::uniform_real_distribution udist{-1., 1.};
@@ -58,9 +91,9 @@ N_t unit_circle_samples(N_t n_samples, Rng rng)
 #endif  // !defined(__CUDACC__)
   // count number of points in the unit circle, i.e. 2-norm <= 1
   double x, y;
-  N_t n_inside = 0;
+  std::size_t n_inside = 0;
   // we can use a raw loop to avoid memory allocations
-  for (N_t i = 0; i < n_samples; i++) {
+  for (std::size_t i = 0; i < n_samples; i++) {
     x = udist(rng);
     y = udist(rng);
     // no need for sqrt here since the target norm is 1
@@ -77,14 +110,11 @@ N_t unit_circle_samples(N_t n_samples, Rng rng)
  *
  * If compiled as CUDA C++, Thrust's RANLUX48 is the entropy source.
  *
- * @tparam N_t Integral type
- *
  * @param n_samples Number of samples to use
  * @param seed Seed for the 64-bit Mersenne Twister
  */
-template <typename N_t>
 PDMPMT_XPU_FUNC
-auto unit_circle_samples(N_t n_samples, std::uint_fast64_t seed)
+inline auto unit_circle_samples(std::size_t n_samples, std::uint_fast64_t seed)
 {
 #if defined(__CUDACC__)
   return unit_circle_samples(n_samples, thrust::random::ranlux48{seed});
@@ -103,14 +133,13 @@ auto unit_circle_samples(N_t n_samples, std::uint_fast64_t seed)
  *
  * @todo Possibility of overly aggressive template matching so add constraint.
  *
- * @tparam N_t Integral type
- * @tparam Rng *UniformRandomBitGenerator* type
+ * @tparam Rng *UniformRandomBitGenerator* or other entropy source
  *
  * @param n_seeds Number of PRNG seeds to generate
  * @param rng PRNG instance for whose type seeds will be generated
  */
-template <typename N_t, typename Rng>
-auto generate_seeds(N_t n_seeds, Rng rng)
+template <typename Rng, typename = entropy_source_t<Rng>>
+auto generate_seeds(std::size_t n_seeds, Rng rng)
 {
 #if defined(__CUDACC__)
   thrust::device_vector<typename Rng::result_type> seeds(n_seeds);
@@ -129,36 +158,30 @@ auto generate_seeds(N_t n_seeds, Rng rng)
  *
  * @todo When compiling as CUDA C++ this can only be used from host code.
  *
- * @tparam N_t Integral type
- *
  * @param n_seeds Number of PRNG seeds to generate
- * @param initial_seed Starting seed for the `std::mt19937_64` seed generator
+ * @param start_seed Starting seed for the PRNG used to generate seeds
  */
-template <typename N_t>
-auto generate_seeds(N_t n_seeds, std::uint_fast64_t initial_seed)
+inline auto generate_seeds(std::size_t n_seeds, std::uint_fast64_t start_seed)
 {
 #if defined(__CUDACC__)
-  return generate_seeds(n_seeds, thrust::random::ranlux48{initial_seed});
+  return generate_seeds(n_seeds, thrust::random::ranlux48{start_seed});
 #else
-  return generate_seeds(n_seeds, std::mt19937_64{initial_seed});
+  return generate_seeds(n_seeds, std::mt19937_64{start_seed});
 #endif  // !defined(__CUDACC__)
 }
 
 /**
  * Given `n_jobs` jobs, divide `n_samples` sample to generate evenly.
  *
- * @tparam N_t Integral type
- *
  * @param n_samples Total number of samples
  * @param n_jobs Number of jobs to split generation across
  */
-template <typename N_t>
-auto generate_sample_counts(N_t n_samples, N_t n_jobs)
+inline auto generate_sample_counts(std::size_t n_samples, std::size_t n_jobs)
 {
   // sample counts, i.e. number of samples each job will generate
-  std::vector<N_t> sample_counts(n_jobs, n_samples / n_jobs);
+  std::vector<std::size_t> sample_counts(n_jobs, n_samples / n_jobs);
   // if there is a remainder, +1 count for the first n_rem jobs
-  N_t n_rem = n_samples % n_jobs;
+  auto n_rem = n_samples % n_jobs;
   std::for_each_n(sample_counts.begin(), n_rem, [](auto& n) { n++; });
   return sample_counts;
 }
@@ -211,20 +234,21 @@ inline auto mcpi_gather(const C1& circle_counts, const C2& sample_counts)
  *
  * Uses the standard "circle-filling" technique to estimate pi / 4.
  *
+ * @todo Figure out how to enable Thrust PRNG usage in constraint.
+ *
  * @tparam T Return type
- * @tparam N_t Integral type
- * @tparam Rng *UniformRandomBitGenerator* type
+ * @tparam Rng *UniformRandomBitGenerator* or other entropy source
  *
  * @param n_samples Number of samples to use
  * @param rng PRNG instance
  */
-template <typename T, typename N_t, typename Rng>
-inline T mcpi(N_t n_samples, const Rng& rng)
+template <typename T, typename Rng, typename = detail::entropy_source_t<Rng>>
+inline T mcpi(std::size_t n_samples, const Rng& rng)
 {
   // MSVC complains about size_t to double loss of data
 PDMPMT_MSVC_WARNING_PUSH()
 PDMPMT_MSVC_WARNING_DISABLE(4244 5219)
-  const auto uctd{static_cast<T>(detail::unit_circle_samples(n_samples, rng))};
+  auto uctd = static_cast<T>(detail::unit_circle_samples(n_samples, rng));
   return 4 * (uctd / n_samples);
 PDMPMT_MSVC_WARNING_POP()
 }
@@ -234,15 +258,18 @@ PDMPMT_MSVC_WARNING_POP()
  *
  * Uses the 64-bit Mersenne Twister implemented through `std::mt19937_64`.
  *
- * @tparam N_t Integral type
+ * @todo Need a better way to integrate Thrust code path when using NVCC.
  *
  * @param n_samples Number of samples to use
  * @param seed Seed for the 64-bit Mersenne Twister
  */
-template <typename N_t>
-inline double mcpi(N_t n_samples, std::uint_fast64_t seed)
+inline double mcpi(std::size_t n_samples, std::uint_fast64_t seed)
 {
+#if defined(__CUDACC__)
+  return mcpi<double>(n_samples, thrust::random::ranlux48{seed});
+#else
   return mcpi<double>(n_samples, std::mt19937_64{seed});
+#endif  // !defined(__CUDACC__)
 }
 
 /**
@@ -250,14 +277,11 @@ inline double mcpi(N_t n_samples, std::uint_fast64_t seed)
  *
  * Uses the 64-bit Mersenne Twister implemented through `std::mt19937_64`.
  *
- * @tparam N_t Integral type
- *
  * @param n_samples Number of samples to use
  */
-template <typename N_t>
-inline double mcpi(N_t n_samples)
+inline double mcpi(std::size_t n_samples)
 {
-  return mcpi<double>(n_samples, std::random_device{}());
+  return mcpi(n_samples, std::random_device{}());
 }
 
 /**
@@ -266,31 +290,31 @@ inline double mcpi(N_t n_samples)
  * Simple map-reduce using `std::async` provided in `<future>`.
  *
  * @tparam T Return type
- * @tparam N_t Integral type
- * @tparam Rng *UniformRandomBitGenerator* type
+ * @tparam Rng *UniformRandomBitGenerator* or other entropy source
  *
  * @param n_samples Number of samples to use
  * @param rng PRNG instance
  * @param n_jobs Number of async jobs to split work over
  */
-template <typename T, typename N_t, typename Rng>
-T mcpi_async(N_t n_samples, const Rng& rng, N_t n_jobs)
+template <typename T, typename Rng>
+T mcpi_async(std::size_t n_samples, const Rng& rng, std::size_t n_jobs)
 {
+  using N_t = decltype(n_samples);
   // generate the seeds used by jobs for generate samples + the sample counts
-  const auto seeds{detail::generate_seeds(n_jobs, rng)};
-  const auto sample_counts{detail::generate_sample_counts(n_samples, n_jobs)};
+  auto seeds = detail::generate_seeds(n_jobs, rng);
+  auto sample_counts = detail::generate_sample_counts(n_samples, n_jobs);
   // submit unit_circle_samples tasks asynchronously + block for results
   std::vector<std::future<N_t>> circle_count_futures(n_jobs);
   for (N_t i = 0; i < n_jobs; i++) {
     circle_count_futures[i] = std::async(
       std::launch::async,
-      detail::unit_circle_samples<N_t, Rng>,
+      detail::unit_circle_samples<Rng>,
       sample_counts[i],
       Rng{seeds[i]}
     );
   }
-  // need to remove the const from const auto
-  std::remove_const_t<decltype(sample_counts)> circle_counts(n_jobs);
+  // get circle counts from futures
+  decltype(sample_counts) circle_counts(n_jobs);
   std::transform(
     circle_count_futures.begin(),
     circle_count_futures.end(),
@@ -351,7 +375,7 @@ inline double mcpi_async(
  *
  * @tparam T Return type
  * @tparam N_t Integral type
- * @tparam Rng *UniformRandomBitGenerator* type
+ * @tparam Rng *UniformRandomBitGenerator* or other entropy source
  *
  * @param n_samples Number of samples to use
  * @param rng PRNG instance
@@ -372,7 +396,7 @@ PDMPMT_MSVC_WARNING_POP()
   // generate seeds used by jobs for generating samples + the sample counts
   auto seeds = detail::generate_seeds(n_threads, rng);
   // to use template deduction, would have to static_cast n_threads to N_t
-  auto sample_counts = detail::generate_sample_counts<N_t>(n_samples, n_threads);
+  auto sample_counts = detail::generate_sample_counts(n_samples, n_threads);
   // compute circle counts using multiple threads using OpenMP
   std::vector<N_t> circle_counts(n_threads);
   #pragma omp parallel for
