@@ -53,51 +53,32 @@ protected:
   static constexpr unsigned int seed_ = 8888;
 };
 
-/**
- * Parametrized testing fixture for the C tests.
- */
-class MCPiTestC
-  : public MCPiTest, public ::testing::WithParamInterface<pdmpmt_rng_type> {};
-
-// type alias for the C++ tests
-using MCPiTestCXX = MCPiTest;
-
-/**
- * Test that C serial estimation of pi using Monte Carlo works as expected.
- */
-TEST_P(MCPiTestC, SerialTest)
-{
-  EXPECT_NEAR(pi_, pdmpmt_rng_smcpi(n_samples_, GetParam(), seed_), pi_tol_);
-}
-
-INSTANTIATE_TEST_SUITE_P(
-  Rng,
-  MCPiTestC,
-  ::testing::Values(PDMPMT_RNG_MRG32K3A, PDMPMT_RNG_MT19937),
-  // test name generator for easier identification of inputs
-  [](const ::testing::TestParamInfo<pdmpmt_rng_type>& info) -> std::string
-  {
-    switch (info.param) {
-      case PDMPMT_RNG_MRG32K3A:
-        return "MRG32k3a";
-      case PDMPMT_RNG_MT19937:
-        return "MT19937";
-      default:
-        return "UnknownRng" + std::to_string(info.index);
-    }
-  }
-);
+// type alias for the C/C++ test fixtures
+using MCPiTestC = MCPiTest;
+using MCPiTestCC = MCPiTest;
 
 /**
  * Test that C serial Monte Carlo pi estimation works with MRG32k3a.
  *
- * @note Should use `TEST_P` for this with `PDMPMT_RNG_MT19937`.
+ * @note Could use `TEST_P` for this but that's too much work.
  */
-TEST_F(MCPiTestC, SerialMRG32k3aTest)
+TEST_F(MCPiTestC, SerialTestMRG32k3a)
 {
   EXPECT_NEAR(
     pi_,
     pdmpmt_rng_smcpi(n_samples_, PDMPMT_RNG_MRG32K3A, seed_),
+    pi_tol_
+  );
+}
+
+/**
+ * Test that C serial Monte Carlo pi estimation works with MT19937.
+ */
+TEST_F(MCPiTestC, SerialTestMT19937)
+{
+  EXPECT_NEAR(
+    pi_,
+    pdmpmt_rng_smcpi(n_samples_, PDMPMT_RNG_MT19937, seed_),
     pi_tol_
   );
 }
@@ -119,7 +100,7 @@ TEST_F(MCPiTestC, OpenMPTest)
 /**
  * Test that C++ serial estimation of pi using Monte Carlo works as expected.
  */
-TEST_F(MCPiTestCXX, SerialTest)
+TEST_F(MCPiTestCC, SerialTest)
 {
   EXPECT_NEAR(pi_, pdmpmt::mcpi(n_samples_, seed_), pi_tol_);
 }
@@ -127,7 +108,7 @@ TEST_F(MCPiTestCXX, SerialTest)
 /**
  * Test that C++ async estimation of pi using Monte Carlo works as expected.
  */
-TEST_F(MCPiTestCXX, AsyncTest)
+TEST_F(MCPiTestCC, AsyncTest)
 {
   EXPECT_NEAR(pi_, pdmpmt::mcpi_async(n_samples_, seed_, n_jobs_), pi_tol_);
 }
@@ -137,7 +118,7 @@ TEST_F(MCPiTestCXX, AsyncTest)
  *
  * If the compiler does not support OpenMP, this test is skipped.
  */
-TEST_F(MCPiTestCXX, OpenMPTest)
+TEST_F(MCPiTestCC, OpenMPTest)
 {
 #ifdef _OPENMP
   EXPECT_NEAR(pi_, pdmpmt::mcpi_omp(n_samples_, seed_, n_jobs_), pi_tol_);
