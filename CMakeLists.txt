@@ -57,6 +57,11 @@ include(ConfigOpenMP)
 
 # TODO: maybe make Google Test not required?
 find_package(GTest 1.10 REQUIRED)
+if(GTest_FOUND)
+    message(STATUS "Google Test version: ${GTest_VERSION}")
+else()
+    message(STATUS "Google Test version: None")
+endif()
 # find Python (note: may add Development component later)
 find_package(Python3 COMPONENTS Interpreter)
 if(Python3_FOUND)
