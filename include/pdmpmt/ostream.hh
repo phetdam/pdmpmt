@@ -142,7 +142,7 @@ using write_input_range_t = std::enable_if_t<is_write_input_range<T>::value>;
 template <typename Range, typename = detail::write_input_range_t<Range>>
 void write(std::ostream& out, const Range& range)
 {
-  pdmpmt::write(out, std::begin(range), std::end(range));
+  write(out, std::begin(range), std::end(range));
 }
 
 }  // namespace pdmpmt
