@@ -55,12 +55,14 @@ include(ConfigOpenMP)
 # check for GSL and include extra GSL configuration
 # include(ConfigGSL)
 
+# Google Test for unit test runners
 find_package(GTest 1.10)
 if(GTest_FOUND)
     message(STATUS "Google Test version: ${GTest_VERSION}")
 else()
     message(STATUS "Google Test version: None")
 endif()
+
 # find Python (note: may add Development component later)
 find_package(Python3 COMPONENTS Interpreter)
 if(Python3_FOUND)
