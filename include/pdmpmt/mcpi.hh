@@ -131,8 +131,6 @@ inline auto unit_circle_samples(std::size_t n_samples, std::uint_fast64_t seed)
  *
  * @todo When compiling as CUDA C++ this can only be used from host code.
  *
- * @todo Possibility of overly aggressive template matching so add constraint.
- *
  * @tparam Rng *UniformRandomBitGenerator* or other entropy source
  *
  * @param n_seeds Number of PRNG seeds to generate
