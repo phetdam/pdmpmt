@@ -147,29 +147,4 @@ void write(std::ostream& out, const Range& range)
 
 }  // namespace pdmpmt
 
-namespace std {
-
-/**
- * Write any flat range to an output stream.
- *
- * The dereferenced type must be insertable into a stream.
- *
- * @note For ADL to work this insertion operator is in the `std::` namespace.
- *
- * @note This should be generic enough that type-specific insertion operator
- *  overloads should not interfere in the overload resolution process.
- *
- * @tparam Range Range type with weak *LegacyInputIterator*
- *
- * @param range Iterable input range
- */
-template <typename Range, typename = pdmpmt::detail::write_input_range_t<Range>>
-auto& operator<<(ostream& out, const Range& range)
-{
-  pdmpmt::write(out, range);
-  return out;
-}
-
-}  // namespace std
-
 #endif  // PDMPMT_OSTREAM_HH_
