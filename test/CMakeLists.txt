@@ -1,12 +1,15 @@
 cmake_minimum_required(VERSION ${CMAKE_MINIMUM_REQUIRED_VERSION})
 
-# pdmpmt_test: C++ unit test program
-add_executable(pdmpmt_test block_test.cc mcpi_test.cc)
-# link OpenMP if OpenMP is available (only need C++ target)
-if(OpenMP_FOUND)
-    target_link_libraries(pdmpmt_test PRIVATE OpenMP::OpenMP_CXX)
+if(GTest_FOUND)
+    # pdmpmt_test: C++ unit test program
+    # TODO: move mcpi tests out into separate programs
+    add_executable(pdmpmt_test block_test.cc mcpi_test.cc)
+    # link OpenMP if OpenMP is available (only need C++ target)
+    if(OpenMP_FOUND)
+        target_link_libraries(pdmpmt_test PRIVATE OpenMP::OpenMP_CXX)
+    endif()
+    target_link_libraries(pdmpmt_test PRIVATE GTest::gtest_main pdmpmt)
 endif()
-target_link_libraries(pdmpmt_test PRIVATE GTest::gtest_main pdmpmt)
 
 # on Windows, copy all DLLs in the project pdmpmt_test depends on is if they
 # have changed. however, note that this DOES NOT copy in DLLs of targets that
@@ -27,6 +30,8 @@ target_link_libraries(pdmpmt_test PRIVATE GTest::gtest_main pdmpmt)
 # copy_gsl_dlls_post_build(pdmpmt_test)
 
 # enable test discovery for Google Test
-include(GoogleTest)
+if(GTest_FOUND)
+    include(GoogleTest)
 
-gtest_discover_tests(pdmpmt_test)
+    gtest_discover_tests(pdmpmt_test)
+endif()

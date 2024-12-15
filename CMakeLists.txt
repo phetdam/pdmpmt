@@ -55,8 +55,7 @@ include(ConfigOpenMP)
 # check for GSL and include extra GSL configuration
 # include(ConfigGSL)
 
-# TODO: maybe make Google Test not required?
-find_package(GTest 1.10 REQUIRED)
+find_package(GTest 1.10)
 if(GTest_FOUND)
     message(STATUS "Google Test version: ${GTest_VERSION}")
 else()
