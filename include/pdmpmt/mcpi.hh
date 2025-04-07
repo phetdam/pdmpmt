@@ -200,6 +200,7 @@ T mcpi_gather(const C1& circle_counts, const C2& sample_counts)
   assert(std::size(circle_counts) && std::size(sample_counts));
   assert(std::size(circle_counts) == std::size(sample_counts));
   // number of samples inside the unit circle, total number of samples drawn
+  // TODO: this can be done using multiple threads
   auto n_inside = std::reduce(std::begin(circle_counts), std::end(circle_counts));
   auto n_total = std::reduce(std::begin(sample_counts), std::end(sample_counts));
   // do division first to reduce likelihood of overflow
@@ -232,8 +233,6 @@ inline auto mcpi_gather(const C1& circle_counts, const C2& sample_counts)
  *
  * Uses the standard "circle-filling" technique to estimate pi / 4.
  *
- * @todo Figure out how to enable Thrust PRNG usage in constraint.
- *
  * @tparam T Return type
  * @tparam Rng *UniformRandomBitGenerator* or other entropy source
  *
@@ -257,6 +256,8 @@ PDMPMT_MSVC_WARNING_POP()
  * Uses the 64-bit Mersenne Twister implemented through `std::mt19937_64`.
  *
  * @todo Need a better way to integrate Thrust code path when using NVCC.
+ * @todo Maybe we should use tag dispatch or some kind of device selection
+ *  method so that users can control execution through a single interface.
  *
  * @param n_samples Number of samples to use
  * @param seed Seed for the 64-bit Mersenne Twister
