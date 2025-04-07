@@ -52,8 +52,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 include(ConfigCUDA)
 # check compiler OpenMP support and add correct OpenMP compile options
 include(ConfigOpenMP)
-# check for GSL and include extra GSL configuration
-# include(ConfigGSL)
 
 # Google Test for unit test runners
 find_package(GTest 1.10)
