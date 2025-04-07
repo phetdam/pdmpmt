@@ -55,4 +55,9 @@ if(_run_dask_tests)
         COMMAND pytest WORKING_DIRECTORY
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     )
+else()
+    message(
+        STATUS
+        "Skipping pdmpmt_pytest_tests (requires Python 3, NumPy, Dask, pytest)"
+    )
 endif()
