@@ -302,6 +302,7 @@ T mcpi_async(std::size_t n_samples, const Rng& rng, std::size_t n_jobs)
   // generate the seeds used by jobs for generate samples + the sample counts
   auto seeds = detail::generate_seeds(n_jobs, rng);
   auto sample_counts = detail::generate_sample_counts(n_samples, n_jobs);
+  // TODO: dispatch blocks to CUDA device or create a new overload
   // submit unit_circle_samples tasks asynchronously + block for results
   std::vector<std::future<N_t>> circle_count_futures(n_jobs);
   for (N_t i = 0; i < n_jobs; i++) {
