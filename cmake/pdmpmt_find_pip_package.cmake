@@ -11,10 +11,10 @@ cmake_minimum_required(VERSION 3.15)
 ##
 # Check that the given Python package has been installed with pip.
 #
-# On completion, the function sets PDMPMT_$[pkg}_PIP_FOUND to TRUE if the
-# package was found, FALSE otherwise. On success, the version is defined:
+# On completion, the function sets $[pkg}_PIP_FOUND to TRUE if the package was
+# found, FALSE otherwise. On success, the version is defined:
 #
-#   PDMPMT_${pkg}_PIP_VERSION
+#   ${pkg}_PIP_VERSION          ${pkg} version reported by pip
 #
 # Arguments:
 #   pkg                         Package name for pip, e.g. dask
@@ -33,7 +33,7 @@ function(pdmpmt_find_pip_package pkg)
     )
     # failed
     if(show_${pkg}_res)
-        set(PDMPMT_${pkg}_PIP_FOUND FALSE PARENT_SCOPE)
+        set(${pkg}_PIP_FOUND FALSE PARENT_SCOPE)
         if(ARG_REQUIRED)
             message(FATAL_ERROR "Could NOT find ${pkg} using pip")
         endif()
@@ -41,7 +41,6 @@ function(pdmpmt_find_pip_package pkg)
         return()
     endif()
     # otherwise, ${pkg} has been located by pip
-    set(PDMPMT_${pkg}_FOUND TRUE)
     # convert show_${pkg}_output to list and keep only version info
     string(REPLACE "\n" ";" show_${pkg}_output "${show_${pkg}_output}")
     list(FILTER show_${pkg}_output INCLUDE REGEX "Version:")
@@ -57,7 +56,7 @@ function(pdmpmt_find_pip_package pkg)
             message(FATAL_ERROR "${_msg}")
         endif()
         message(STATUS "${_msg}")
-        set(PDMPMT_${pkg}_PIP_FOUND FALSE PARENT_SCOPE)
+        set(${pkg}_PIP_FOUND FALSE PARENT_SCOPE)
         message(STATUS "${pkg} version: None")
         return()
     endif()
@@ -68,12 +67,12 @@ function(pdmpmt_find_pip_package pkg)
             message(FATAL_ERROR "${_msg}")
         endif()
         message(STATUS "${_msg}")
-        set(PDMPMT_${pkg}_PIP_FOUND FALSE PARENT_SCOPE)
+        set(${pkg}_PIP_FOUND FALSE PARENT_SCOPE)
         message(STATUS "${pkg} version: None")
         return()
     endif()
     # set variables in parent scope to finish
-    set(PDMPMT_${pkg}_PIP_FOUND TRUE PARENT_SCOPE)
-    set(PDMPMT_${pkg}_PIP_VERSION ${${pkg}_version} PARENT_SCOPE)
+    set(${pkg}_PIP_FOUND TRUE PARENT_SCOPE)
+    set(${pkg}_PIP_VERSION ${${pkg}_version} PARENT_SCOPE)
     message(STATUS "${pkg} version: ${${pkg}_version}")
 endfunction()
