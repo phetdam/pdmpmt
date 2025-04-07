@@ -10,15 +10,25 @@ project(
 
 # TODO: consider only allowing building as shared
 option(BUILD_SHARED_LIBS "Build libraries as shared instead of static" ON)
-# this option is mostly important on Windows
-# TODO: remove, we don't want to use GPL'd code
-option(PDMPMT_GSL_SHARED "Use GNU GSL shared libraries" ON)
 # build tests
 option(PDMPMT_BUILD_TESTS "Build test programs" ON)
+
+# check if generator is multi-config
+get_property(PDMPMT_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+if(PDMPMT_MULTI_CONFIG)
+    message(STATUS "Generator config: Multi")
+else()
+    message(STATUS "Generator config: Single")
+endif()
 
 # build debug by default; we set -DCMAKE_BUILD_TYPE=Release for release
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
+endif()
+if(PDMPMT_MULTI_CONFIG)
+    message(STATUS "Build config: Multi")
+else()
+    message(STATUS "Build config: ${CMAKE_BUILD_TYPE}")
 endif()
 
 # C/C++ standards are all _reasonably_ recent
