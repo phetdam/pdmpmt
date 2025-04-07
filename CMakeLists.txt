@@ -62,6 +62,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 include(ConfigCUDA)
 # check compiler OpenMP support and add correct OpenMP compile options
 include(ConfigOpenMP)
+# function to locate pip packages
+include(pdmpmt_find_pip_package)
 
 # Google Test for unit test runners
 find_package(GTest 1.10)
@@ -79,37 +81,11 @@ else()
     message(STATUS "Python version: None")
 endif()
 
-# if we have Python 3, find Dask
+# if we have Python 3, find relevant packages
 if(Python3_FOUND)
-    execute_process(
-        COMMAND pip show dask
-        RESULT_VARIABLE _show_dask_res
-        OUTPUT_VARIABLE _show_dask_output
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-    # failed
-    if(_show_dask_res)
-        set(PDMPMT_DASK_FOUND FALSE)
-    else()
-        # Dask found
-        set(PDMPMT_DASK_FOUND TRUE)
-        # convert _show_dask_output to list and keep only version info
-        string(REPLACE "\n" ";" _show_dask_output "${_show_dask_output}")
-        list(FILTER _show_dask_output INCLUDE REGEX "Version:")
-        # convert into version
-        string(
-            REGEX REPLACE "Version:[ ]+" ""
-            PDMPMT_DASK_VERSION "${_show_dask_output}"
-        )
-    endif()
-    unset(_show_dask_res)
-    unset(_show_dask_output)
-endif()
-# Dask found?
-if(PDMPMT_DASK_FOUND)
-    message(STATUS "Dask version: ${PDMPMT_DASK_VERSION}")
-else()
-    message(STATUS "Dask version: None")
+    pdmpmt_find_pip_package(dask MIN_VERSION 2025.2)
+    pdmpmt_find_pip_package(distributed MIN_VERSION 2025.2)
+    pdmpmt_find_pip_package(pytest MIN_VERSION 8)
 endif()
 
 # set compiler-specific configuration options. this is done after finding all
