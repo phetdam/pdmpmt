@@ -7,6 +7,7 @@ add_subdirectory(pdmpmt)
 # TODO: see if we can use host C++ compiler only + use shared CUDA runtime
 if(CUDAToolkit_FOUND)
     add_executable(thrust_demo thrust_demo.cu)
+    target_link_libraries(thrust_demo PRIVATE pdmpmt++)
     add_test(NAME thrust_demo COMMAND thrust_demo)
 else()
     message(STATUS "Skipping thrust_demo (requires CUDA Toolkit)")
@@ -15,7 +16,7 @@ endif()
 # cuda_device_info: print info on available CUDA devices
 if(CUDAToolkit_FOUND)
     add_executable(cuda_device_info cuda_device_info.cc)
-    target_link_libraries(cuda_device_info PRIVATE CUDA::cudart)
+    target_link_libraries(cuda_device_info PRIVATE CUDA::cudart pdmpmt++)
     # print standard output
     add_test(NAME cuda_device_info COMMAND cuda_device_info)
     # test command-line options
@@ -40,6 +41,7 @@ endif()
 # TODO: consider making this also a test in the Google Test runner
 if(CUDAToolkit_FOUND)
     add_executable(thrust_mcpi thrust_mcpi.cu)
+    target_link_libraries(thrust_mcpi PRIVATE pdmpmt++)
     add_test(NAME thrust_mcpi COMMAND thrust_mcpi)
 else()
     message(STATUS "Skipping thrust_mcpi (requires CUDA Toolkit)")

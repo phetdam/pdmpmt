@@ -97,12 +97,21 @@ endif()
 # dependencies so there is no possible interference with upstream compile flags
 include(ConfigCompile)
 
-# base include for this repo (since "include" is reserved)
-set(PDMPMT_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+# base include for this repo
+set(PDMPMT_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 # must add include directories if they are installed in non-standard locations
 # that were specified by BOOST_ROOT, GTEST_ROOT, etc.
-include_directories(${PDMPMT_INCLUDE} SYSTEM ${GTEST_INCLUDE_DIRS})
+# include_directories(${PDMPMT_INCLUDE} SYSTEM ${GTEST_INCLUDE_DIRS})
+
+# pdmpmt++: C++ header-only library implementation
+add_library(pdmpmt++ INTERFACE)
+add_library(pdmpmt::pdmpmt++ ALIAS pdmpmt++)
+target_include_directories(
+    pdmpmt++ INTERFACE
+    $<BUILD_INTERFACE:${PDMPMT_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
+)
 
 include(CTest)
 

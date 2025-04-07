@@ -4,11 +4,11 @@ if(GTest_FOUND)
     # pdmpmt_test: C++ unit test program
     # TODO: move mcpi tests out into separate programs
     add_executable(pdmpmt_test block_test.cc mcpi_test.cc)
+    target_link_libraries(pdmpmt_test PRIVATE GTest::gtest_main pdmpmt pdmpmt++)
     # link OpenMP if OpenMP is available (only need C++ target)
     if(OpenMP_FOUND)
         target_link_libraries(pdmpmt_test PRIVATE OpenMP::OpenMP_CXX)
     endif()
-    target_link_libraries(pdmpmt_test PRIVATE GTest::gtest_main pdmpmt)
 endif()
 
 # on Windows, copy all DLLs in the project pdmpmt_test depends on is if they
