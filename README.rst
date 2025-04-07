@@ -72,6 +72,12 @@ be installed with ``pip install .``, which requires `setuptools`_.
 Building GSL from source
 ------------------------
 
+   Note: Use of GSL has been removed from this repo to comply with licensing.
+   The prand_ library has been instead vendored into the source tree with a
+   custom CMake config for pseudorandom number generation.
+
+.. _prand: https://github.com/cheng-zhao/prand
+
 Windows
 ~~~~~~~
 
