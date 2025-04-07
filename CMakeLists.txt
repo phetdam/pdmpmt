@@ -74,11 +74,16 @@ else()
 endif()
 
 # find Python (note: may add Development component later)
-find_package(Python3 COMPONENTS Interpreter)
+find_package(Python3 COMPONENTS Interpreter NumPy)
 if(Python3_FOUND)
     message(STATUS "Python version: ${Python3_VERSION}")
 else()
     message(STATUS "Python version: None")
+endif()
+if(Python3_NumPy_FOUND)
+    message(STATUS "NumPy version: ${Python3_NumPy_VERSION}")
+else()
+    message(STATUS "NumPy version: None")
 endif()
 
 # if we have Python 3, find relevant packages
