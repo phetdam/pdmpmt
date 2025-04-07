@@ -32,6 +32,5 @@ endif()
 # enable test discovery for Google Test
 if(GTest_FOUND)
     include(GoogleTest)
-
     gtest_discover_tests(pdmpmt_test)
 endif()
