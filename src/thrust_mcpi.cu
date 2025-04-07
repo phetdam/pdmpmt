@@ -18,7 +18,7 @@ int main()
   // seed + sample count
   constexpr auto seed = 8888u;
   constexpr auto n_samples = 1000000u;
-  // compute + print
+  // compute (serially) + print
   // TODO: should put this as part of the test runner
   auto pi = pdmpmt::mcpi(n_samples, seed);
   std::cout << "pi (n_samples=" << n_samples << ", seed=" << seed << "): " <<
