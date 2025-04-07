@@ -79,6 +79,39 @@ else()
     message(STATUS "Python version: None")
 endif()
 
+# if we have Python 3, find Dask
+if(Python3_FOUND)
+    execute_process(
+        COMMAND pip show dask
+        RESULT_VARIABLE _show_dask_res
+        OUTPUT_VARIABLE _show_dask_output
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    # failed
+    if(_show_dask_res)
+        set(PDMPMT_DASK_FOUND FALSE)
+    else()
+        # Dask found
+        set(PDMPMT_DASK_FOUND TRUE)
+        # convert _show_dask_output to list and keep only version info
+        string(REPLACE "\n" ";" _show_dask_output "${_show_dask_output}")
+        list(FILTER _show_dask_output INCLUDE REGEX "Version:")
+        # convert into version
+        string(
+            REGEX REPLACE "Version:[ ]+" ""
+            PDMPMT_DASK_VERSION "${_show_dask_output}"
+        )
+    endif()
+    unset(_show_dask_res)
+    unset(_show_dask_output)
+endif()
+# Dask found?
+if(PDMPMT_DASK_FOUND)
+    message(STATUS "Dask version: ${PDMPMT_DASK_VERSION}")
+else()
+    message(STATUS "Dask version: None")
+endif()
+
 # set compiler-specific configuration options. this is done after finding all
 # dependencies so there is no possible interference with upstream compile flags
 include(ConfigCompile)
