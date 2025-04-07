@@ -68,10 +68,10 @@ pdmpmt_rng_unit_circle_samples(
 }
 
 /**
- * Return a new block of `unsigned long` values usable as GSL PRNG seeds.
+ * Return a new block of `unsigned long` values usable as PRNG seeds.
  *
  * @param n_jobs Number of seeds to generate
- * @param rng_type Address to a GSL PRNG
+ * @param rng_type PRNG type
  * @param seed Seed value for the PRNG
  */
 pdmpmt_block_ulong
