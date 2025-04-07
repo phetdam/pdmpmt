@@ -8,9 +8,7 @@ import math
 import numpy as np
 
 # pyright: reportMissingImports=false
-from pdmpmt.mcpi import (
-    generate_seeds, mcpi_dask, mcpi_gather, mcpi_serial, unit_circle_samples
-)
+from pdmpmt import mcpi as pmc
 
 
 def test_mcpi_serial(n_serial_samples, default_seed, big_tol):
@@ -25,7 +23,7 @@ def test_mcpi_serial(n_serial_samples, default_seed, big_tol):
     big_tol : float
         pytest fixture, see conftest.py
     """
-    mcpi = mcpi_serial(n_samples=n_serial_samples, seed=default_seed)
+    mcpi = pmc.mcpi_serial(n_samples=n_serial_samples, seed=default_seed)
     # the estimate is pretty rough with low samples so ballpark 3.14 is fine
     np.testing.assert_allclose(mcpi, math.pi, atol=big_tol)
 
@@ -41,15 +39,15 @@ def test_mcpi_gather(n_serial_samples, n_batches, default_seed, big_tol):
     n_batches : int
         pytest fixture, see conftest.py
     """
-    seeds = generate_seeds(n_batches, initial_seed=default_seed)
+    seeds = pmc.generate_seeds(n_batches, initial_seed=default_seed)
     # division has no remainder here, but we also explicitly check
     assert n_serial_samples % n_batches == 0, "uneven division of samples"
     n_batch_samples = n_serial_samples // n_batches
     circle_counts = [
-        unit_circle_samples(n_batch_samples, seed=seed)
+        pmc.unit_circle_samples(n_batch_samples, seed=seed)
         for seed in seeds
     ]
-    mcpi = mcpi_gather(circle_counts, [n_batch_samples] * n_batches)
+    mcpi = pmc.mcpi_gather(circle_counts, [n_batch_samples] * n_batches)
     # same tolerance as test_mcpi_serial
     np.testing.assert_allclose(mcpi, math.pi, atol=big_tol)
 
@@ -62,7 +60,7 @@ def test_mcpi_dask(n_serial_samples, default_seed, big_tol):
     # we don't need that many batches
     n_batches = 2
     # run using LocalCluster with 2 workers, 2 jobs
-    mcpi = mcpi_dask(
+    mcpi = pmc.mcpi_dask(
         n_samples=n_serial_samples,
         seed=default_seed,
         n_jobs=n_batches,
