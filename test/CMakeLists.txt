@@ -34,3 +34,25 @@ if(GTest_FOUND)
     include(GoogleTest)
     gtest_discover_tests(pdmpmt_test)
 endif()
+
+# criteria for running Dask tests
+if(
+    Python3_NumPy_FOUND AND
+    dask_PIP_FOUND AND
+    distributed_PIP_FOUND AND
+    pytest_PIP_FOUND
+)
+    set(_run_dask_tests TRUE)
+else()
+    set(_run_dask_tests FALSE)
+endif()
+
+# run pytest test if possible
+# TODO: find way to run tests individually
+if(_run_dask_tests)
+    add_test(
+        NAME pdmpmt_pytest_tests
+        COMMAND pytest WORKING_DIRECTORY
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    )
+endif()
