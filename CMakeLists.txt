@@ -91,6 +91,7 @@ if(Python3_FOUND)
     pdmpmt_find_pip_package(dask MIN_VERSION 2025.2)
     pdmpmt_find_pip_package(distributed MIN_VERSION 2025.2)
     pdmpmt_find_pip_package(pytest MIN_VERSION 8)
+    pdmpmt_find_pip_package(ray MIN_VERSION 2.40)
 endif()
 
 # set compiler-specific configuration options. this is done after finding all
