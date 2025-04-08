@@ -117,6 +117,7 @@ if(NOT WIN32 AND ray-cpp_PIP_FOUND)
         REQUIRED
     )
     # create target
+    # TODO: this could be a SHARED IMPORTED target if we set IMPORTED_LOCATION
     add_library(pdmpmt::ray_api INTERFACE IMPORTED)
     target_include_directories(pdmpmt::ray_api INTERFACE ${ray-cpp_INCLUDE_DIRS})
     # note: binary Python wheels for Linux still use the pre-C++11 ABI. another
