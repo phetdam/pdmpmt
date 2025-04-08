@@ -28,15 +28,21 @@ function(pdmpmt_find_pip_package pkg)
     execute_process(
         COMMAND pip show ${pkg}
         RESULT_VARIABLE show_${pkg}_res
+        ERROR_VARIABLE show_${pkg}_errout
         OUTPUT_VARIABLE show_${pkg}_output
+        ERROR_STRIP_TRAILING_WHITESPACE
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
     # failed
     if(show_${pkg}_res)
         set(${pkg}_PIP_FOUND FALSE PARENT_SCOPE)
         if(ARG_REQUIRED)
-            message(FATAL_ERROR "Could NOT find ${pkg} using pip")
+            message(
+                FATAL_ERROR
+                "Could NOT find ${pkg} using pip:\n${show_${pkg}_errout}"
+            )
         endif()
+        message(STATUS "${show_${pkg}_errout}")
         message(STATUS "${pkg} version: None")
         return()
     endif()
