@@ -94,6 +94,47 @@ if(Python3_FOUND)
     # note: ray-cpp must be separtely installed from ray
     pdmpmt_find_pip_package(ray-cpp MIN_VERSION 2.40)
 endif()
+# if ray-cpp is found create an imported target to link against
+# note: not supported on Windows. we also would have to use find_file to locate
+# the library because the DLL is named libray_api.so. it's not possible to use
+# it because MSVC complains that the DLL is corrupt and there's also probably
+# not enough symbols that are exported from the DLL (also no import lib)
+if(NOT WIN32 AND ray-cpp_PIP_FOUND)
+    # Ray C++ root, include dir, library dir
+    # TODO: Ray has vendored dependencies. use find_package on them?
+    set(ray-cpp_ROOT_DIR ${Python3_SITEARCH}/ray/cpp)
+    # need to normalize to CMake path because Python3_SITEARCH contains the raw
+    # Windows path that is returned from Python
+    cmake_path(CONVERT ${ray-cpp_ROOT_DIR} TO_CMAKE_PATH_LIST ray-cpp_ROOT_DIR)
+    set(ray-cpp_INCLUDE_DIRS ${ray-cpp_ROOT_DIR}/include)
+    # find the main Ray library
+    find_library(
+        ray-cpp_LIBRARIES
+        NAMES ray_api
+        HINTS ${ray-cpp_ROOT_DIR}
+        PATH_SUFFIXES lib
+        NO_CACHE
+        REQUIRED
+    )
+    # create target
+    add_library(pdmpmt::ray_api INTERFACE IMPORTED)
+    target_include_directories(pdmpmt::ray_api INTERFACE ${ray-cpp_INCLUDE_DIRS})
+    # note: binary Python wheels for Linux still use the pre-C++11 ABI. another
+    # example would by PyTorch; this is also a required compile definition. see
+    # https://github.com/ray-project/ray/issues/26031
+    # TODO: may not need this?
+    target_compile_definitions(pdmpmt::ray_api INTERFACE _GLIBCXX_USE_CXX11_ABI=0)
+    target_link_libraries(pdmpmt::ray_api INTERFACE ${ray-cpp_LIBRARIES})
+    # build Ray example (kind of janky)
+    # TODO: has issues with SO_REUSEPORT on WSL1
+    add_executable(ray-example ${ray-cpp_ROOT_DIR}/example/example.cc)
+    target_link_libraries(ray-example PRIVATE pdmpmt::ray_api)
+else()
+    message(
+        STATUS
+        "Skipping pdmpmt::ray_api (Ray C++ API not supported on Windows)"
+    )
+endif()
 
 # set compiler-specific configuration options. this is done after finding all
 # dependencies so there is no possible interference with upstream compile flags
