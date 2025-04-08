@@ -7,6 +7,8 @@ set_target_properties(pdmpmt PROPERTIES DEFINE_SYMBOL PDMPMT_BUILD_DLL)
 target_include_directories(
     pdmpmt PUBLIC
     $<BUILD_INTERFACE:${PDMPMT_INCLUDE_DIR}>
+    # config-independent generated headers
+    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(pdmpmt PRIVATE prand)

@@ -12,6 +12,16 @@ project(
 option(BUILD_SHARED_LIBS "Build libraries as shared instead of static" ON)
 # build tests
 option(PDMPMT_BUILD_TESTS "Build test programs" ON)
+# build as release version without build suffix
+option(PDMPMT_RELEASE_BUILD "Build as an official release" OFF)
+
+# find Git
+find_package(Git)
+if(Git_FOUND)
+    message(STATUS "Git version: ${GIT_VERSION_STRING}")
+else()
+    message(STATUS "Git version: None")
+endif()
 
 # check if generator is multi-config
 get_property(PDMPMT_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
@@ -56,7 +66,29 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 # update module search path to find our CMake scripts
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
+include(pdmpmt_write_build_info)
+
+# set major minor patch version (because we want all-caps prefix)
+set(PDMPMT_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+set(PDMPMT_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+set(PDMPMT_VERSION_PATCH ${PROJECT_VERSION_PATCH})
+# determine build info (empty for actual release) + set build version
+if(PDMPMT_RELEASE_BUILD)
+    set(PDMPMT_BUILD_INFO "")
+    # PDMPMT_VERSION implicitly set
+    # pip version for Python package
+    set(PDMPMT_PY_VERSION ${PDMPMT_VERSION})
+else()
+    pdmpmt_write_build_info(PDMPMT_BUILD_INFO)
+    # update to include build info
+    set(PDMPMT_VERSION ${PROJECT_VERSION}-${PDMPMT_BUILD_INFO})
+    # note: since __init__.py is being generated we don't want WSL and Window
+    # to keep overwriting each other's version so no extra build info
+    set(PDMPMT_PY_VERSION ${PROJECT_VERSION}.dev0)
+endif()
+message(STATUS "Build version: ${PDMPMT_VERSION}")
 
 # check for optional CUDA Toolkit and configure
 include(ConfigCUDA)
@@ -145,9 +177,33 @@ include(ConfigCompile)
 # base include for this repo
 set(PDMPMT_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
-# must add include directories if they are installed in non-standard locations
-# that were specified by BOOST_ROOT, GTEST_ROOT, etc.
-# include_directories(${PDMPMT_INCLUDE} SYSTEM ${GTEST_INCLUDE_DIRS})
+# generate version.h header
+set(PDMPMT_VERSION_HEADER include/pdmpmt/version.h)
+# variables consumed:
+#
+#   PDMPMT_VERSION
+#   PDMPMT_VERSION_MAJOR
+#   PDMPMT_VERSION_MINOR
+#   PDMPMT_VERSION_PATCH
+#   PDMPMT_BUILD_INFO
+#
+configure_file(
+    ${PDMPMT_VERSION_HEADER}.in ${PDMPMT_VERSION_HEADER}
+    NEWLINE_STYLE LF @ONLY
+)
+message(STATUS "Generated ${PDMPMT_VERSION_HEADER}")
+
+# generate __init__.py
+set(PDMPMT_INIT_PY pdmpmt/__init__.py)
+# variables consumed:
+#
+#   PDMPMT_PY_VERSION
+#
+configure_file(
+    ${PDMPMT_INIT_PY}.in ${CMAKE_CURRENT_SOURCE_DIR}/${PDMPMT_INIT_PY}
+    NEWLINE_STYLE LF @ONLY
+)
+message(STATUS "Generated ${PDMPMT_INIT_PY}")
 
 # pdmpmt++: C++ header-only library implementation
 add_library(pdmpmt++ INTERFACE)
@@ -155,6 +211,8 @@ add_library(pdmpmt::pdmpmt++ ALIAS pdmpmt++)
 target_include_directories(
     pdmpmt++ INTERFACE
     $<BUILD_INTERFACE:${PDMPMT_INCLUDE_DIR}>
+    # config-independent generated headers
+    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
 

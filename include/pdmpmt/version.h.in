@@ -1,0 +1,38 @@
+/**
+ * @file version.h
+ * @author Derek Huang
+ * @brief C/C++ header for pdmpmt version info
+ * @copyright MIT License
+ */
+
+#ifndef PDMPMT_VERSION_H_
+#define PDMPMT_VERSION_H_
+
+/**
+ * pdmpmt major version.
+ */
+#define PDMPMT_VERSION_MAJOR @PDMPMT_VERSION_MAJOR@
+
+/**
+ * pdmpmt minor version.
+ */
+#define PDMPMT_VERSION_MINOR @PDMPMT_VERSION_MINOR@
+
+/**
+ * pdmpmt patch version.
+ */
+#define PDMPMT_VERSION_PATCH @PDMPMT_VERSION_PATCH@
+
+/**
+ * pdmpmt build info string.
+ *
+ * This is empty for release builds but will be a Git short has or "DEV".
+ */
+#define PDMPMT_BUILD_INFO "@PDMPMT_BUILD_INFO@"
+
+/**
+ * pdmpmt version string.
+ */
+#define PDMPMT_VERSION "@PDMPMT_VERSION@"
+
+#endif  // PDMPMT_VERSION_H_
