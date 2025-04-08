@@ -16,3 +16,5 @@ dask-worker-space
 # ignore CMake build directories
 /build
 /build_windows*
+# ignore __init__.py (generated)
+/pdmpmt/__init__.py
