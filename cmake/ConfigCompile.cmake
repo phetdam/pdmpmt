@@ -24,8 +24,6 @@ if(MSVC)
         # pplwin.h: class with virtual functions has non-virtual dtor
         $<$<COMPILE_LANGUAGE:C,CXX>:/wd5204>
     )
-    # needed for GSL global variables that have to be exported
-    add_compile_definitions(GSL_DLL)
 # options are also accepted by Clang
 else()
     add_compile_options(
