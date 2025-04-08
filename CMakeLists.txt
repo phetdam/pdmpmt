@@ -91,7 +91,7 @@ if(Python3_FOUND)
     pdmpmt_find_pip_package(dask MIN_VERSION 2025.2)
     pdmpmt_find_pip_package(distributed MIN_VERSION 2025.2)
     pdmpmt_find_pip_package(pytest MIN_VERSION 8)
-    # note: ray-cpp must be separtely installed from ray
+    # note: ray-cpp must be separately installed from ray
     pdmpmt_find_pip_package(ray-cpp MIN_VERSION 2.40)
 endif()
 # if ray-cpp is found create an imported target to link against
