@@ -26,7 +26,7 @@
 /**
  * pdmpmt build info string.
  *
- * This is empty for release builds but will be a Git short has or "DEV".
+ * This is empty for release builds but will be a Git short hash or "DEV".
  */
 #define PDMPMT_BUILD_INFO "@PDMPMT_BUILD_INFO@"
 
