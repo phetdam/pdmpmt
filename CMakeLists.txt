@@ -127,7 +127,8 @@ if(NOT WIN32 AND ray-cpp_PIP_FOUND)
     target_compile_definitions(pdmpmt::ray_api INTERFACE _GLIBCXX_USE_CXX11_ABI=0)
     target_link_libraries(pdmpmt::ray_api INTERFACE ${ray-cpp_LIBRARIES})
     # build Ray example (kind of janky)
-    # TODO: has issues with SO_REUSEPORT on WSL1
+    # note: has issues with SO_REUSEPORT on WSL1. see
+    # https://github.com/grpc/grpc/issues/28936 and others
     add_executable(ray-example ${ray-cpp_ROOT_DIR}/example/example.cc)
     target_link_libraries(ray-example PRIVATE pdmpmt::ray_api)
 else()
