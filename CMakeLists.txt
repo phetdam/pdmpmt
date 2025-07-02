@@ -68,6 +68,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 # update module search path to find our CMake scripts
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
+include(pdmpmt_find_pip_package)
 include(pdmpmt_write_build_info)
 
 # set major minor patch version (because we want all-caps prefix)
@@ -90,12 +91,19 @@ else()
 endif()
 message(STATUS "Build version: ${PDMPMT_VERSION}")
 
+# TODO: use macros for configuration instead of including modules
 # check for optional CUDA Toolkit and configure
 include(ConfigCUDA)
 # check compiler OpenMP support and add correct OpenMP compile options
 include(ConfigOpenMP)
-# function to locate pip packages
-include(pdmpmt_find_pip_package)
+
+# find OpenCL
+find_package(OpenCL 3.0)
+if(OpenCL_FOUND)
+    message(STATUS "OpenCL version: ${OpenCL_VERSION_STRING}")
+else()
+    message(STATUS "OpenCL version: None")
+endif()
 
 # Google Test for unit test runners
 find_package(GTest 1.10)
