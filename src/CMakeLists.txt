@@ -37,6 +37,15 @@ else()
     message(STATUS "Skipping cuda_device_info (requires CUDA Toolkit)")
 endif()
 
+# cl_platform_info: print OpenCL platform info
+if(OpenCL_FOUND)
+    add_executable(cl_platform_info cl_platform_info.cc)
+    target_link_libraries(cl_platform_info PRIVATE OpenCL::OpenCL)
+    add_test(NAME cl_platform_info COMMAND cl_platform_info)
+else()
+    message(STATUS "Skipping cl_platform_info (requires OpenCL)")
+endif()
+
 # thrust_mcpi: compute pi using Monte Carlo using Thrust
 # TODO: consider making this also a test in the Google Test runner
 if(CUDAToolkit_FOUND)
