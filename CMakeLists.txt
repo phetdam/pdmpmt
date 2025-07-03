@@ -98,7 +98,7 @@ include(ConfigCUDA)
 include(ConfigOpenMP)
 
 # find OpenCL
-find_package(OpenCL 3.0)
+find_package(OpenCL 2.0)
 if(OpenCL_FOUND)
     message(STATUS "OpenCL version: ${OpenCL_VERSION_STRING}")
 else()
