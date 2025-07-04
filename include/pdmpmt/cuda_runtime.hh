@@ -16,8 +16,11 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 #include <cuda_runtime.h>
+
+#include "pdmpmt/features.h"
 
 namespace pdmpmt {
 
@@ -28,8 +31,13 @@ namespace pdmpmt {
  */
 inline auto cuda_error_string(cudaError_t err)
 {
-  return std::string{"CUDA error: "} + cudaGetErrorName(err) +
-    std::string{": "} + cudaGetErrorString(err);
+  std::stringstream ss;
+  ss << "CUDA error: " << cudaGetErrorName(err) << ": " << cudaGetErrorString(err);
+#if PDMPMT_HAS_CC20
+  return std::move(ss).str();  // string move-construct
+#else
+  return ss.str();             // string copy
+#endif  // !PDMPMT_HAS_CC20
 }
 
 /**
