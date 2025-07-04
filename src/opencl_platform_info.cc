@@ -1,5 +1,5 @@
 /**
- * @file cl_platform_info.cc
+ * @file opencl_platform_info.cc
  * @author Derek Huang
  * @brief C++ program for querying OpenCL platform info
  * @copyright MIT License
