@@ -29,7 +29,7 @@ namespace {
  *
  * @param err OpenCL error code
  */
-constexpr auto cl_strerror(cl_int err) noexcept
+constexpr auto opencl_strerror(cl_int err) noexcept
 {
   switch (err) {
 #define ERR_CASE(v) case v: return #v;
@@ -61,19 +61,19 @@ constexpr opencl_error_handler cl_check;
 /**
  * Exception type for an OpenCL error.
  */
-class cl_runtime_error : public std::runtime_error {
+class opencl_runtime_error : public std::runtime_error {
 public:
   /**
    * Ctor.
    *
    * @param err OpenCL error code
    */
-  cl_runtime_error(cl_int err)
+  opencl_runtime_error(cl_int err)
     : std::runtime_error{
         [err]
         {
           std::stringstream ss;
-          ss << "OpenCL error: " << cl_strerror(err) << " (" << err << ")";
+          ss << "OpenCL error: " << opencl_strerror(err) << " (" << err << ")";
           return ss.str();
         }()
       }
@@ -99,7 +99,7 @@ void operator<<(opencl_error_handler /*handler*/, cl_int err)
 {
   if (err == CL_SUCCESS)
     return;
-  throw cl_runtime_error{err};
+  throw opencl_runtime_error{err};
 }
 
 /**
@@ -169,7 +169,7 @@ constexpr indentation_factory indent;
  *
  * This enumerates the OpenCL platforms that are available.
  */
-auto cl_platform_ids()
+auto opencl_platform_ids()
 {
   // get the number of platforms
   cl_uint n_plats;
@@ -195,7 +195,7 @@ auto cl_platform_ids()
  * @tparam I OpenCL platform info value
  */
 template <cl_platform_info I, typename = void>
-struct cl_platform_info_converter {};
+struct opencl_platform_info_converter {};
 
 /**
  * Retrieve the specified OpenCL platform info.
@@ -205,7 +205,7 @@ struct cl_platform_info_converter {};
  * @tparam I OpenCL platform info value
  */
 template <cl_platform_info I>
-constexpr cl_platform_info_converter<I> platform_info;
+constexpr opencl_platform_info_converter<I> opencl_platform_info;
 
 /**
  * Partial specialization for the types that return a string.
@@ -213,7 +213,7 @@ constexpr cl_platform_info_converter<I> platform_info;
  * @tparam I OpenCL platform info value
  */
 template <cl_platform_info I>
-struct cl_platform_info_converter<
+struct opencl_platform_info_converter<
   I,
   std::enable_if_t<
     I == CL_PLATFORM_PROFILE ||
@@ -248,7 +248,7 @@ struct cl_platform_info_converter<
 int main()
 {
   // get the OpenCL platform IDs
-  auto plat_ids = cl_platform_ids();
+  auto plat_ids = opencl_platform_ids();
   // get info for each platform
   std::cout << "OpenCL platforms: " << plat_ids.size() << std::endl;
   for (auto i = 0u; i < plat_ids.size(); i++) {
@@ -257,8 +257,8 @@ int main()
     std::cout << indent(1) << "Platform " << i << ":\n";
     // print platform name + platform version string
     std::cout <<
-      indent(2) << platform_info<CL_PLATFORM_NAME>(plat_id) << "\n" <<
-      indent(2) << platform_info<CL_PLATFORM_VERSION>(plat_id) << "\n";
+      indent(2) << opencl_platform_info<CL_PLATFORM_NAME>(plat_id) << "\n" <<
+      indent(2) << opencl_platform_info<CL_PLATFORM_VERSION>(plat_id) << "\n";
     // ensure flush
     std::cout << std::flush;
   }
