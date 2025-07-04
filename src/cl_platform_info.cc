@@ -249,17 +249,6 @@ int main()
 {
   // get the OpenCL platform IDs
   auto plat_ids = cl_platform_ids();
-  // lambda for getting null-terminated OpenCL platform information
-  auto plat_strinfo = [](cl_platform_id id, cl_platform_info info)
-  {
-    // get length (including null terminator)
-    std::size_t len;
-    cl_check << clGetPlatformInfo(id, info, 0u, nullptr, &len);
-    // allocate buffer + get null-terminated name
-    auto buf = std::make_unique<char[]>(len);
-    cl_check << clGetPlatformInfo(id, info, len, buf.get(), nullptr);
-    return buf;
-  };
   // get info for each platform
   std::cout << "OpenCL platforms: " << plat_ids.size() << std::endl;
   for (auto i = 0u; i < plat_ids.size(); i++) {
