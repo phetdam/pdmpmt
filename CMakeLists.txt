@@ -85,17 +85,44 @@ else()
     pdmpmt_write_build_info(PDMPMT_BUILD_INFO)
     # update to include build info
     set(PDMPMT_VERSION ${PROJECT_VERSION}-${PDMPMT_BUILD_INFO})
-    # note: since __init__.py is being generated we don't want WSL and Window
+    # note: since __init__.py is being generated we don't want WSL and Windows
     # to keep overwriting each other's version so no extra build info
     set(PDMPMT_PY_VERSION ${PROJECT_VERSION}.dev0)
 endif()
 message(STATUS "Build version: ${PDMPMT_VERSION}")
 
-# TODO: use macros for configuration instead of including modules
-# check for optional CUDA Toolkit and configure
-include(ConfigCUDA)
-# check compiler OpenMP support and add correct OpenMP compile options
-include(ConfigOpenMP)
+# find CUDA Toolkit
+# note: we choose CUDA Toolkit 12 as then NVCC can support C++20
+find_package(CUDAToolkit 12.2)
+# if found, configure
+if(CUDAToolkit_FOUND)
+    message(STATUS "CUDA version: ${CUDAToolkit_VERSION}")
+    # enable CUDA for project
+    enable_language(CUDA)
+    # same C++ standard and requirement
+    set(CMAKE_CUDA_STANDARD ${CMAKE_CXX_STANDARD})
+    set(CMAKE_CUDA_STANDARD_REQUIRED ${CMAKE_CXX_STANDARD_REQUIRED})
+else()
+    message(STATUS "CUDA version: None")
+endif()
+
+# OpenMP target version depends on the compiler. MSVC OpenMP support lags
+# behind GCC's a lot (only 2.0) while GCC 9.x and Clang 3.9+ implement 4.5
+if(MSVC)
+    set(_omp_find_version 2.0)
+else()
+    set(_omp_find_version 4.5)
+endif()
+# find OpenMP
+find_package(OpenMP ${_omp_find_version} COMPONENTS C CXX)
+if(OpenMP_FOUND)
+    message(STATUS "OpenMP C version: ${OpenMP_C_VERSION}")
+    message(STATUS "OpenMP C++ version: ${OpenMP_CXX_VERSION}")
+else()
+    message(STATUS "OpenMP C version: None")
+    message(STATUS "OpenMP C++ version: None")
+endif()
+unset(_omp_find_version)
 
 # find OpenCL
 find_package(OpenCL 2.0)
