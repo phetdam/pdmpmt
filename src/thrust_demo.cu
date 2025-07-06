@@ -1,7 +1,7 @@
 /**
- * @file mcpi.cu
+ * @file thrust_demo.cc
  * @author Derek Huang
- * @brief CUDA C++ implementation for estimating pi with Monte Carlo
+ * @brief C++ Thrust demo program
  * @copyright MIT License
  */
 
