@@ -23,6 +23,10 @@ if(MSVC)
         $<$<COMPILE_LANGUAGE:C,CXX>:/wd5045>
         # pplwin.h: class with virtual functions has non-virtual dtor
         $<$<COMPILE_LANGUAGE:C,CXX>:/wd5204>
+        # ensure CUDA compiler makes MSVC use /W3. we don't want to have the
+        # warning level too high when using NVCC because those headers tend to
+        # trigger MSVC a lot when using /Wall
+        $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/W3>
     )
 # options are also accepted by Clang
 else()
