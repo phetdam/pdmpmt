@@ -46,12 +46,13 @@ else()
     message(STATUS "Skipping opencl_platform_info (requires OpenCL)")
 endif()
 
-# thrust_mcpi: compute pi using Monte Carlo using Thrust
+# curand_mcpi: compute pi using Monte Carlo using Thrust + cuRAND
 # TODO: consider making this also a test in the Google Test runner
+# TODO: change name to cuda_mcpi since we also use cuRAND
 if(CUDAToolkit_FOUND)
-    add_executable(thrust_mcpi thrust_mcpi.cu)
-    target_link_libraries(thrust_mcpi PRIVATE pdmpmt++)
-    add_test(NAME thrust_mcpi COMMAND thrust_mcpi)
+    add_executable(curand_mcpi curand_mcpi.cu)
+    target_link_libraries(curand_mcpi PRIVATE CUDA::curand pdmpmt++)
+    add_test(NAME curand_mcpi COMMAND curand_mcpi)
 else()
-    message(STATUS "Skipping thrust_mcpi (requires CUDA Toolkit)")
+    message(STATUS "Skipping curand_mcpi (requires CUDA Toolkit)")
 endif()
