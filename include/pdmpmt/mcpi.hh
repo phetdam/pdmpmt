@@ -73,7 +73,7 @@ using entropy_source_t = std::enable_if_t<is_entropy_source<T>::value>;
 /**
  * Return number of samples in [-1, 1] x [-1, 1] that fall in the unit circle.
  *
- * We make a copy of the PRNG instance, otherwise its state will be changed.
+ * We make a copy of the PRNG instance as otherwise its state will be changed.
  *
  * @tparam Rng *UniformRandomBitGenerator* or other entropy source
  *
@@ -84,18 +84,18 @@ template <typename Rng, typename = entropy_source_t<Rng>>
 PDMPMT_XPU_FUNC
 auto unit_circle_samples(std::size_t n_samples, Rng rng)
 {
+// TODO: replace with cuRAND MT19937 generator for batch generation
 #if defined(__CUDACC__)
   thrust::random::uniform_real_distribution udist{-1., 1.};
 #else
   std::uniform_real_distribution udist{-1., 1.};
 #endif  // !defined(__CUDACC__)
   // count number of points in the unit circle, i.e. 2-norm <= 1
-  double x, y;
   std::size_t n_inside = 0;
   // we can use a raw loop to avoid memory allocations
   for (std::size_t i = 0; i < n_samples; i++) {
-    x = udist(rng);
-    y = udist(rng);
+    auto x = udist(rng);
+    auto y = udist(rng);
     // no need for sqrt here since the target norm is 1
     if (x * x + y * y <= 1.)
       n_inside++;
@@ -388,9 +388,8 @@ T mcpi_omp(N_t n_samples, const Rng& rng, unsigned n_threads = 0u)
 PDMPMT_MSVC_WARNING_PUSH()
 PDMPMT_MSVC_WARNING_DISABLE(4365)
   // set number of threads if nonzero else use default
-  if (n_threads)
-    omp_set_num_threads(n_threads);
-  else
+  // if zero, use omp_get_num_threads() as the default
+  if (!n_threads)
     n_threads = omp_get_num_threads();
 PDMPMT_MSVC_WARNING_POP()
   // generate seeds used by jobs for generating samples + the sample counts
@@ -399,7 +398,7 @@ PDMPMT_MSVC_WARNING_POP()
   auto sample_counts = detail::generate_sample_counts(n_samples, n_threads);
   // compute circle counts using multiple threads using OpenMP
   std::vector<N_t> circle_counts(n_threads);
-  #pragma omp parallel for
+  #pragma omp parallel for num_threads(n_threads)
 // for MSVC, since its OpenMP version is quite old (2.0), must use signed var
   for (
 #ifdef _MSC_VER
