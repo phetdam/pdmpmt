@@ -32,6 +32,10 @@
 
 #include "pdmpmt/warnings.h"
 
+// TODO: consider using prand as the PRNG implementation as otherwise the
+// comparison with the C implementation is not really apples to apples. it
+// seems like prand is consistently almost 2x faster than std::mt19937
+
 namespace pdmpmt {
 
 namespace detail {
@@ -398,7 +402,11 @@ PDMPMT_MSVC_WARNING_POP()
   auto sample_counts = detail::generate_sample_counts(n_samples, n_threads);
   // compute circle counts using multiple threads using OpenMP
   std::vector<N_t> circle_counts(n_threads);
+// MSVC complains about n_threads being unsigned
+PDMPMT_MSVC_WARNING_PUSH()
+PDMPMT_MSVC_WARNING_DISABLE(4365)
   #pragma omp parallel for num_threads(n_threads)
+PDMPMT_MSVC_WARNING_POP()
 // for MSVC, since its OpenMP version is quite old (2.0), must use signed var
   for (
 #ifdef _MSC_VER
