@@ -37,7 +37,7 @@ class MCPiTest : public ::testing::Test {
 protected:
   // number of samples to use for estimating pi in a single process; produces a
   // very crude guess, so the tolerance we will need is relatively large.
-  static constexpr std::size_t n_samples_ = 1000000;
+  static constexpr std::size_t n_samples_ = 5'000'000;
   // default number of jobs to use at once
   static constexpr std::size_t n_jobs_ = 8;
   // double pi, if using C++20 we can use std::numbers instead
