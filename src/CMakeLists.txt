@@ -48,7 +48,6 @@ endif()
 
 # curand_mcpi: compute pi using Monte Carlo using Thrust + cuRAND
 # TODO: consider making this also a test in the Google Test runner
-# TODO: change name to cuda_mcpi since we also use cuRAND
 if(CUDAToolkit_FOUND)
     add_executable(curand_mcpi curand_mcpi.cu)
     target_link_libraries(curand_mcpi PRIVATE CUDA::curand pdmpmt++)
