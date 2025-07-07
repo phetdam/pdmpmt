@@ -7,10 +7,12 @@
 
 #include <cstddef>
 #include <cstdlib>
+#include <filesystem>
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 // TODO: include CL/opencl.h instead?
@@ -23,6 +25,15 @@
 #endif  // __has_include
 
 namespace {
+
+// program name and usage
+const auto progname = std::filesystem::path{__FILE__}.stem().string();
+const auto program_usage = "Usage: " + progname + " [-h]\n"
+  "\n"
+  "Print information on available OpenCL platforms and devices.\n"
+  "\n"
+  "Options:\n"
+  "  -h, --help         Print this usage";
 
 /**
  * Return the error identifier for a given OpenCL error code.
@@ -97,9 +108,8 @@ private:
  */
 void operator<<(opencl_error_handler /*handler*/, cl_int err)
 {
-  if (err == CL_SUCCESS)
-    return;
-  throw opencl_runtime_error{err};
+  if (err != CL_SUCCESS)
+    throw opencl_runtime_error{err};
 }
 
 /**
@@ -243,10 +253,35 @@ struct opencl_platform_info_converter<
   }
 };
 
+/**
+ * Get a vector of OpenCL device IDs from the given platform ID.
+ *
+ * This enumerates the OpenCL devices available for the platform.
+ *
+ * @param id OpenCL platform ID
+ * @param type OpenCL device type
+ */
+auto opencl_device_ids(cl_platform_id id, cl_device_type type)
+{
+  // get the number of devices
+  cl_uint n_dev;
+  cl_check << clGetDeviceIDs(id, type, 0u, nullptr, &n_dev);
+  // now get the device IDs
+  std::vector<cl_device_id> ids(n_dev);
+  cl_check << clGetDeviceIDs(id, type, n_dev, ids.data(), nullptr);
+  return ids;
+}
+
 }  // namespace
 
-int main()
+int main(int argc, char** /*argv*/)
 {
+  // quick and dirty usage print
+  // TODO: allow the program to accept more options
+  if (argc != 1) {
+    std::cout << program_usage << std::endl;
+    return EXIT_SUCCESS;
+  }
   // get the OpenCL platform IDs
   auto plat_ids = opencl_platform_ids();
   // get info for each platform
@@ -258,9 +293,15 @@ int main()
     // print platform name + platform version string
     std::cout <<
       indent(2) << opencl_platform_info<CL_PLATFORM_NAME>(plat_id) << "\n" <<
-      indent(2) << opencl_platform_info<CL_PLATFORM_VERSION>(plat_id) << "\n";
-    // ensure flush
-    std::cout << std::flush;
+      indent(2) << opencl_platform_info<CL_PLATFORM_VERSION>(plat_id) << std::endl;
+    // get device IDs for the platform
+    auto dev_ids = opencl_device_ids(plat_id, CL_DEVICE_TYPE_ALL);
+    std::cout << indent(2) << "OpenCL devices: " << dev_ids.size() << std::endl;
+    // TODO: print info for each platform device
+#if 0
+    for (auto j = 0u; j < dev_ids.size(); j++)
+      std::cout << indent(3) << "Device " << j << ":\n";
+#endif  // 0
   }
   return EXIT_SUCCESS;
 }
