@@ -216,7 +216,7 @@ public:
   auto size() const noexcept { return size_; }
 
   /**
-   * Return the `i`th element in the span.
+   * Return a reference to the `i`th element in the span.
    */
   PDMPMT_XPU_FUNC
   auto& operator[](std::size_t i) noexcept
@@ -225,7 +225,7 @@ public:
   }
 
   /**
-   * Return the `i`th element in the span.
+   * Return a const reference to the `i`th element in the span.
    */
   PDMPMT_XPU_FUNC
   const auto& operator[](std::size_t i) const noexcept
@@ -263,14 +263,13 @@ private:
  *
  * @tparam T Floating type
  *
- * @param ns Number of samples
+ * @param cts Per-thread counts of points within the quarter-unit circle
  * @param xs x-axis samples in (0, 1]
  * @param ys y-axis sampels in (0, 1]
- * @param cts Per-thread counts of points within the quarter-unit circle
  */
 template <typename T>
-__global__ void
-unit_circle_check(const span<T> xs, const span<T> ys, span<unsigned> cts)
+PDMPMT_KERNEL
+void unit_circle_check(const span<T> xs, const span<T> ys, span<unsigned> cts)
 {
   // get number of samples and number of threads
   // note: assumes xs and ys have the same size

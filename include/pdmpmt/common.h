@@ -58,11 +58,11 @@
 #if defined(__CUDACC__)
 #define PDMPMT_HOST __host__
 #define PDMPMT_DEVICE __device__
-#define PDMPMT_KERNEL_FUNC __global__
+#define PDMPMT_KERNEL __global__
 #else
 #define PDMPMT_HOST
 #define PDMPMT_DEVICE
-#define PDMPMT_KERNEL_FUNC
+#define PDMPMT_KERNEL
 #endif  // !defined(__CUDACC__)
 
 // CUDA/HIP C++ function attributes (device only, host + device)
