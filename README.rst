@@ -36,6 +36,8 @@ single-core, single-thread implementation.
 |          |          |          | ``std::async`` [#]_       |
 |          |          |          +---------------------------+
 |          |          |          | OpenMP                    |
+|          |          |          +---------------------------+
+|          |          |          | CUDA_                     |
 |          +----------+----------+---------------------------+
 |          | Python   | CPU      | serial                    |
 |          |          |          +---------------------------+
@@ -57,6 +59,8 @@ single-core, single-thread implementation.
 
 .. _global interpreter lock: https://docs.python.org/3/glossary.html#
    term-global-interpreter-lock
+
+.. _CUDA: https://docs.nvidia.com/cuda/index.html
 
 Building from source
 --------------------
