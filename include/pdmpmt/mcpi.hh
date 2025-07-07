@@ -181,11 +181,11 @@ inline auto generate_seeds(std::size_t n_seeds, std::uint_fast64_t start_seed)
 inline auto generate_sample_counts(std::size_t n_samples, std::size_t n_jobs)
 {
   // sample counts, i.e. number of samples each job will generate
-  std::vector<std::size_t> sample_counts(n_jobs, n_samples / n_jobs);
+  std::vector<std::size_t> counts(n_jobs, n_samples / n_jobs);
   // if there is a remainder, +1 count for the first n_rem jobs
   auto n_rem = n_samples % n_jobs;
-  std::for_each_n(sample_counts.begin(), n_rem, [](auto& n) { n++; });
-  return sample_counts;
+  std::for_each_n(counts.begin(), n_rem, [](auto& n) { n++; });
+  return counts;
 }
 
 /**
@@ -195,18 +195,18 @@ inline auto generate_sample_counts(std::size_t n_samples, std::size_t n_jobs)
  * @tparam C1 *Container* with integral value type
  * @tparam C2 *Container* with integral value type
  *
- * @param circle_counts Counts of samples falling in unit circle
- * @param sample_counts Per-job total sample counts
+ * @param in_counts Counts of samples falling in unit circle
+ * @param tot_counts Per-job total sample counts
  */
 template <typename T, typename C1, typename C2>
-T mcpi_gather(const C1& circle_counts, const C2& sample_counts)
+T mcpi_gather(const C1& in_counts, const C2& tot_counts)
 {
-  assert(std::size(circle_counts) && std::size(sample_counts));
-  assert(std::size(circle_counts) == std::size(sample_counts));
+  assert(std::size(in_counts) && std::size(tot_counts));
+  assert(std::size(in_counts) == std::size(tot_counts));
   // number of samples inside the unit circle, total number of samples drawn
   // TODO: this can be done using multiple threads
-  auto n_inside = std::reduce(std::begin(circle_counts), std::end(circle_counts));
-  auto n_total = std::reduce(std::begin(sample_counts), std::end(sample_counts));
+  auto n_inside = std::reduce(std::begin(in_counts), std::end(in_counts));
+  auto n_total = std::reduce(std::begin(tot_counts), std::end(tot_counts));
   // do division first to reduce likelihood of overflow
 // MSVC complains of possible loss of data converting size_t to double
 PDMPMT_MSVC_WARNING_PUSH()
@@ -221,13 +221,13 @@ PDMPMT_MSVC_WARNING_POP()
  * @tparam C1 *Container* with integral value type
  * @tparam C2 *Container* with integral value type
  *
- * @param circle_counts Counts of samples falling in unit circle
- * @param sample_counts Per-job total sample counts
+ * @param in_counts Counts of samples falling in unit circle
+ * @param tot_counts Per-job total sample counts
  */
 template <typename C1, typename C2>
-inline auto mcpi_gather(const C1& circle_counts, const C2& sample_counts)
+inline auto mcpi_gather(const C1& in_counts, const C2& tot_counts)
 {
-  return mcpi_gather<double>(circle_counts, sample_counts);
+  return mcpi_gather<double>(in_counts, tot_counts);
 }
 
 }  // namespace detail
@@ -299,33 +299,33 @@ inline double mcpi(std::size_t n_samples)
  * @param rng PRNG instance
  * @param n_jobs Number of async jobs to split work over
  */
-template <typename T, typename Rng>
+template <typename T, typename Rng, typename = detail::entropy_source_t<Rng>>
 T mcpi_async(std::size_t n_samples, const Rng& rng, std::size_t n_jobs)
 {
   using N_t = decltype(n_samples);
   // generate the seeds used by jobs for generate samples + the sample counts
   auto seeds = detail::generate_seeds(n_jobs, rng);
-  auto sample_counts = detail::generate_sample_counts(n_samples, n_jobs);
+  auto tot_counts = detail::generate_sample_counts(n_samples, n_jobs);
   // TODO: dispatch blocks to CUDA device or create a new overload
   // submit unit_circle_samples tasks asynchronously + block for results
-  std::vector<std::future<N_t>> circle_count_futures(n_jobs);
+  std::vector<std::future<N_t>> count_futures(n_jobs);
   for (N_t i = 0; i < n_jobs; i++) {
-    circle_count_futures[i] = std::async(
+    count_futures[i] = std::async(
       std::launch::async,
       detail::unit_circle_samples<Rng>,
-      sample_counts[i],
+      tot_counts[i],
       Rng{seeds[i]}
     );
   }
-  // get circle counts from futures
-  decltype(sample_counts) circle_counts(n_jobs);
+  // get counts inside the unit circle from futures
+  decltype(tot_counts) in_counts(n_jobs);
   std::transform(
-    circle_count_futures.begin(),
-    circle_count_futures.end(),
-    circle_counts.begin(),
+    count_futures.begin(),
+    count_futures.end(),
+    in_counts.begin(),
     [](auto& x) { return x.get(); }
   );
-  return detail::mcpi_gather(circle_counts, sample_counts);
+  return detail::mcpi_gather(in_counts, tot_counts);
 }
 
 /**
@@ -399,9 +399,9 @@ PDMPMT_MSVC_WARNING_POP()
   // generate seeds used by jobs for generating samples + the sample counts
   auto seeds = detail::generate_seeds(n_threads, rng);
   // to use template deduction, would have to static_cast n_threads to N_t
-  auto sample_counts = detail::generate_sample_counts(n_samples, n_threads);
+  auto tot_counts = detail::generate_sample_counts(n_samples, n_threads);
   // compute circle counts using multiple threads using OpenMP
-  std::vector<N_t> circle_counts(n_threads);
+  std::vector<N_t> in_counts(n_threads);
 // MSVC complains about n_threads being unsigned
 PDMPMT_MSVC_WARNING_PUSH()
 PDMPMT_MSVC_WARNING_DISABLE(4365)
@@ -421,11 +421,10 @@ PDMPMT_MSVC_WARNING_POP()
 // MSVC complains of signed/unsigned mismatch as i is intmax_t
 PDMPMT_MSVC_WARNING_PUSH()
 PDMPMT_MSVC_WARNING_DISABLE(4365)
-    circle_counts[i] = detail::
-      unit_circle_samples(sample_counts[i], Rng{seeds[i]});
+    in_counts[i] = detail::unit_circle_samples(tot_counts[i], Rng{seeds[i]});
 PDMPMT_MSVC_WARNING_POP()
   }
-  return detail::mcpi_gather(circle_counts, sample_counts);
+  return detail::mcpi_gather(in_counts, tot_counts);
 }
 
 /**
