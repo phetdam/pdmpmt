@@ -166,7 +166,12 @@ private:
 };
 
 /**
- * 1D span for CUDA code.
+ * Class for a 1D XPU-compatible span.
+ *
+ * This serves as a lighter version of the C++20 `std::span<T>` that is also
+ * appropriately annotated for compilation in device code.
+ *
+ * @tparam T type
  */
 template <typename T>
 class span {
@@ -176,7 +181,6 @@ public:
    *
    * Creates an empty span.
    */
-  PDMPMT_XPU_FUNC
   span() noexcept = default;
 
   /**
