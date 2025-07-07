@@ -68,6 +68,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 # update module search path to find our CMake scripts
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
+include(pdmpmt_config_compile)
 include(pdmpmt_find_pip_package)
 include(pdmpmt_write_build_info)
 
@@ -207,7 +208,7 @@ endif()
 
 # set compiler-specific configuration options. this is done after finding all
 # dependencies so there is no possible interference with upstream compile flags
-include(ConfigCompile)
+pdmpmt_config_compile()
 
 # base include for this repo
 set(PDMPMT_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
