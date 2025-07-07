@@ -65,9 +65,9 @@ single-core, single-thread implementation.
 Building from source
 --------------------
 
-TBA. The ``build.(sh|bat)`` scripts work to build the C/C++ code, which
-requires `CMake`_. The Python code (for now) has no compiled components and can
-be installed with ``pip install .``, which requires `setuptools`_.
+TBA. The ``build.(sh|bat)`` scripts work to build the project, which requires
+`CMake`_. After running the build script, the Python code can then be installed
+with ``pip install .``, which requires `setuptools`_.
 
 .. _CMake: https://cmake.org/cmake/help/latest/
 
