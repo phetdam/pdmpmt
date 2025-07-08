@@ -24,6 +24,10 @@ macro(pdmpmt_config_compile)
             # Google Test: implicitly deleted copy ctor, copy assignment
             $<$<COMPILE_LANGUAGE:C,CXX>:/wd4625>
             $<$<COMPILE_LANGUAGE:C,CXX>:/wd4626>
+            # C4710: function ont inlined
+            $<$<COMPILE_LANGUAGE:C,CXX>:/wd4710>
+            # C4711: function selected for automatic inline expansion
+            $<$<COMPILE_LANGUAGE:C,CXX>:/wd4711>
             # C4820: 'n' bytes of padding added after data member
             $<$<COMPILE_LANGUAGE:C,CXX>:/wd4820>
             # Google Test: implicitly deleted move ctor, move assignment
