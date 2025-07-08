@@ -94,6 +94,8 @@ constexpr indentation_factory indent;
 
 int main(int argc, char** /*argv*/)
 {
+  using pdmpmt::opencl::platform_info;
+  using pdmpmt::opencl::device_info;
   // quick and dirty usage print
   // TODO: allow the program to accept more options
   if (argc != 1) {
@@ -103,25 +105,39 @@ int main(int argc, char** /*argv*/)
   // get the OpenCL platform IDs
   auto plat_ids = pdmpmt::opencl::platform_ids();
   // get info for each platform
-  std::cout << "OpenCL platforms: " << plat_ids.size() << std::endl;
+  std::cout << "OpenCL platforms:" << std::endl;
   for (auto i = 0u; i < plat_ids.size(); i++) {
     // platform ID
-    auto plat_id = plat_ids[i];
+    auto plat = plat_ids[i];
     std::cout << indent(1) << "Platform " << i << ":\n";
-    // print platform name + platform version string
+    // print platform name + supported OpenCL version
     std::cout <<
-      indent(2) <<
-        pdmpmt::opencl::platform_info<CL_PLATFORM_NAME>(plat_id) << "\n" <<
-      indent(2) <<
-        pdmpmt::opencl::platform_info<CL_PLATFORM_VERSION>(plat_id) << std::endl;
+      indent(2) << "Name: " <<
+        platform_info<CL_PLATFORM_NAME>(plat) << "\n" <<
+      indent(2) << "Supports: " <<
+        platform_info<CL_PLATFORM_VERSION>(plat) << std::endl;
     // get device IDs for the platform
-    auto dev_ids = pdmpmt::opencl::device_ids(plat_id, CL_DEVICE_TYPE_ALL);
-    std::cout << indent(2) << "OpenCL devices: " << dev_ids.size() << std::endl;
+    auto dev_ids = pdmpmt::opencl::device_ids(plat);
+    std::cout << indent(2) << "OpenCL devices:" << std::endl;
     // TODO: print info for each platform device
-#if 0
-    for (auto j = 0u; j < dev_ids.size(); j++)
+    for (auto j = 0u; j < dev_ids.size(); j++) {
+      // device ID
+      auto dev = dev_ids[j];
       std::cout << indent(3) << "Device " << j << ":\n";
-#endif  // 0
+      // print device name + supported OpenCL version + other info
+      std::cout <<
+        indent(4) << "Name: " <<
+          device_info<CL_DEVICE_NAME>(dev) << "\n" <<
+        indent(4) << "Supports: " <<
+          device_info<CL_DEVICE_VERSION>(dev) << "\n" <<
+        indent(4) << "Compute units: " <<
+          device_info<CL_DEVICE_MAX_COMPUTE_UNITS>(dev) << "\n" <<
+        indent(4) << "Address bits: " <<
+          device_info<CL_DEVICE_ADDRESS_BITS>(dev) << "\n" <<
+        indent(4) << "Memory: " <<
+          device_info<CL_DEVICE_GLOBAL_MEM_SIZE>(dev) / (1 << 30) << "G" <<
+          std::endl;
+    }
   }
   return EXIT_SUCCESS;
 }
