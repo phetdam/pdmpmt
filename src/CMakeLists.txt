@@ -37,13 +37,22 @@ else()
     message(STATUS "Skipping cuda_device_info (requires CUDA Toolkit)")
 endif()
 
-# opencl_platform_info: print OpenCL platform info
+# opencl_device_info: print OpenCL platform + device info
 if(OpenCL_FOUND)
-    add_executable(opencl_platform_info opencl_platform_info.cc)
-    target_link_libraries(opencl_platform_info PRIVATE OpenCL::OpenCL)
-    add_test(NAME opencl_platform_info COMMAND opencl_platform_info)
+    add_executable(opencl_device_info opencl_device_info.cc)
+    target_link_libraries(opencl_device_info PRIVATE OpenCL::OpenCL pdmpmt++)
+    # plain run
+    add_test(NAME opencl_device_info COMMAND opencl_device_info)
+    # -h, --help
+    add_test(NAME opencl_device_info_h COMMAND opencl_device_info -h)
+    add_test(NAME opencl_device_info_help COMMAND opencl_device_info --help)
+    set_tests_properties(
+        opencl_device_info_h
+        opencl_device_info_help PROPERTIES
+        PASS_REGULAR_EXPRESSION "Usage: opencl_device_info"
+    )
 else()
-    message(STATUS "Skipping opencl_platform_info (requires OpenCL)")
+    message(STATUS "Skipping opencl_device_info (requires OpenCL)")
 endif()
 
 # curand_mcpi: compute pi using Monte Carlo using Thrust + cuRAND
