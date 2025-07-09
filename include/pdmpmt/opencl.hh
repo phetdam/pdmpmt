@@ -440,6 +440,54 @@ struct device_info_converter<
   }
 };
 
+/**
+ * Partial specialization for the `size_t` types.
+ *
+ * This handles *only* the `cl_device_info` values whose `clGetDeviceInfo`
+ * return type is explicitly stated as `size_t`. Any typedefs are excluded.
+ *
+ * @tparam I OpenCL device info value
+ */
+template <cl_device_info I>
+struct device_info_converter<
+  I,
+  std::enable_if_t<
+    I == CL_DEVICE_MAX_WORK_GROUP_SIZE ||
+    I == CL_DEVICE_IMAGE2D_MAX_WIDTH ||
+    I == CL_DEVICE_IMAGE2D_MAX_HEIGHT ||
+    I == CL_DEVICE_IMAGE3D_MAX_WIDTH ||
+    I == CL_DEVICE_IMAGE3D_MAX_HEIGHT ||
+    I == CL_DEVICE_IMAGE3D_MAX_DEPTH ||
+#ifdef CL_VERSION_1_2
+    I == CL_DEVICE_IMAGE_MAX_BUFFER_SIZE ||
+    I == CL_DEVICE_IMAGE_MAX_ARRAY_SIZE ||
+#endif  // CL_VERSION_1_2
+    I == CL_DEVICE_MAX_PARAMETER_SIZE ||
+#ifdef CL_VERSION_2_0
+    I == CL_DEVICE_MAX_GLOBAL_VARIABLE_SIZE ||
+    I == CL_DEVICE_GLOBAL_VARIABLE_PREFERRED_TOTAL_SIZE ||
+#endif  // CL_VERSION_2_0
+#ifdef CL_VERSION_1_2
+    I == CL_DEVICE_PRINTF_BUFFER_SIZE ||
+#endif  // CL_VERSION_1_2
+#ifdef CL_VERSION_2_0
+    I == CL_DEVICE_PREFERRED_WORK_GROUP_SIZE_MULTIPLE ||
+#endif  // CL_VERSION_3_0
+    I == CL_DEVICE_PROFILING_TIMER_RESOLUTION
+  > > {
+  /**
+   * Return the `size_t` info value for the given openCL device ID.
+   *
+   * @param dev OPenCL device ID
+   */
+  auto operator()(cl_device_id dev) const
+  {
+    size_t res;
+    errh << clGetDeviceInfo(dev, I, sizeof res, &res, nullptr);
+    return res;
+  }
+};
+
 }  // namespace opencl
 }  // namespace pdmpmt
 
