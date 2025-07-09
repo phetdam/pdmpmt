@@ -114,7 +114,7 @@ int main(int argc, char** /*argv*/)
     std::cout <<
       indent(2) << "Name: " <<
         platform_info<CL_PLATFORM_NAME>(plat) << "\n" <<
-      indent(2) << "Supports: " <<
+      indent(2) << "Version: " <<
         platform_info<CL_PLATFORM_VERSION>(plat) << std::endl;
     // get device IDs for the platform
     auto dev_ids = pdmpmt::opencl::device_ids(plat);
@@ -128,10 +128,12 @@ int main(int argc, char** /*argv*/)
       std::cout <<
         indent(4) << "Name: " <<
           device_info<CL_DEVICE_NAME>(dev) << "\n" <<
-        indent(4) << "Supports: " <<
+        indent(4) << "Version: " <<
           device_info<CL_DEVICE_VERSION>(dev) << "\n" <<
         indent(4) << "Compute units: " <<
           device_info<CL_DEVICE_MAX_COMPUTE_UNITS>(dev) << "\n" <<
+        indent(4) << "Work group size: " <<
+          device_info<CL_DEVICE_MAX_WORK_GROUP_SIZE>(dev) << "\n" <<
         indent(4) << "Address bits: " <<
           device_info<CL_DEVICE_ADDRESS_BITS>(dev) << "\n" <<
         indent(4) << "Memory: " <<
