@@ -182,9 +182,8 @@ inline auto generate_sample_counts(std::size_t n_samples, std::size_t n_jobs)
 {
   // sample counts, i.e. number of samples each job will generate
   std::vector<std::size_t> counts(n_jobs, n_samples / n_jobs);
-  // if there is a remainder, +1 count for the first n_rem jobs
-  auto n_rem = n_samples % n_jobs;
-  std::for_each_n(counts.begin(), n_rem, [](auto& n) { n++; });
+  // if there is a remainder, +1 count for the remaining jobs
+  std::for_each_n(counts.begin(), n_samples % n_jobs, [](auto& n) { n++; });
   return counts;
 }
 
