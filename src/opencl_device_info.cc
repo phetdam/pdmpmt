@@ -132,7 +132,7 @@ int main(int argc, char** /*argv*/)
           device_info<CL_DEVICE_VERSION>(dev) << "\n" <<
         indent(4) << "Compute units: " <<
           device_info<CL_DEVICE_MAX_COMPUTE_UNITS>(dev) << "\n" <<
-        indent(4) << "Work group size: " <<
+        indent(4) << "Max work group: " <<
           device_info<CL_DEVICE_MAX_WORK_GROUP_SIZE>(dev) << "\n" <<
         indent(4) << "Address bits: " <<
           device_info<CL_DEVICE_ADDRESS_BITS>(dev) << "\n" <<
