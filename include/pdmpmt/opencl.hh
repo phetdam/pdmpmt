@@ -313,16 +313,18 @@ struct device_info_converter<
    *
    * @param dev OpenCL device ID
    */
-  std::string operator()(cl_device_id dev) const
+  auto operator()(cl_device_id dev) const
   {
     // get length (including null terminator)
     std::size_t len;
     errh << clGetDeviceInfo(dev, I, 0u, nullptr, &len);
-    // allocate buffer + get null-terminated name
-    auto buf = std::make_unique<char[]>(len);
-    errh << clGetDeviceInfo(dev, I, len, buf.get(), nullptr);
-    // return std::string from characters (minus null terminator)
-    return {buf.get(), len - 1};
+    // allocate string of NULs
+    std::string s(len - 1u, '\0');
+    // write null-terminated characters (including null terminator) + return.
+    // this is defined behavior since C++11. see cppreference for details:
+    // https://en.cppreference.com/w/cpp/string/basic_string/operator_at.html
+    errh << clGetDeviceInfo(dev, I, len, &s[0], nullptr);
+    return s;
   }
 };
 
