@@ -346,7 +346,7 @@ template <typename T>
 constexpr bool is_legacy_iterator_v = is_legacy_iterator<T>::value;
 
 /**
- * Traits type loosely satisfying the *LegacyInputIterator*.
+ * Traits type loosely satisfying the *LegacyInputIterator* named requirements.
  *
  * @tparam T type
  */
@@ -369,16 +369,51 @@ struct is_legacy_input_iterator<
     // it->member is valid (only automatically true for pointers)
     is_member_accessible_v<T> &&
     // it++
+    // note: should more precisely check that *it++ convertible to value type
     is_post_incrementable_v<T>
   > > : std::true_type {};
 
 /**
- * indicate that a type loosely satsifies *LegacyInputIterator*.
+ * Indicate that a type loosely satsifies *LegacyInputIterator*.
  *
  * @tparam T type
  */
 template <typename T>
 constexpr bool is_legacy_input_iterator_v = is_legacy_input_iterator<T>::value;
+
+/**
+ * Traits type loosely satisfying *LegacyForwardIterator* named requirements.
+ *
+ * @tparam T type
+ */
+template <typename T, typename = void>
+struct is_legacy_forward_iterator : std::false_type {};
+
+/**
+ * True specialization for a type satisfying *LegacyForwardIterator*.
+ *
+ * @tparam T type
+ */
+template <typename T>
+struct is_legacy_forward_iterator<
+  T,
+  std::enable_if_t<
+    // satisfies LegacyInputIterator
+    is_legacy_input_iterator_v<T> &&
+    // it++ convertible to const T& (e.g. prvalue materialization)
+    std::is_convertible_v<decltype(std::declval<T>()++), const T&> &&
+    // *it++ results in a reference. this is what makes the forward iterator
+    // different from the input iterator (which may yield a value only)
+    std::is_reference_v<decltype(*std::declval<T>()++)>
+  > > : std::true_type {};
+
+/**
+ * Indicate thata type loosely satisfies *LegacyForwardIterator*.
+ *
+ * @tparam T type
+ */
+template <typename T>
+constexpr bool is_legacy_forward_iterator_v = is_legacy_forward_iterator<T>::value;
 
 /**
  * Traits type modeling a range.
