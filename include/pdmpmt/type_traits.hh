@@ -50,7 +50,7 @@ template <typename T>
 using ostreamable_t = std::enable_if_t<is_ostreamable_v<T>>;
 
 /**
- * Traits helpers to indicate that a type is deferenceable.
+ * Traits type to indicate that a type is deferenceable.
  *
  * @tparam T type
  */
@@ -73,6 +73,47 @@ struct is_indirectly_readable<T, std::void_t<decltype(*std::declval<T>())>>
  */
 template <typename T>
 constexpr bool is_indirectly_readable_v = is_indirectly_readable<T>::value;
+
+/**
+ * Traits type to indicate that a type enables member access with `->`.
+ *
+ * For indirectly readable types `T`, an instance `v` may not necessarily allow
+ * member access with `->`. This is typically only true for pointer types.
+ *
+ * @note Indirect readability is *not* required by this traits.
+ *
+ * @tparam T type
+ */
+template <typename T, typename = void>
+struct is_member_accessible : std::false_type {};
+
+/**
+ * True specialization for pointers.
+ *
+ * Pointers of course do not implement `->` as an operator.
+ *
+ * @tparam T type
+ */
+template <typename T>
+struct is_member_accessible<T, std::enable_if_t<std::is_pointer_v<T>> >
+  : std::true_type {};
+
+/**
+ * True specialization for types that implement `->` as an operator.
+ *
+ * @tparam T type
+ */
+template <typename T>
+struct is_member_accessible<
+  T, std::void_t<decltype(std::declval<T>()->operator())> > : std::true_type {};
+
+/**
+ * Indicate that a type allows member access with `->`.
+ *
+ * @tparam T type
+ */
+template <typename T>
+constexpr bool is_member_accessible_v = is_member_accessible<T>::value;
 
 /**
  * Traits helper to indicate that a type is equality comparable.
@@ -101,6 +142,35 @@ template <typename T>
 constexpr bool is_equality_comparable_v = is_equality_comparable<T>::value;
 
 /**
+ * Yraits helper to indicate that a type is inequaltiy comparable.
+ *
+ * Before C++20 where `!=` is synthesized from `==`, two instances `u`, `v` of
+ * equality-comparable `T` were not comparable using `!=`.
+ *
+ * @tparam T type
+ */
+template <typename T, typename = void>
+struct is_inequality_comparable : std::false_type {};
+
+/**
+ * True specialization for types that are inequality comparable.
+ *
+ * @tparam T type
+ */
+template <typename T>
+struct is_inequality_comparable<
+  T, std::void_t<decltype(std::declval<T>() != std::declval<T>())> >
+  : std::true_type {};
+
+/**
+ * Indicate that a type is inequaltiy comparable.
+ *
+ * @tparam T type
+ */
+template <typename T>
+constexpr bool is_inequality_comparable_v = is_inequality_comparable<T>::value;
+
+/**
  * Indicate that a type is pre-incrementable.
  *
  * @tparam T type
@@ -124,6 +194,31 @@ struct is_pre_incrementable<T, std::void_t<decltype(++std::declval<T>())> >
  */
 template <typename T>
 constexpr bool is_pre_incrementable_v = is_pre_incrementable<T>::value;
+
+/**
+ * Indicate that a type is post-incrementable.
+ *
+ * @tparam T type
+ */
+template <typename T, typename = void>
+struct is_post_incrementable : std::false_type {};
+
+/**
+ * True specialization for post-incrementable types.
+ *
+ * @tparam T type
+ */
+template <typename T>
+struct is_post_incrementable<T, std::void_t<decltype(std::declval<T>()++)> >
+  : std::true_type {};
+
+/**
+ * Indicate that a type is post-incrementable.
+ *
+ * @tparam T type
+ */
+template <typename T>
+constexpr bool is_post_incrementable_v = is_post_incrementable<T>::value;
 
 /**
  * Traits type to model the *UniformRandomBitGenerator* named concept.
@@ -174,6 +269,148 @@ template <typename T>
 using uniform_random_bit_generator_t = std::enable_if_t<
   is_uniform_random_bit_generator_v<T>
 >;
+
+/**
+ * Boost-style traits type constraints type.
+ *
+ * This is modeled after observing the usage of `constraint_t` in Boost.Asio
+ * code for SFINAE as a function instead of template parameter. For example:
+ *
+ * @code{.cc}
+ * template <typename T>
+ * auto f(T&&, constraint_t<is_something_v<T>> = 0)
+ * {
+ *   // ...
+ * }
+ * @endcode
+ *
+ * @tparam truth Truth condition
+ */
+template <bool truth>
+struct constraint_type {};
+
+/**
+ * True specialization when the truth condition is `true`.
+ */
+template <>
+struct constraint_type<true> {
+  using type = int;
+};
+
+/**
+ * SFINAE helper for template constraints.
+ *
+ * @tparam truth Truth condition
+ */
+template <bool truth>
+using constraint_t = typename constraint_type<truth>::type;
+
+/**
+ * Traits type loosely satisfying the *LegacyIterator* named requirements.
+ *
+ * This is somewhat looser than the real *LegacyIterator* named requirements
+ * since it does not require type members for `iterator_traits<It>`.
+ *
+ * @note *LegacyIterator* does *not* require the type to be post-incrementable.
+ *
+ * @tparam T type
+ */
+template <typename T, typename = void>
+struct is_legacy_iterator : std::false_type {};
+
+/**
+ * Partial specialization for types that satisfy *LegacyIterator*.
+ *
+ * @tparam T type
+ */
+template <typename T>
+struct is_legacy_iterator<
+  T,
+  std::enable_if_t<
+    std::is_copy_constructible_v<T> &&
+    std::is_copy_assignable_v<T> &&
+    std::is_destructible_v<T> &&
+    std::is_swappable_v<T> &&
+    // *it
+    is_indirectly_readable_v<T> &&
+    // ++it -> T&
+    std::is_same_v<decltype(++std::declval<T>()), T&>
+  > > : std::true_type {};
+
+/**
+ * Indicate that a type loosely satsfies *LegacyIterator*.
+ *
+ * @tparam T type
+ */
+template <typename T>
+constexpr bool is_legacy_iterator_v = is_legacy_iterator<T>::value;
+
+/**
+ * Traits type loosely satisfying the *LegacyInputIterator*.
+ *
+ * @tparam T type
+ */
+template <typename T, typename = void>
+struct is_legacy_input_iterator : std::false_type {};
+
+/**
+ * True specialization for a type satisfying *LegacyInputIterator*.
+ *
+ * @tparam T type
+ */
+template <typename T>
+struct is_legacy_input_iterator<
+  T,
+  std::enable_if_t<
+    // satisfies LegacyIterator
+    is_legacy_iterator_v<T> &&
+    is_equality_comparable_v<T> &&
+    is_inequality_comparable_v<T> &&
+    // it->member is valid (only automatically true for pointers)
+    is_member_accessible_v<T> &&
+    // it++
+    is_post_incrementable_v<T>
+  > > : std::true_type {};
+
+/**
+ * indicate that a type loosely satsifies *LegacyInputIterator*.
+ *
+ * @tparam T type
+ */
+template <typename T>
+constexpr bool is_legacy_input_iterator_v = is_legacy_input_iterator<T>::value;
+
+/**
+ * Traits type modeling a range.
+ *
+ * This differs from the C++20 range concept since it works with the legacy
+ * iterator named concepts used in C++ prior to C++20.
+ *
+ * @tparam T type
+ */
+template <typename T, typename = void>
+struct is_range : std::false_type {};
+
+/**
+ * True specialization for a range-like type.
+ *
+ * @tparam T type
+ */
+template <typename T>
+struct is_range<
+  T,
+  std::enable_if_t<
+    std::is_same_v<void, std::void_t<decltype(std::begin(std::declval<T>()))>> &&
+    std::is_same_v<void, std::void_t<decltype(std::end(std::declval<T>()))>>
+  > > : std::true_type {};
+
+/**
+ * Indicate that a type is range-like.
+ *
+ * @tparam T type
+ */
+template <typename T>
+constexpr bool is_range_v = is_range<T>::value;
 
 }  // namespace pdmpmt
 
