@@ -5,15 +5,10 @@
  * @copyright MIT License
  */
 
-#include <cstddef>
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
-#include <memory>
 #include <sstream>
-#include <stdexcept>
-#include <string>
-#include <vector>
 
 #include "pdmpmt/opencl.hh"
 
@@ -130,13 +125,27 @@ int main(int argc, char** /*argv*/)
           device_info<CL_DEVICE_NAME>(dev) << "\n" <<
         indent(4) << "Version: " <<
           device_info<CL_DEVICE_VERSION>(dev) << "\n" <<
-        indent(4) << "Compute units: " <<
+        indent(4) << "Max compute units: " <<
           device_info<CL_DEVICE_MAX_COMPUTE_UNITS>(dev) << "\n" <<
-        indent(4) << "Max work group: " <<
+        indent(4) << "Max work group size: " <<
           device_info<CL_DEVICE_MAX_WORK_GROUP_SIZE>(dev) << "\n" <<
-        indent(4) << "Address bits: " <<
-          device_info<CL_DEVICE_ADDRESS_BITS>(dev) << "\n" <<
-        indent(4) << "Memory: " <<
+        indent(4) << "Max work item sizes: " <<
+          [dev]
+          {
+            // work item count per dimension
+            auto dims = device_info<CL_DEVICE_MAX_WORK_ITEM_SIZES>(dev);
+            // format into (n1, n2, ...) tuple
+            std::stringstream ss;
+            ss << '(';
+            for (auto i = 0u; i < dims.size(); i++) {
+              if (i)
+                ss << ", ";
+              ss << dims[i];
+            }
+            ss << ')';
+            return ss.str();
+          }() << "\n" <<
+        indent(4) << "Global memory: " <<
           device_info<CL_DEVICE_GLOBAL_MEM_SIZE>(dev) / (1 << 30) << "G" <<
           std::endl;
     }
