@@ -30,6 +30,7 @@
 #include <thrust/random/uniform_real_distribution.h>
 #endif  // __CUDACC__
 
+#include "pdmpmt/type_traits.hh"
 #include "pdmpmt/warnings.h"
 
 // TODO: consider using prand as the PRNG implementation as otherwise the
@@ -198,10 +199,11 @@ inline auto generate_sample_counts(std::size_t n_samples, std::size_t n_jobs)
  * @param tot_counts Per-job total sample counts
  */
 template <typename T, typename C1, typename C2>
-T mcpi_gather(const C1& in_counts, const C2& tot_counts)
+T mcpi_gather(
+  const C1& in_counts,
+  const C2& tot_counts,
+  constraint_t<is_range_v<C1> && is_range_v<C2>> = 0)
 {
-  assert(std::size(in_counts) && std::size(tot_counts));
-  assert(std::size(in_counts) == std::size(tot_counts));
   // number of samples inside the unit circle, total number of samples drawn
   // TODO: this can be done using multiple threads
   auto n_inside = std::reduce(std::begin(in_counts), std::end(in_counts));
