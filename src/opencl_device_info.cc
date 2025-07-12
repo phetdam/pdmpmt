@@ -9,8 +9,10 @@
 #include <filesystem>
 #include <iostream>
 #include <sstream>
+#include <utility>
 
 #include "pdmpmt/opencl.hh"
+#include "pdmpmt/type_traits.hh"
 
 namespace {
 
@@ -85,6 +87,33 @@ struct indentation_factory {
 // global for generating indentation objects
 constexpr indentation_factory indent;
 
+/**
+ * Helper to format a range like a tuple.
+ *
+ * The returned string will have values formatted like `(v1, ... vn)`.
+ *
+ * @todo The range value type must also be streamable.
+ *
+ * @tparam R Rnage-like with *LegacyForwardIterator* iterators
+ *
+ * @param rng Range to format
+ */
+template <typename R>
+auto format(R&& rng, pdmpmt::constraint_t<pdmpmt::is_range_v<R>> = 0)
+{
+  std::stringstream ss;
+  // iterate
+  ss << '(';
+  for (auto it = std::begin(rng); it != std::end(rng); ++it) {
+    if (!(it == std::begin(rng)))
+      ss << ", ";
+    ss << *it;
+  }
+  ss << ')';
+  // convert to string. string is moved in C++20
+  return std::move(ss).str();
+}
+
 }  // namespace
 
 int main(int argc, char** /*argv*/)
@@ -130,21 +159,7 @@ int main(int argc, char** /*argv*/)
         indent(4) << "Max work group size: " <<
           device_info<CL_DEVICE_MAX_WORK_GROUP_SIZE>(dev) << "\n" <<
         indent(4) << "Max work item sizes: " <<
-          [dev]
-          {
-            // work item count per dimension
-            auto dims = device_info<CL_DEVICE_MAX_WORK_ITEM_SIZES>(dev);
-            // format into (n1, n2, ...) tuple
-            std::stringstream ss;
-            ss << '(';
-            for (auto i = 0u; i < dims.size(); i++) {
-              if (i)
-                ss << ", ";
-              ss << dims[i];
-            }
-            ss << ')';
-            return ss.str();
-          }() << "\n" <<
+          format(device_info<CL_DEVICE_MAX_WORK_ITEM_SIZES>(dev)) << "\n" <<
         indent(4) << "Global memory: " <<
           device_info<CL_DEVICE_GLOBAL_MEM_SIZE>(dev) / (1 << 30) << "G" <<
           std::endl;
