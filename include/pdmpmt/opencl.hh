@@ -8,7 +8,7 @@
 #ifndef PDMPMT_OPENCL_HH_
 #define PDMPMT_OPENCL_HH_
 
-#include <cstdint>
+#include <cstddef>
 #include <sstream>
 #include <stdexcept>
 #include <vector>
@@ -168,18 +168,20 @@ struct platform_info_converter<
     // get length (including null terminator)
     std::size_t len;
     errh << clGetPlatformInfo(plat, I, 0u, nullptr, &len);
-    // allocate buffer + get null-terminated name
-    auto buf = std::make_unique<char[]>(len);
-    errh << clGetPlatformInfo(plat, I, len, buf.get(), nullptr);
-    // return std::string from characters (minus null terminator)
-    return {buf.get(), len - 1};
+    // allocate string of NULs
+    std::string str(len - 1u, '\0');
+    // write null-terminated characters (including null terminator) + return.
+    // this is defined behavior since C++11. see cppreference for details:
+    // https://en.cppreference.com/w/cpp/string/basic_string/operator_at.html
+    errh << clGetPlatformInfo(plat, I, len, &str[0], nullptr);
+    return str;
   }
 };
 
 // only available for OpenCL 3.0 or with the cl_khr_extended_versioning
 #if defined(CL_VERSION_3_0)  || defined(cl_khr_extended_versioning)
 /**
- * Partial specialization for the OpenCL numveric version.
+ * Partial specialization for the OpenCL numeric version.
  *
  * @note This is only available since OpenCL 3.0 or if the OpenCL extenson
  *  `cl_khr_extended_versioning` is available, e.g. the macro is defined.
@@ -319,12 +321,12 @@ struct device_info_converter<
     std::size_t len;
     errh << clGetDeviceInfo(dev, I, 0u, nullptr, &len);
     // allocate string of NULs
-    std::string s(len - 1u, '\0');
+    std::string str(len - 1u, '\0');
     // write null-terminated characters (including null terminator) + return.
     // this is defined behavior since C++11. see cppreference for details:
     // https://en.cppreference.com/w/cpp/string/basic_string/operator_at.html
-    errh << clGetDeviceInfo(dev, I, len, &s[0], nullptr);
-    return s;
+    errh << clGetDeviceInfo(dev, I, len, &str[0], nullptr);
+    return str;
   }
 };
 
