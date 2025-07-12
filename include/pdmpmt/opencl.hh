@@ -163,7 +163,7 @@ struct platform_info_converter<
    *
    * @param plat OpenCL platform ID
    */
-  std::string operator()(cl_platform_id plat) const
+  auto operator()(cl_platform_id plat) const
   {
     // get length (including null terminator)
     std::size_t len;
@@ -178,10 +178,9 @@ struct platform_info_converter<
   }
 };
 
-// only available for OpenCL 3.0 or with the cl_khr_extended_versioning
 #if defined(CL_VERSION_3_0)  || defined(cl_khr_extended_versioning)
 /**
- * Partial specialization for the OpenCL numeric version.
+ * Partial specialization for the platform's supported OpenCL numeric version.
  *
  * @note This is only available since OpenCL 3.0 or if the OpenCL extenson
  *  `cl_khr_extended_versioning` is available, e.g. the macro is defined.
@@ -329,6 +328,46 @@ struct device_info_converter<
     return str;
   }
 };
+
+#if defined(CL_VERSION_3_0)  || defined(cl_khr_extended_versioning)
+/**
+ * Partial specialization for the device's supported OpenCL numeric version.
+ *
+ * @note This is only available since OpenCL 3.0 or if the OpenCL extenson
+ *  `cl_khr_extended_versioning` is available, e.g. the macro is defined.
+ *
+ * @tparam I OpenCL device info value
+ */
+template <cl_device_info I>
+struct device_info_converter<
+  I,
+  std::enable_if_t<
+// if OpenCL 3.0 is available, use CL_DEVICE_NUMERIC_VERSION
+#if defined(CL_VERSION_3_0)
+    I == CL_DEVICE_NUMERIC_VERSION
+// otherwise, use the Khronos extension
+#else
+    I == CL_DEVICE_NUMERIC_VERSION_KHR
+#endif  // !defined(CL_VERSION_3_0)
+  > > {
+  /**
+   * Return the numeric OpenCL veresion supported by the device.
+   *
+   * @param dev OPenCL device ID
+   */
+  auto operator()(cl_device_id dev) const
+  {
+    // init + return the numeric OpenCL version
+#if defined(CL_VERSION_3_0)
+    cl_version ver;
+#else
+    cl_version_khr ver;
+#endif  // !defined(CL_VERSION_3_0)
+    errh << clGetDeviceInfo(dev, I, sizeof ver, &ver, nullptr);
+    return ver;
+  }
+};
+#endif  // defined(CL_VERSION_3_0)  || defined(cl_khr_extended_versioning)
 
 /**
  * Partial specialization for the OpenCL device type bitmask.
