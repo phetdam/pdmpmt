@@ -1,5 +1,5 @@
 /**
- * @file opencl_device_info.cc
+ * @file opencl_info.cc
  * @author Derek Huang
  * @brief C++ program for querying OpenCL platform/device info
  * @copyright MIT License
@@ -139,7 +139,9 @@ int main(int argc, char** /*argv*/)
       indent(2) << "Name: " <<
         platform_info<CL_PLATFORM_NAME>(plat) << "\n" <<
       indent(2) << "Version: " <<
-        platform_info<CL_PLATFORM_VERSION>(plat) << std::endl;
+        platform_info<CL_PLATFORM_VERSION>(plat) << "\n" <<
+      indent(2) << "Extensions: " <<
+        platform_info<CL_PLATFORM_EXTENSIONS>(plat) << "\n";
     // get device IDs for the platform
     auto dev_ids = pdmpmt::opencl::device_ids(plat);
     std::cout << indent(2) << "OpenCL devices:" << std::endl;
@@ -154,16 +156,17 @@ int main(int argc, char** /*argv*/)
           device_info<CL_DEVICE_NAME>(dev) << "\n" <<
         indent(4) << "Version: " <<
           device_info<CL_DEVICE_VERSION>(dev) << "\n" <<
+        indent(4) << "Global memory: " <<
+          device_info<CL_DEVICE_GLOBAL_MEM_SIZE>(dev) / (1 << 30) << "G\n" <<
         indent(4) << "Max compute units: " <<
           device_info<CL_DEVICE_MAX_COMPUTE_UNITS>(dev) << "\n" <<
         indent(4) << "Max work group size: " <<
           device_info<CL_DEVICE_MAX_WORK_GROUP_SIZE>(dev) << "\n" <<
         indent(4) << "Max work item sizes: " <<
           format(device_info<CL_DEVICE_MAX_WORK_ITEM_SIZES>(dev)) << "\n" <<
-        indent(4) << "Global memory: " <<
-          device_info<CL_DEVICE_GLOBAL_MEM_SIZE>(dev) / (1 << 30) << "G" <<
-          std::endl;
-    }
+        indent(4) << "Extensions: " <<
+          device_info<CL_DEVICE_EXTENSIONS>(dev) << "\n" << std::flush;
+    }  // CL_DEVICE_EXTENSIONS
   }
   return EXIT_SUCCESS;
 }

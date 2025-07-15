@@ -1,5 +1,5 @@
 /**
- * @file cuda_device_info.cc
+ * @file cuda_info.cc
  * @author Derek Huang
  * @brief C++ program to query CUDA device information
  * @copyright MIT License

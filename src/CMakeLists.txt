@@ -13,46 +13,46 @@ else()
     message(STATUS "Skipping thrust_demo (requires CUDA Toolkit)")
 endif()
 
-# cuda_device_info: print info on available CUDA devices
+# cuda_info: print info on available CUDA devices
 if(CUDAToolkit_FOUND)
-    add_executable(cuda_device_info cuda_device_info.cc)
-    target_link_libraries(cuda_device_info PRIVATE CUDA::cudart pdmpmt++)
+    add_executable(cuda_info cuda_info.cc)
+    target_link_libraries(cuda_info PRIVATE CUDA::cudart pdmpmt++)
     # print standard output
-    add_test(NAME cuda_device_info COMMAND cuda_device_info)
+    add_test(NAME cuda_info COMMAND cuda_info)
     # test command-line options
-    add_test(NAME cuda_device_info_e COMMAND cuda_device_info -e)
-    add_test(NAME cuda_device_info_extended COMMAND cuda_device_info --extended)
-    add_test(NAME cuda_device_info_h COMMAND cuda_device_info -h)
-    add_test(NAME cuda_device_info_help COMMAND cuda_device_info --help)
+    add_test(NAME cuda_info_e COMMAND cuda_info -e)
+    add_test(NAME cuda_info_extended COMMAND cuda_info --extended)
+    add_test(NAME cuda_info_h COMMAND cuda_info -h)
+    add_test(NAME cuda_info_help COMMAND cuda_info --help)
     set_tests_properties(
-        cuda_device_info_h cuda_device_info_help
+        cuda_info_h cuda_info_help
         PROPERTIES PASS_REGULAR_EXPRESSION "Usage:"
     )
-    add_test(NAME cuda_device_info_badopt COMMAND cuda_device_info --illegal-opt)
+    add_test(NAME cuda_info_badopt COMMAND cuda_info --illegal-opt)
     set_tests_properties(
-        cuda_device_info_badopt PROPERTIES
+        cuda_info_badopt PROPERTIES
         PASS_REGULAR_EXPRESSION "Unknown argument"
     )
 else()
-    message(STATUS "Skipping cuda_device_info (requires CUDA Toolkit)")
+    message(STATUS "Skipping cuda_info (requires CUDA Toolkit)")
 endif()
 
-# opencl_device_info: print OpenCL platform + device info
+# opencl_info: print OpenCL platform + device info
 if(OpenCL_FOUND)
-    add_executable(opencl_device_info opencl_device_info.cc)
-    target_link_libraries(opencl_device_info PRIVATE OpenCL::OpenCL pdmpmt++)
+    add_executable(opencl_info opencl_info.cc)
+    target_link_libraries(opencl_info PRIVATE OpenCL::OpenCL pdmpmt++)
     # plain run
-    add_test(NAME opencl_device_info COMMAND opencl_device_info)
+    add_test(NAME opencl_info COMMAND opencl_info)
     # -h, --help
-    add_test(NAME opencl_device_info_h COMMAND opencl_device_info -h)
-    add_test(NAME opencl_device_info_help COMMAND opencl_device_info --help)
+    add_test(NAME opencl_info_h COMMAND opencl_info -h)
+    add_test(NAME opencl_info_help COMMAND opencl_info --help)
     set_tests_properties(
-        opencl_device_info_h
-        opencl_device_info_help PROPERTIES
-        PASS_REGULAR_EXPRESSION "Usage: opencl_device_info"
+        opencl_info_h
+        opencl_info_help PROPERTIES
+        PASS_REGULAR_EXPRESSION "Usage:"
     )
 else()
-    message(STATUS "Skipping opencl_device_info (requires OpenCL)")
+    message(STATUS "Skipping opencl_info (requires OpenCL)")
 endif()
 
 # curand_mcpi: compute pi using Monte Carlo using Thrust + cuRAND
