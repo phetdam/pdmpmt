@@ -513,7 +513,7 @@ struct device_info_converter<
 #ifdef CL_VERSION_1_2
     I == CL_DEVICE_PRINTF_BUFFER_SIZE ||
 #endif  // CL_VERSION_1_2
-#ifdef CL_VERSION_2_0
+#ifdef CL_VERSION_3_0
     I == CL_DEVICE_PREFERRED_WORK_GROUP_SIZE_MULTIPLE ||
 #endif  // CL_VERSION_3_0
     I == CL_DEVICE_PROFILING_TIMER_RESOLUTION
