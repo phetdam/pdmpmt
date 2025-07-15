@@ -129,6 +129,17 @@ unset(_omp_find_version)
 find_package(OpenCL 2.0)
 if(OpenCL_FOUND)
     message(STATUS "OpenCL version: ${OpenCL_VERSION_STRING}")
+    # if CL_TARGET_OPENCL_VERSION is not defined we get a compiler warning
+    set(PDMPMT_OPENCL_TARGET ${OpenCL_VERSION_MAJOR}${OpenCL_VERSION_MINOR}0)
+    message(STATUS "OpenCL CL_TARGET_OPENCL_VERSION: ${PDMPMT_OPENCL_TARGET}")
+    # pdmpmt_opencl_target_version: interface target for defining the OpenCL
+    # target version via CL_TARGET_OPENCL_VERSION
+    add_library(pdmpmt_opencl_target_version INTERFACE)
+    add_library(pdmpmt::opencl_target_version ALIAS pdmpmt_opencl_target_version)
+    target_compile_definitions(
+        pdmpmt_opencl_target_version INTERFACE
+        CL_TARGET_OPENCL_VERSION=${PDMPMT_OPENCL_TARGET}
+    )
 else()
     message(STATUS "OpenCL version: None")
 endif()

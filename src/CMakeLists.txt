@@ -40,7 +40,10 @@ endif()
 # opencl_info: print OpenCL platform + device info
 if(OpenCL_FOUND)
     add_executable(opencl_info opencl_info.cc)
-    target_link_libraries(opencl_info PRIVATE OpenCL::OpenCL pdmpmt++)
+    target_link_libraries(
+        opencl_info PRIVATE
+        OpenCL::OpenCL pdmpmt++ pdmpmt_opencl_target_version
+    )
     # plain run
     add_test(NAME opencl_info COMMAND opencl_info)
     # -h, --help
