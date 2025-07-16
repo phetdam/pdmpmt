@@ -126,6 +126,7 @@ endif()
 unset(_omp_find_version)
 
 # find OpenCL
+# note: OpenCL 3.0 only detected starting from CMake 3.24
 find_package(OpenCL 2.0)
 if(OpenCL_FOUND)
     message(STATUS "OpenCL version: ${OpenCL_VERSION_STRING}")
@@ -142,6 +143,17 @@ if(OpenCL_FOUND)
     )
 else()
     message(STATUS "OpenCL version: None")
+endif()
+
+# find OpenGL
+# TODO: on success, compile and run a test program to create an OpenGL context
+# and call glGetString(GL_VERSION) to report the supported OpenGL version. we
+# will assume use of GLX on POSIX systems (also update COMPONENTS)
+find_package(OpenGL COMPONENTS OpenGL)
+if(OpenGL_FOUND)
+    message(STATUS "OpenGL: Yes")
+else()
+    message(STATUS "OpenGL: No")
 endif()
 
 # Google Test for unit test runners
