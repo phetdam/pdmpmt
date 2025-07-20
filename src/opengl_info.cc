@@ -95,7 +95,7 @@ int main()
     return EXIT_FAILURE;
   }
   // create OpenGL context and make it current
-  pdmpmt::opengl::context glctx{dc, true};
+  pdmpmt::opengl::context glc{dc, true};
   // print some OpenGL info
   std::cout <<
     "OpenGL version: " << glGetString(GL_VERSION) << "\n" <<
