@@ -33,7 +33,7 @@ const auto progname = std::filesystem::path{__FILE__}.string();
 
 int main()
 {
-#ifdef _WIN32
+#if defined(_WIN32)
   // register window class. we don't care about the icon
   WNDCLASSA wclass{};
   // default window callback (since we won't do anything)
@@ -102,26 +102,11 @@ int main()
     "OpenGL vendor: " << glGetString(GL_VENDOR) << "\n" <<
     "OpenGL renderer: " << glGetString(GL_RENDERER) << "\n" <<
     // TODO: re-enable later if user supplies command-line flag. there can be
-    // a large number of extensions for the device and it becomes very verbose.
-    // also, since OpenGL 3.0, glGetString(GL_EXTENSIONS) has been deprecated
-    // and is removed in OpenGL 3.1. for equivalent output in OpenGL 3.1+, use:
-    //
-    // GLint n_gl_ext;
-    // glGetINtegerv(GL_NUM_EXTENSIONS, &n_gl_ext);
-    // std::stringstream ss;
-    // for (GLint i = 0; i < n_gl_ext; i++) {
-    //   if (i)
-    //     ss << " ";
-    //   ss << glGetStringi(GL_EXTENSIONS, i);
-    // }
-    // std::cout << "OpenGL extensions: " << ss.str() << std::endl;
-    //
-    // conditional compilation via detecting GL_NUM_EXTENSIONS is necessary.
-    //
-    // "OpenGL extensions: " << glGetString(GL_EXTENSIONS) << "\n" <<
+    // a large number of extensions for the device and it becomes very verbose
+    // "OpenGL extensions: " << pdmpmt::opengl::extensions << "\n" <<
     std::flush;
 #else
   std::cout << "not implemented" << std::endl;
-#endif  // _WIN32
+#endif  // !defined(_WIN32)
   return EXIT_SUCCESS;
 }
