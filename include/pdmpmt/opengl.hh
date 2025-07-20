@@ -40,6 +40,7 @@
 
 #include "pdmpmt/common.h"
 #include "pdmpmt/features.h"
+#include "pdmpmt/warnings.h"
 
 #ifdef _WIN32
 #include "pdmpmt/win32.hh"
@@ -435,8 +436,13 @@ inline bool init_extensions()
 #else
 #define PDMPMT_GLEXT_INIT_FUNC(name)
 #endif  // !defined(PDMPMT_LOAD_GLEXT)
+// suppres C4191 for MSVC
+PDMPMT_MSVC_WARNING_PUSH()
+PDMPMT_MSVC_WARNING_DISABLE(4191)
   // call macro for each name of interest
   PDMPMT_GLEXT_INIT_FUNC(glGetStringi);
+PDMPMT_MSVC_WARNING_POP()
+// not needed anymore
 #undef PDMPMT_GLEXT_INIT_FUNC
 // return false if no extensions were loaded
 #if defined(PDMPMT_LOAD_GLEXT)
