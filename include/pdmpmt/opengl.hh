@@ -26,12 +26,54 @@
 
 // note: on Windows the path is actually gl/GL.h
 #include <GL/gl.h>
+// include GLX if available
+#if !defined(_WIN32) && defined(__has_include)
+#if __has_include(<GL/glx.h>)
+#include <GL/glx.h>
+#define PDMPMT_HAS_GLX 1
+#endif  // __has_include(<GL/glx.h>)
+#endif  // !defined(_WIN32) && defined(__has_include)
 
+#ifndef PDMPMT_HAS_GLX
+#define PDMPMT_HAS_GLX 0
+#endif  // PDMPMT_HAS_GLX
+
+#include "pdmpmt/common.h"
 #include "pdmpmt/features.h"
 
 #ifdef _WIN32
 #include "pdmpmt/win32.hh"
 #endif  // _WIN32
+
+/**
+ * Type alias name associated with the given OpenGL extension function.
+ *
+ * @note This is only meaningful after `PDMPMT_GLEXT_FUNC` is used for `name`.
+ *
+ * @param name OpenGL extension function name
+ */
+#define PDMPMT_GLEXT_FUNC_TYPE(name) \
+  PDMPMT_CONCAT(PDMPMT_CONCAT(pdmpmt_opengl_, name), _type)
+
+/**
+ * Macro for defining an OpenGL extension function pointer.
+ *
+ * Since these extension functions can be context dependent each function
+ * pointer is thread-local since contexts are bound to their creation threads.
+ *
+ * @param name OpenGL extension function name
+ * @param ret Return type
+ * @param ... Argument types
+ */
+#define PDMPMT_GLEXT_FUNC(name, ret, ...) \
+  /* APIENTRY defined by OpenGL implementations */ \
+  using PDMPMT_GLEXT_FUNC_TYPE(name) = ret (APIENTRY *)(__VA_ARGS__); \
+  /* we don't want to have function pointers per-translation-unit */ \
+  inline thread_local PDMPMT_GLEXT_FUNC_TYPE(name) name
+
+// OpenGl extension functions. since these may be context dependent, we make
+// the function pointers thread-local since contexts tied to individual threads
+PDMPMT_GLEXT_FUNC(glGetStringi, const GLubyte*, GLenum name, GLuint index);
 
 namespace pdmpmt {
 namespace opengl {
@@ -353,6 +395,58 @@ private:
 #endif  // _WIN32
 
 /**
+ * Macro representing the OPenGL extension loading routine.
+ *
+ * This resolves to `wglGetProcAddress` on Windows and `glXGetProcAddress` for
+ * platforms that have a GLX implementation. Otherwise, it is undefined.
+ *
+ * @param name String literal for the OpenGL extension function name
+ */
+#if defined(_WIN32)
+#define PDMPMT_LOAD_GLEXT(name) \
+  /* no cast; expects LPCSTR */ \
+  wglGetProcAddress(name)
+// GLX extension init
+#elif PDMPMT_HAS_GLX
+#define PDMPMT_LOAD_GLEXT(name) \
+  /* needs reinterpret_cast */ \
+  glXGetProcAddress(reinterpret_cast<const GLubyte*>(name))
+#endif  // !defined(_WIN32)
+
+/**
+ * Initialize all OpenGL extension of interest.
+ *
+ * If extensions were loaded, returns `true`, and returns `false` otherwise.
+ *
+ * @todo Consider if we want so add ways to report loading errors.
+ */
+inline bool init_extensions()
+{
+// macro for correctly assigning each function pointer
+#if defined(PDMPMT_LOAD_GLEXT)
+#define PDMPMT_GLEXT_INIT_FUNC(name) \
+  do { \
+    auto fptr = PDMPMT_LOAD_GLEXT(PDMPMT_STRINGIFY(name)); \
+    /* kludge */ \
+    name = (PDMPMT_GLEXT_FUNC_TYPE(name)) fptr; \
+  } \
+  while (false)
+// empty if there is no extension loading function
+#else
+#define PDMPMT_GLEXT_INIT_FUNC(name)
+#endif  // !defined(PDMPMT_LOAD_GLEXT)
+  // call macro for each name of interest
+  PDMPMT_GLEXT_INIT_FUNC(glGetStringi);
+#undef PDMPMT_GLEXT_INIT_FUNC
+// return false if no extensions were loaded
+#if defined(PDMPMT_LOAD_GLEXT)
+  return true;
+#else
+  return false;
+#endif  // !defined(PDMPMT_LOAD_GLEXT)
+}
+
+/**
  * Proxy object type for retrieving the list of OpenGL extension names.
  *
  * This helps provide a unified interface for OpenGL before and after OpenGL
@@ -367,6 +461,9 @@ constexpr extensions_proxy_type extensions;
 
 /**
  * Stream each OpenGL extension name separated by spaces.
+ *
+ * If `glGetStringi` is not available on an OpenGL 3.0+ platform the number of
+ * extensions and a message on `glGetStringi` not being available is printed.
  */
 inline auto& operator<<(std::ostream& out, extensions_proxy_type)
 {
@@ -381,15 +478,15 @@ inline auto& operator<<(std::ostream& out, extensions_proxy_type)
 // 1. include glext.h and compile with GL_GLEXT_PROTOTYPES (not desirable)
 // 2. correctly query the glGetStringi function pointer
 //
-#if 0
+// for now, we choose 2., as init_extensions helps with the function pointers
+  if (!glGetStringi)
+    return out << n_ext << " (cannot list names without glGetStringi)";
   // iterate
   for (GLint i = 0; i < n_ext; i++) {
     if (i)
       out << " ";
     out << glGetStringi(GL_EXTENSIONS, i);
   }
-#endif  // 0
-  out << "not implemented (" << n_ext << " extensions)";
 // use old glGetString(NUM_EXTENSIONS)
 #else
   out << glGetString(GL_EXTENSIONS);
