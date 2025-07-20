@@ -17,6 +17,7 @@
 #endif  // _WIN32
 
 #include <cstddef>
+#include <ostream>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -350,6 +351,53 @@ private:
   }
 };
 #endif  // _WIN32
+
+/**
+ * Proxy object type for retrieving the list of OpenGL extension names.
+ *
+ * This helps provide a unified interface for OpenGL before and after OpenGL
+ * 3.1 where `glGetString(GL_EXTENSIONS)` was removed.
+ */
+struct extensions_proxy_type {};
+
+/**
+ * Global for referring to OpenGL extensions.
+ */
+constexpr extensions_proxy_type extensions;
+
+/**
+ * Stream each OpenGL extension name separated by spaces.
+ */
+inline auto& operator<<(std::ostream& out, extensions_proxy_type)
+{
+// OpenGL 3.1+ way of using GL_EXTENSIONS
+#if defined(GL_VERSION_3_0)
+  // get extension count
+  GLint n_ext;
+  glGetIntegerv(GL_NUM_EXTENSIONS, &n_ext);
+// FIXME: glGetStringi is not in OpenGL 1.1 and cannot be assumed to statically
+// exist. we have a couple choices to pick from:
+//
+// 1. include glext.h and compile with GL_GLEXT_PROTOTYPES (not desirable)
+// 2. correctly query the glGetStringi function pointer
+//
+#if 0
+  // iterate
+  for (GLint i = 0; i < n_ext; i++) {
+    if (i)
+      out << " ";
+    out << glGetStringi(GL_EXTENSIONS, i);
+  }
+#endif  // 0
+  out << "not implemented (" << n_ext << " extensions)";
+// use old glGetString(NUM_EXTENSIONS)
+#else
+  out << glGetString(GL_EXTENSIONS);
+#endif  // !defined(GL_NUM_EXTENSIONS)
+  return out;
+}
+
+// TODO: add operator<< for std::vector
 
 }  // namespace opengl
 }  // namespace pdmpmt
