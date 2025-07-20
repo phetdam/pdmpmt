@@ -38,7 +38,7 @@ int main()
   WNDCLASSA wclass{};
   // default window callback (since we won't do anything)
   wclass.lpfnWndProc = DefWindowProcA;
-  // TODO: do i need to set hInstance?
+  // note: nullptr hInstance seems to be allowed
   // use program name for the menu/class name
   wclass.lpszMenuName = progname.c_str();
   wclass.lpszClassName = progname.c_str();
@@ -73,8 +73,8 @@ int main()
   PIXELFORMATDESCRIPTOR pfd{};
   pfd.nSize = sizeof pfd;
   pfd.nVersion = 1;
-  // ask for OpenGL support
-  pfd.dwFlags = /*PFD_DRAW_TO_WINDOW |*/ PFD_SUPPORT_OPENGL;
+  // ask for OpenGL support for window and standard double-buffering
+  pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
   pfd.iPixelType = PFD_TYPE_RGBA;
   // 1 octet for each color channel
   pfd.cColorBits = 8;
@@ -94,8 +94,9 @@ int main()
       pdmpmt::win32::strerror() << std::endl;
     return EXIT_FAILURE;
   }
-  // create OpenGL context and make it current
+  // create OpenGL context, make it current, and initialize extensions
   pdmpmt::opengl::context glc{dc, true};
+  pdmpmt::opengl::init_extensions();
   // print some OpenGL info
   std::cout <<
     "OpenGL version: " << glGetString(GL_VERSION) << "\n" <<
@@ -103,7 +104,7 @@ int main()
     "OpenGL renderer: " << glGetString(GL_RENDERER) << "\n" <<
     // TODO: re-enable later if user supplies command-line flag. there can be
     // a large number of extensions for the device and it becomes very verbose
-    // "OpenGL extensions: " << pdmpmt::opengl::extensions << "\n" <<
+    "OpenGL extensions: " << pdmpmt::opengl::extensions << "\n" <<
     std::flush;
 #else
   std::cout << "not implemented" << std::endl;
