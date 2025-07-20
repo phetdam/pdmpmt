@@ -20,6 +20,7 @@
 
 #include <GL/gl.h>
 
+#include "pdmpmt/opengl.hh"
 #ifdef _WIN32
 #include "pdmpmt/win32.hh"
 #endif  // _WIN32
@@ -93,19 +94,8 @@ int main()
       pdmpmt::win32::strerror() << std::endl;
     return EXIT_FAILURE;
   }
-  // create OpenGL context
-  auto glctx = wglCreateContext(dc);
-  if (!glctx) {
-    std::cerr << "Error: OpenGL context creation failed. " <<
-      pdmpmt::win32::strerror() << std::endl;
-    return EXIT_FAILURE;
-  }
-  // make OpenGL context current
-  if (wglMakeCurrent(dc, glctx) != TRUE) {
-    std::cerr << "Error: Could not make OpenGL context current. " <<
-      pdmpmt::win32::strerror() << std::endl;
-    return EXIT_FAILURE;
-  }
+  // create OpenGL context and make it current
+  pdmpmt::opengl::context glctx{dc, true};
   // print some OpenGL info
   std::cout <<
     "OpenGL version: " << glGetString(GL_VERSION) << "\n" <<
@@ -130,13 +120,6 @@ int main()
     //
     // "OpenGL extensions: " << glGetString(GL_EXTENSIONS) << "\n" <<
     std::flush;
-  // TODO: print more OpenGL info
-  // done, delete OpenGL context and release device context
-  if (wglDeleteContext(glctx) != TRUE) {
-    std::cerr << "Error: Failed to delete OpenGL context. " <<
-      pdmpmt::win32::strerror() << std::endl;
-    return EXIT_SUCCESS;
-  }
 #else
   std::cout << "not implemented" << std::endl;
 #endif  // _WIN32

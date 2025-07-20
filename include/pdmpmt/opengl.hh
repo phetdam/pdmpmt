@@ -8,16 +8,29 @@
 #ifndef PDMPMT_OPENGL_HH_
 #define PDMPMT_OPENGL_HH_
 
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif  // WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#include <wingdi.h>
+#endif  // _WIN32
+
 #include <cstddef>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <utility>
 
 // note: on Windows the path is actually gl/GL.h
 #include <GL/gl.h>
 
 #include "pdmpmt/features.h"
+
+#ifdef _WIN32
+#include "pdmpmt/win32.hh"
+#endif  // _WIN32
 
 namespace pdmpmt {
 namespace opengl {
@@ -47,7 +60,7 @@ constexpr auto strerror(GLenum err) noexcept
 /**
  * Exception representing a standaard OpenGL error from `glGetError().`
  */
-class exception : std::runtime_error {
+class exception : public std::runtime_error {
 public:
   /**
    * Ctor.
@@ -215,6 +228,128 @@ private:
   std::string_view build_{""};
   std::string_view info_{""};
 };
+
+// currently only available for Windows
+#ifdef _WIN32
+/**
+ * Class representing an OpenGL context.
+ *
+ * On scope exit the OpenGL context will be destroyed.
+ */
+class context {
+public:
+  /**
+   * Ctor.
+   *
+   * Constructs from a Win32 window device context with set pixel format. Note
+   * that the window device context must be alive and in scope for the lifetime
+   * of the OpenGL context,e.g. `ReleaseDC` or `DeleteDC` not called.
+   *
+   * @param dc Win32 device context handle
+   * @param current `true` to make the context the current OpenGL context
+   */
+  context(HDC dc, bool current = false)
+    : dc_{dc}, glc_{wglCreateContext(dc)}, current_{current}
+  {
+    // failed
+    if (!glc_)
+      throw win32::exception{"OpenGL context creation failed"};
+    // short-circuit if not making current
+    if (current_ && !wglMakeCurrent(dc_, glc_))
+      throw win32::exception{"Could not make OpenGL context current"};
+  }
+
+  /**
+   * Deleted copy ctor.
+   */
+  context(const context&) = delete;
+
+  /**
+   * Move ctor.
+   */
+  context(context&& other) noexcept
+  {
+    from(std::move(other));
+  }
+
+  /**
+   * Move assignment operator.
+   */
+  auto& operator=(context&& other) noexcept(noexcept(destroy()))
+  {
+    destroy();
+    from(std::move(other));
+    return *this;
+  }
+
+  /**
+   * Dtor.
+   */
+  ~context() noexcept(noexcept(destroy()))
+  {
+    destroy();
+  }
+
+  /**
+   * Return the Win32 device context associated with the OpenGL context.
+   */
+  HDC device_context() const noexcept { return dc_; }
+
+  /**
+   * Return the raw OpenGL context handle.
+   */
+  auto handle() const noexcept { return glc_; }
+
+  /**
+   * Indicate if the OpenGL context is the current context.
+   *
+   * The result of this function is only meaningful if checked on the same
+   * thread that was used to create the OpenGL context.
+   */
+  bool current() const noexcept { return current_; }
+
+  /**
+   * Implicitly convert to the OpenGL context handle.
+   *
+   * This is useful for C function interop and to test for ownership.
+   */
+  operator HGLRC() const noexcept
+  {
+    return glc_;
+  }
+
+private:
+  HDC dc_;
+  HGLRC glc_;
+  bool current_;
+
+  /**
+   * Move-initialize the OPenGL context.
+   *
+   * On completion `other` will have zeroed-out members.
+   */
+  void from(context&& other) noexcept
+  {
+    dc_ = other.dc_;
+    glc_ = other.glc_;
+    current_ = other.current_;
+    other.dc_ = nullptr;
+    other.glc_ = nullptr;
+    other.current_ = false;
+  }
+
+  /**
+   * Destroy the OpenGL context if the handle if not `nullptr`.
+   */
+  void destroy() noexcept
+  {
+    // TODO: could error, but usually we don't care. not sure it's worth making
+    // this dtor noexcept(false) or trying to detect where to print errors
+    if (glc_)
+      wglDeleteContext(glc_);
+  }
+};
+#endif  // _WIN32
 
 }  // namespace opengl
 }  // namespace pdmpmt
