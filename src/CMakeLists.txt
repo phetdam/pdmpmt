@@ -70,7 +70,12 @@ endif()
 
 # opengl_info: print OpenGL platform + version info
 # TODO: get this working for X Windows too
-if(WIN32 AND OpenGL_FOUND)
+if(OpenGL_FOUND)
     add_executable(opengl_info opengl_info.cc)
-    target_link_libraries(opengl_info PRIVATE OpenGL::GL gdi32 user32)
+    target_link_libraries(opengl_info PRIVATE OpenGL::GL pdmpmt++)
+    # on Windows, link to relevant system libraries like GDI
+    if(WIN32)
+        target_link_libraries(opengl_info PRIVATE gdi32 user32)
+    endif()
+    add_test(NAME opengl_info COMMAND opengl_info)
 endif()
