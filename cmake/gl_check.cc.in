@@ -1,0 +1,31 @@
+/**
+ * @file gl_check.cc
+ * @author Derek Huang
+ * @brief C++ prgraom to statically check the OpenGL headers version
+ * @copyright MIT License
+ *
+ * This version of `gl_check.cc` checks for `GL_VERSION_@gl_ver_suffix@`.
+ */
+
+// note: including gl.h by itself on Windows causes compilation errors.
+// APIENTRY is defined in minwindef.h but we cannot just include minwindef.h
+// as winnt.h will complain about no target architecture. this is rectified by
+// including Windows.h which defines macros like _AMD64_ for winnt.h
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#endif  // _WIN32
+
+#include <cstdlib>
+
+#include <GL/gl.h>
+
+#ifndef GL_VERSION_@gl_ver_suffix@
+#error "OpenGL version macro GL_VERSION_@gl_ver_suffix@ not defined"
+#endif  // GL_VERSION_@gl_ver_suffix@
+
+// note: try_compile requires that main is defined
+int main()
+{
+  return EXIT_SUCCESS;
+}
