@@ -189,12 +189,13 @@ if(OpenGL_FOUND)
                 CXX_STANDARD ${CMAKE_CXX_STANDARD}
                 # note: use OUTPUT_VARIABLE if we need compiler output
             )
-            # report success/fail
+            # report success/fail. we short-circuit if necessary
             if(gl_version_found)
                 message(CHECK_PASS "found")
                 set(PDMPMT_OPENGL_GL_VERSION ${gl_ver})
             else()
                 message(CHECK_FAIL "not found")
+                break()
             endif()
         # otherwise, use check_symbol_exists
         else()
@@ -206,6 +207,9 @@ if(OpenGL_FOUND)
             # if found, update OpenGL version
             if(gl_version_found_${gl_ver_suffix})
                 set(PDMPMT_OPENGL_GL_VERSION ${gl_ver})
+            # otherwise, short circuit
+            else()
+                break()
             endif()
         endif()
     endforeach()
@@ -236,12 +240,13 @@ if(OPENGL_GLU_FOUND)
                 CXX_STANDARD ${CMAKE_CXX_STANDARD}
                 # note: use OUTPUT_VARIABLE if we need compiler output
             )
-            # report success/fail
+            # report success/fail. we short-circuit if necessary
             if(glu_version_found)
                 message(CHECK_PASS "found")
                 set(PDMPMT_GLU_VERSION 1.${glu_minor})
             else()
                 message(CHECK_FAIL "not found")
+                break()
             endif()
         else()
             check_symbol_exists(
@@ -252,6 +257,9 @@ if(OPENGL_GLU_FOUND)
             # if found, update GLU version
             if(glu_version_found_${glu_minor})
                 set(PDMPMT_GLU_VERSION 1.${glu_minor})
+            # otherwise, short circuit
+            else()
+                break()
             endif()
         endif()
     endforeach()
