@@ -125,12 +125,16 @@ else()
 endif()
 unset(_omp_find_version)
 
+# for check_symbol_exists. we use this for version detection via macro checks
+include(CheckSymbolExists)
+
 # find OpenCL
 # note: OpenCL 3.0 only detected starting from CMake 3.24
 find_package(OpenCL 2.0)
 if(OpenCL_FOUND)
     message(STATUS "OpenCL version: ${OpenCL_VERSION_STRING}")
     # if CL_TARGET_OPENCL_VERSION is not defined we get a compiler warning
+    # TODO: should we try parsing it out of cl_version.h? e.g. try_compile
     set(PDMPMT_OPENCL_TARGET ${OpenCL_VERSION_MAJOR}${OpenCL_VERSION_MINOR}0)
     message(STATUS "OpenCL CL_TARGET_OPENCL_VERSION: ${PDMPMT_OPENCL_TARGET}")
     # pdmpmt_opencl_target_version: interface target for defining the OpenCL
@@ -146,14 +150,136 @@ else()
 endif()
 
 # find OpenGL
-# TODO: on success, compile and run a test program to create an OpenGL context
-# and call glGetString(GL_VERSION) to report the supported OpenGL version. we
 # will assume use of GLX on POSIX systems (also update COMPONENTS)
-find_package(OpenGL COMPONENTS OpenGL)
+find_package(OpenGL COMPONENTS OpenGL OPTIONAL_COMPONENTS GLX)
+# known OpenGL versions: https://www.khronos.org/opengl/wiki/History_of_OpenGL
+set(
+    gl_versions
+    1.1 1.2 1.3 1.4 1.5 2.0 2.1 3.0 3.1 3.2 3.3 4.0 4.1 4.2 4.3 4.4 4.5 4.6
+)
+# check for OpenGL core
 if(OpenGL_FOUND)
-    message(STATUS "OpenGL: Yes")
+    # bug on Windows: OPENGL_INCLUDE_DIR is never set
+    if(WIN32 AND NOT OPENGL_INCLUDE_DIR)
+        find_path(OPENGL_INCLUDE_DIR Gl/gl.h NO_CACHE)
+    endif()
+    # if found, attempt to determine OpenGL header version. default is 1.0.
+    # this determines the highest statically available OpenGL version
+    set(PDMPMT_OPENGL_GL_VERSION 1.0)
+    # note: gl.h usually doesn't provide anything beyond GL_VERSION_1_3.
+    # however, modern Linux distributions typically have gl.h include glext.h
+    # unless GL_GLEXT_LEGACY is defined, so transitively you get GL_VERSION_4_6
+    foreach(gl_ver ${gl_versions})
+        # convert 1.1 -> 1_1 for macro checking
+        string(REPLACE "." "_" gl_ver_suffix "${gl_ver}")
+        # for Windows, check_symbol_exists seems to fail regardless if we use
+        # CMAKE_REQUIRED_DIRS or OPENGL_INCLUDE_DIR, even with conversion to a
+        # CMake-style path. that's why for Windows we instead use try_compile
+        if(WIN32)
+            # first, configure gl_check (use native newlines)
+            # variables consumed: gl_ver_suffix
+            configure_file(cmake/gl_check.cc.in gl_check.cc @ONLY)
+            # now attempt to compile
+            message(CHECK_START "Looking for GL_VERSION_${gl_ver_suffix}")
+            try_compile(
+                gl_version_found
+                ${CMAKE_CURRENT_BINARY_DIR}
+                ${CMAKE_CURRENT_BINARY_DIR}/gl_check.cc
+                # for consistency, use same C++ standard
+                CXX_STANDARD ${CMAKE_CXX_STANDARD}
+                # note: use OUTPUT_VARIABLE if we need compiler output
+            )
+            # report success/fail
+            if(gl_version_found)
+                message(CHECK_PASS "found")
+                set(PDMPMT_OPENGL_GL_VERSION ${gl_ver})
+            else()
+                message(CHECK_FAIL "not found")
+            endif()
+        # otherwise, use check_symbol_exists
+        else()
+            check_symbol_exists(
+                GL_VERSION_${gl_ver_suffix}
+                ${OPENGL_INCLUDE_DIR}/GL/gl.h
+                gl_version_found_${gl_ver_suffix}
+            )
+            # if found, update OpenGL version
+            if(gl_version_found_${gl_ver_suffix})
+                set(PDMPMT_OPENGL_GL_VERSION ${gl_ver})
+            endif()
+        endif()
+    endforeach()
+    # TODO: on success, compile and run a test program to create an OpenGL
+    # context and call glGetString(GL_VERSION) to report the OpenGL version.
+    # we probably also need to print out the device context, etc.
+    message(STATUS "OpenGL version: ${PDMPMT_OPENGL_GL_VERSION}")
 else()
-    message(STATUS "OpenGL: No")
+    message(STATUS "OpenGL version: None")
+endif()
+# GLU
+if(OPENGL_GLU_FOUND)
+    # if found, attempt to determine GLU version for each known minor version
+    set(PDMPMT_GLU_VERSION 1.0)
+    foreach(glu_minor 1 2 3)
+        # same issue with checking OpenGL header version
+        if(WIN32)
+            # first, configure glu_check (use native newlines)
+            # variables consumed: glu_minor
+            configure_file(cmake/glu_check.cc.in glu_check.cc @ONLY)
+            # now attempt to compile
+            message(CHECK_START "Looking for GLU_VERSION_1_${glu_minor}")
+            try_compile(
+                glu_version_found
+                ${CMAKE_CURRENT_BINARY_DIR}
+                ${CMAKE_CURRENT_BINARY_DIR}/glu_check.cc
+                # for consistency, use same C++ standard
+                CXX_STANDARD ${CMAKE_CXX_STANDARD}
+                # note: use OUTPUT_VARIABLE if we need compiler output
+            )
+            # report success/fail
+            if(glu_version_found)
+                message(CHECK_PASS "found")
+                set(PDMPMT_GLU_VERSION 1.${glu_minor})
+            else()
+                message(CHECK_FAIL "not found")
+            endif()
+        else()
+            check_symbol_exists(
+                GLU_VERSION_1_${glu_minor}
+                ${OPENGL_INCLUDE_DIR}/GL/glu.h
+                glu_version_found_${glu_minor}
+            )
+            # if found, update GLU version
+            if(glu_version_found_${glu_minor})
+                set(PDMPMT_GLU_VERSION 1.${glu_minor})
+            endif()
+        endif()
+    endforeach()
+    # report
+    message(STATUS "GLU version: ${PDMPMT_GLU_VERSION}")
+else()
+    message(STATUS "GLU version: None")
+endif()
+# GLX
+if(OpenGL_GLX_FOUND)
+    # if found, attempt to determine GLX version for each of the GLX minor
+    # versions that are known. assumes GLX version is 1.0 otherwise
+    set(PDMPMT_GLX_VERSION 1.0)
+    foreach(glx_minor 1 2 3 4)
+        check_symbol_exists(
+            GLX_VERSION_1_${glx_minor}
+            ${OPENGL_INCLUDE_DIR}/GL/glx.h
+            glx_version_found_${glx_minor}
+        )
+        # if found, update GLX version
+        if(glx_version_found_${glx_minor})
+            set(PDMPMT_GLX_VERSION 1.${glx_minor})
+        endif()
+    endforeach()
+    # report
+    message(STATUS "GLX version: ${PDMPMT_GLX_VERSION}")
+else()
+    message(STATUS "GLX version: None")
 endif()
 
 # Google Test for unit test runners
