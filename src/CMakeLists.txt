@@ -70,12 +70,23 @@ endif()
 
 # opengl_info: print OpenGL platform + version info
 # TODO: get this working for X Windows too
-if(OpenGL_FOUND)
+if(OpenGL_FOUND AND WIN32 OR (X11_FOUND AND OpenGL_GLX_FOUND))
     add_executable(opengl_info opengl_info.cc)
     target_link_libraries(opengl_info PRIVATE OpenGL::GL pdmpmt++)
     # on Windows, link to relevant system libraries like GDI
     if(WIN32)
         target_link_libraries(opengl_info PRIVATE gdi32 user32)
+    # otherwise, using GLX + X11
+    else()
+        target_link_libraries(opengl_info PRIVATE OpenGL::GLX X11::X11)
     endif()
     add_test(NAME opengl_info COMMAND opengl_info)
+else()
+    set(opengl_info_requires "OpenGL")
+    # if not on Windows, need X11 + GLX
+    if(NOT WIN32)
+        string(APPEND opengl_info_requires " + GLX + X11")
+    endif()
+    message(STATUS "Skipping opengl_info (requires ${opengl_info_requires})")
+    unset(opengl_info_requires)
 endif()
