@@ -290,6 +290,16 @@ else()
     message(STATUS "GLX version: None")
 endif()
 
+# find X11 (for use with GLX)
+# TODO: do we have a way to get the version without using pkg-config?
+message(CHECK_START "Looking for X11")
+find_package(X11)
+if(X11_FOUND)
+    message(CHECK_PASS "found")
+else()
+    message(CHECK_FAIL "not found")
+endif()
+
 # Google Test for unit test runners
 find_package(GTest 1.10)
 if(GTest_FOUND)
