@@ -238,33 +238,33 @@ public:
    * @param major OpenGL major version
    * @param minor OpenGL minor version
    */
-  version(unsigned major, unsigned minor) noexcept
+  constexpr version(unsigned major, unsigned minor) noexcept
     : major_{major}, minor_{minor}
   {}
 
   /**
    * Return the OpenGL major version.
    */
-  auto major() const noexcept { return major_; }
+  constexpr auto major() const noexcept { return major_; }
 
   /**
    * Return the OpenGL minor version.
    */
-  auto minor() const noexcept { return minor_; }
+  constexpr auto minor() const noexcept { return minor_; }
 
   /**
    * Return a string view of the vendor-specific build string.
    *
    * This will point to the empty string if not available in the version info.
    */
-  const auto& build() const noexcept { return build_; }
+  constexpr auto& build() const noexcept { return build_; }
 
   /**
    * Return a string view of any additional vendor-specific info.
    *
    * This will point to the empty string if not available in the version info.
    */
-  const auto& info() const noexcept { return info_; }
+  constexpr auto& info() const noexcept { return info_; }
 
 private:
   unsigned major_;
