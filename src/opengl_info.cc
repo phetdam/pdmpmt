@@ -170,8 +170,17 @@ int main()
     "GLX client/server information excluded (GLX version < 1.1)" <<
 #endif  // !defined(GLX_VERSION_1_1)
     std::flush;
+  // choose pixel format. this is as close to the Windows format as posible
+  int px_fmt[] = {GLX_RGBA, GLX_DOUBLEBUFFER, GLX_DEPTH_SIZE, 16, None};
+  auto xvi = glXChooseVisual(dsp, scn, px_fmt);
+  if (!xvi) {
+    std::cerr << "Error: Unable to choose appropriate X visual" << std::endl;
+    return EXIT_FAILURE;
+  }
+  // create OpenGL context
   // TODO: still need to choose pixel format, create OpenGL context, etc.
-  // done, close display
+  // done, free visual info + close display
+  XFree(xvi);
   // TODO: handle possible BadGC error
   XCloseDisplay(dsp);
 #endif  // !defined(_WIN32)
