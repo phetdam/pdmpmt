@@ -23,9 +23,15 @@ const auto program_usage = "Usage: " + progname + " [-h] [--no-extensions]\n"
   "\n"
   "Print information on available OpenCL platforms and devices.\n"
   "\n"
+  "This inculdes platform and device names, supported OpenCL versions, the\n"
+  "global memory sizes for each device, supported OpenCL extensions, etc.\n"
+  "\n"
   "Options:\n"
   "  -h, --help         Print this usage\n"
-  "  --no-extensions    Do not print platform and device OpenCL extensions";
+  "  --no-extensions    Do not print platform and device OpenCL extensions.\n"
+  "                     OpenCL extensions are printed by default, but if there\n"
+  "                     are multiple platforms and devices, printing all their\n"
+  "                     OpenCL extensions can take up a lot of screen space.";
 
 /**
  * Struct for the command-line options.
