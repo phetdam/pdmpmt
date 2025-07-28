@@ -55,9 +55,9 @@ if(OpenCL_FOUND)
         PASS_REGULAR_EXPRESSION "Usage:"
     )
     # --no-extensions
-    add_test(NAME opencl_info_no_extensions COMMAND opencl_info --no-extensions)
+    add_test(NAME opencl_info_no_ext COMMAND opencl_info --no-ext)
     set_tests_properties(
-        opencl_info_no_extensions PROPERTIES
+        opencl_info_no_ext PROPERTIES
         FAIL_REGULAR_EXPRESSION "Extensions:"
     )
     # invalid argument

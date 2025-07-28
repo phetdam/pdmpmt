@@ -19,7 +19,7 @@ namespace {
 
 // program name and usage
 const auto progname = std::filesystem::path{__FILE__}.stem().string();
-const auto program_usage = "Usage: " + progname + " [-h] [--no-extensions]\n"
+const auto program_usage = "Usage: " + progname + " [-h] [--no-ext]\n"
   "\n"
   "Print information on available OpenCL platforms and devices.\n"
   "\n"
@@ -28,7 +28,7 @@ const auto program_usage = "Usage: " + progname + " [-h] [--no-extensions]\n"
   "\n"
   "Options:\n"
   "  -h, --help         Print this usage\n"
-  "  --no-extensions    Do not print platform and device OpenCL extensions.\n"
+  "  --no-ext           Do not print platform and device OpenCL extensions.\n"
   "                     OpenCL extensions are printed by default, but if there\n"
   "                     are multiple platforms and devices, printing all their\n"
   "                     OpenCL extensions can take up a lot of screen space.";
@@ -37,11 +37,11 @@ const auto program_usage = "Usage: " + progname + " [-h] [--no-extensions]\n"
  * Struct for the command-line options.
  *
  * @param print_usage `true` to print the promgra usage
- * @param print_extensions `true` to show platform/device OpenGL extensions
+ * @param print_ext `true` to show platform/device OpenGL extensions
  */
 struct cli_options {
   bool print_usage = false;
-  bool print_extensions = true;
+  bool print_ext = true;
 };
 
 /**
@@ -63,9 +63,9 @@ bool parse_args(cli_options& opts, int argc, char** argv)
       opts.print_usage = true;
       return true;
     }
-    // dnodon't show platform/device extensions
-    else if (arg == "--no-extensions")
-      opts.print_extensions = false;
+    // don't show platform/device extensions
+    else if (arg == "--no-ext")
+      opts.print_ext = false;
     // unknown
     else {
       std::cerr << "Error: Unknown option " << arg << ". Try " << progname <<
@@ -196,7 +196,7 @@ int main(int argc, char** argv)
       indent(2) << "Version: " <<
         platform_info<CL_PLATFORM_VERSION>(plat) << "\n";
     // print extensions if not disabled
-    if (opts.print_extensions)
+    if (opts.print_ext)
       std::cout <<
         indent(2) << "Extensions: " <<
           platform_info<CL_PLATFORM_EXTENSIONS>(plat) << "\n";
@@ -223,7 +223,7 @@ int main(int argc, char** argv)
         indent(4) << "Max work item sizes: " <<
           format(device_info<CL_DEVICE_MAX_WORK_ITEM_SIZES>(dev)) << "\n";
       // print extensions if not disabled
-      if (opts.print_extensions)
+      if (opts.print_ext)
         std::cout <<
           indent(4) << "Extensions: " <<
             device_info<CL_DEVICE_EXTENSIONS>(dev) << "\n";
