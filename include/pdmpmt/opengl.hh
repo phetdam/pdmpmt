@@ -72,9 +72,38 @@
   /* we don't want to have function pointers per-translation-unit */ \
   inline thread_local PDMPMT_GLEXT_FUNC_TYPE(name) name
 
-// OpenGl extension functions. since these may be context dependent, we make
+// GLchar available in OpenGL 2.0 so if glext.h is not available for an OpenGL
+// implementation, e.g. on Windows, we need to manually typedef
+#ifndef GL_VERSION_2_0
+using GLchar = char;
+#endif  // GL_VERSION_2_0
+
+namespace pdmpmt {
+namespace opengl {
+
+/**
+ * OpenGL debug callback function pointer type.
+ */
+using debug_callback = void (APIENTRY *)(
+  GLenum source,
+  GLenum type,
+  GLuint id,
+  GLenum severity,
+  GLsizei length,
+  const GLchar* message,
+  const void* userParam);
+
+}  // namespace opengl
+}  // namespace pdmpmt
+
+// OpenGL extension functions. since these may be context dependent, we make
 // the function pointers thread-local since contexts tied to individual threads
 PDMPMT_GLEXT_FUNC(glGetStringi, const GLubyte*, GLenum name, GLuint index);
+PDMPMT_GLEXT_FUNC(
+  glDebugMessageCallback,
+  void,
+  pdmpmt::opengl::debug_callback callback, const void* userParam
+);
 
 namespace pdmpmt {
 namespace opengl {
@@ -441,6 +470,7 @@ PDMPMT_MSVC_WARNING_PUSH()
 PDMPMT_MSVC_WARNING_DISABLE(4191)
   // call macro for each name of interest
   PDMPMT_GLEXT_INIT_FUNC(glGetStringi);
+  PDMPMT_GLEXT_INIT_FUNC(glDebugMessageCallback);
 PDMPMT_MSVC_WARNING_POP()
 // not needed anymore
 #undef PDMPMT_GLEXT_INIT_FUNC
