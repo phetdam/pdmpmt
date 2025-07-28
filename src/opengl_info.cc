@@ -45,6 +45,25 @@ namespace {
 
 const auto progname = std::filesystem::path{__FILE__}.string();
 
+/**
+ * Print OpenGL platform and device info to standard output.
+ *
+ * This function encapsulates the actual OpenGL informational operations we
+ * want to perform. All the platform-dependent OpenGL context creation and
+ * cleanup logic is handled outside of this subroutine.
+ */
+void print_info()
+{
+  std::cout <<
+    "OpenGL version: " << glGetString(GL_VERSION) << "\n" <<
+    "OpenGL vendor: " << glGetString(GL_VENDOR) << "\n" <<
+    "OpenGL renderer: " << glGetString(GL_RENDERER) << "\n" <<
+    // TODO: re-enable later if user supplies command-line flag. there can be
+    // a large number of extensions for the device and it becomes very verbose
+    "OpenGL extensions: " << pdmpmt::opengl::extensions << "\n" <<
+    std::flush;
+}
+
 }  // namespace
 
 int main()
@@ -113,15 +132,8 @@ int main()
   // create OpenGL context, make it current, and initialize extensions
   pdmpmt::opengl::context glc{dc, true};
   pdmpmt::opengl::init_extensions();
-  // print some OpenGL info
-  std::cout <<
-    "OpenGL version: " << glGetString(GL_VERSION) << "\n" <<
-    "OpenGL vendor: " << glGetString(GL_VENDOR) << "\n" <<
-    "OpenGL renderer: " << glGetString(GL_RENDERER) << "\n" <<
-    // TODO: re-enable later if user supplies command-line flag. there can be
-    // a large number of extensions for the device and it becomes very verbose
-    "OpenGL extensions: " << pdmpmt::opengl::extensions << "\n" <<
-    std::flush;
+  // print OpenGL info
+  print_info();
 #elif PDMPMT_HAS_X11
   // open default X display (e.g. :0 on WSL1 from the DISPLAY env var)
   auto dsp = XOpenDisplay(nullptr);
@@ -177,7 +189,28 @@ int main()
     std::cerr << "Error: Unable to choose appropriate X visual" << std::endl;
     return EXIT_FAILURE;
   }
-  // create OpenGL context
+  // create GLX context
+  auto glc = glXCreateContext(dsp, xvi, nullptr, True);
+  if (!glc) {
+    std::cerr << "Error: Unable to create a GLX context for OpenGL" << std::endl;
+    return EXIT_FAILURE;
+  }
+  // make GLX context current using the roow window for the screen
+  // note: could use DefaultRootWindows since scn is DefaultScreen(dsp)
+  if (glXMakeCurrent(dsp, DefaultRootWindow(dsp), glc) != True) {
+    std::cerr <<
+      "Error: Unable to make GLX context current using default root window" <<
+      std::endl;
+    return EXIT_FAILURE;
+  }
+  // initialize OpenGL extensions + print info
+  pdmpmt::opengl::init_extensions();
+  print_info();
+  // explicitly make context non-current + destroy GLX context
+  // TODO: handle GLXBadContext and glXMakeCurrent errors. unclear whether it
+  // is absolutely necessary to call glXMakeCurrent (see glXDestroyContext)
+  glXMakeCurrent(dsp, None, nullptr);
+  glXDestroyContext(dsp, glc);
   // TODO: still need to choose pixel format, create OpenGL context, etc.
   // done, free visual info + close display
   XFree(xvi);
