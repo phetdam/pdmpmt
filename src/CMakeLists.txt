@@ -54,6 +54,18 @@ if(OpenCL_FOUND)
         opencl_info_help PROPERTIES
         PASS_REGULAR_EXPRESSION "Usage:"
     )
+    # --no-extensions
+    add_test(NAME opencl_info_no_extensions COMMAND opencl_info --no-extensions)
+    set_tests_properties(
+        opencl_info_no_extensions PROPERTIES
+        FAIL_REGULAR_EXPRESSION "Extensions:"
+    )
+    # invalid argument
+    add_test(NAME opencl_info_badopt COMMAND opencl_info --badopt)
+    set_tests_properties(
+        opencl_info_badopt PROPERTIES
+        PASS_REGULAR_EXPRESSION "Error: Unknown option"
+    )
 else()
     message(STATUS "Skipping opencl_info (requires OpenCL)")
 endif()
