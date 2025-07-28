@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <iostream>
 #include <sstream>
+#include <string_view>
 #include <utility>
 
 #include "pdmpmt/opencl.hh"
@@ -18,12 +19,57 @@ namespace {
 
 // program name and usage
 const auto progname = std::filesystem::path{__FILE__}.stem().string();
-const auto program_usage = "Usage: " + progname + " [-h]\n"
+const auto program_usage = "Usage: " + progname + " [-h] [--no-extensions]\n"
   "\n"
   "Print information on available OpenCL platforms and devices.\n"
   "\n"
   "Options:\n"
-  "  -h, --help         Print this usage";
+  "  -h, --help         Print this usage\n"
+  "  --no-extensions    Do not print platform and device OpenCL extensions";
+
+/**
+ * Struct for the command-line options.
+ *
+ * @param print_usage `true` to print the promgra usage
+ * @param print_extensions `true` to show platform/device OpenGL extensions
+ */
+struct cli_options {
+  bool print_usage = false;
+  bool print_extensions = true;
+};
+
+/**
+ * Parse incoming command-line options.
+ *
+ * @param opts Command-line options to set
+ * @param argc Argument count from` main()`
+ * @param argv Argument vector from `main()`
+ * @returns `true` if parsing succeeded, `false` otherwise
+ */
+bool parse_args(cli_options& opts, int argc, char** argv)
+{
+  // simple loop through arguments
+  for (int i = 1; i < argc; i++) {
+    // arg string view for convenience
+    std::string_view arg{argv[i]};
+    // print usage (break early)
+    if (arg == "-h" || arg == "--help") {
+      opts.print_usage = true;
+      return true;
+    }
+    // dnodon't show platform/device extensions
+    else if (arg == "--no-extensions")
+      opts.print_extensions = false;
+    // unknown
+    else {
+      std::cerr << "Error: Unknown option " << arg << ". Try " << progname <<
+        " --help for usage" << std::endl;
+      return false;
+    }
+  }
+  // done
+  return true;
+}
 
 /**
  * Indentation helper.
@@ -116,13 +162,16 @@ auto format(R&& rng, pdmpmt::constraint_t<pdmpmt::is_range_v<R>> = 0)
 
 }  // namespace
 
-int main(int argc, char** /*argv*/)
+int main(int argc, char** argv)
 {
   using pdmpmt::opencl::platform_info;
   using pdmpmt::opencl::device_info;
-  // quick and dirty usage print
-  // TODO: allow the program to accept more options
-  if (argc != 1) {
+  // parse command-line arguments
+  cli_options opts;
+  if (!parse_args(opts, argc, argv))
+    return EXIT_FAILURE;
+  // print usage if specified
+  if (opts.print_usage) {
     std::cout << program_usage << std::endl;
     return EXIT_SUCCESS;
   }
@@ -139,9 +188,12 @@ int main(int argc, char** /*argv*/)
       indent(2) << "Name: " <<
         platform_info<CL_PLATFORM_NAME>(plat) << "\n" <<
       indent(2) << "Version: " <<
-        platform_info<CL_PLATFORM_VERSION>(plat) << "\n" <<
-      indent(2) << "Extensions: " <<
-        platform_info<CL_PLATFORM_EXTENSIONS>(plat) << "\n";
+        platform_info<CL_PLATFORM_VERSION>(plat) << "\n";
+    // print extensions if not disabled
+    if (opts.print_extensions)
+      std::cout <<
+        indent(2) << "Extensions: " <<
+          platform_info<CL_PLATFORM_EXTENSIONS>(plat) << "\n";
     // get device IDs for the platform
     auto dev_ids = pdmpmt::opencl::device_ids(plat);
     std::cout << indent(2) << "OpenCL devices:" << std::endl;
@@ -163,9 +215,14 @@ int main(int argc, char** /*argv*/)
         indent(4) << "Max work group size: " <<
           device_info<CL_DEVICE_MAX_WORK_GROUP_SIZE>(dev) << "\n" <<
         indent(4) << "Max work item sizes: " <<
-          format(device_info<CL_DEVICE_MAX_WORK_ITEM_SIZES>(dev)) << "\n" <<
-        indent(4) << "Extensions: " <<
-          device_info<CL_DEVICE_EXTENSIONS>(dev) << "\n" << std::flush;
+          format(device_info<CL_DEVICE_MAX_WORK_ITEM_SIZES>(dev)) << "\n";
+      // print extensions if not disabled
+      if (opts.print_extensions)
+        std::cout <<
+          indent(4) << "Extensions: " <<
+            device_info<CL_DEVICE_EXTENSIONS>(dev) << "\n";
+      // flush stdout
+      std::cout << std::flush;
     }  // CL_DEVICE_EXTENSIONS
   }
   return EXIT_SUCCESS;
