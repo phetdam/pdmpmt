@@ -92,7 +92,17 @@ if(OpenGL_FOUND AND WIN32 OR (X11_FOUND AND OpenGL_GLX_FOUND))
     else()
         target_link_libraries(opengl_info PRIVATE OpenGL::GLX X11::X11)
     endif()
+    # smoke test
     add_test(NAME opengl_info COMMAND opengl_info)
+    # -h, --help option
+    add_test(NAME opengl_info_h COMMAND opengl_info -h)
+    add_test(NAME opengl_info_help COMMAND opengl_info --help)
+    set_tests_properties(
+        opengl_info_h opengl_info_help PROPERTIES
+        PASS_REGULAR_EXPRESSION "Usage:"
+    )
+    # TODO: add tests for brief options (no extension printing) when we have
+    # finally decided what the options should be
 else()
     set(opengl_info_requires "OpenGL")
     # if not on Windows, need X11 + GLX
