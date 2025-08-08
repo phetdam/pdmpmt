@@ -5,6 +5,9 @@
  * @copyright MIT License
  */
 
+// note: included earlier for feature detection macros
+#include "pdmpmt/features.h"
+
 #ifdef _WIN32
 // reduce Windows.h include size
 #ifndef WIN32_LEAN_AND_MEAN
@@ -14,30 +17,16 @@
 #include <wingdi.h>
 #endif  // _WIN32
 
-// TODO: make part of features.h
-#ifdef __has_include
-#if __has_include(<X11/Xlib.h>)
-#include <X11/Xlib.h>
-#define PDMPMT_HAS_X11 1
-#endif  // __has_include(<X11/Xlib.h>)
-#endif  // __has_include
-
-#ifndef PDMPMT_HAS_X11
-#define PDMPMT_HAS_X11 0
-#endif  // PDMPMT_HAS_X11
-
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
 #include <string_view>
 
 #include <GL/gl.h>
-// TODO: should have separate check for GLX
-#if PDMPMT_HAS_X11
+#if PDMPMT_HAS_GLX
 #include <GL/glx.h>
-#endif  // PDMPMT_HAS_X11
+#endif  // PDMPMT_HAS_GLX
 
-#include "pdmpmt/features.h"
 #include "pdmpmt/opengl.hh"
 #ifdef _WIN32
 #include "pdmpmt/win32.hh"
@@ -48,9 +37,9 @@ namespace {
 // program name and usage
 const auto progname = std::filesystem::path{__FILE__}.stem().string();
 const auto program_usage = "Usage: " + progname + " [-h] [--nx-gl]"
-#if PDMPMT_HAS_X11
+#if PDMPMT_HAS_GLX
   " [--nx-glx]"
-#endif  // PDMPMT_HAS_X11
+#endif  // PDMPMT_HAS_GLX
   "\n"
   "\n"
   "Print information on available OpenGL runtime.\n"
@@ -62,10 +51,10 @@ const auto program_usage = "Usage: " + progname + " [-h] [--nx-gl]"
   "Options:\n"
   "  -h, --help             Print this usage\n"
   "  --nx-gl                Do not print the supported OpenGL extensions"
-#if PDMPMT_HAS_X11
+#if PDMPMT_HAS_GLX
   "\n"
   "  --nx-glx               Do not print the supported GLX extensions"
-#endif  // PDMPMT_HAS_X11
+#endif  // PDMPMT_HAS_GLX
   ;
 
 /**
@@ -104,11 +93,11 @@ bool parse_args(cli_options& opts, int argc, char** argv)
     // --nx-gl
     else if (arg == "--nx-gl")
       opts.print_gl_ext = false;
-#if PDMPMT_HAS_X11
+#if PDMPMT_HAS_GLX
     // --nx-glx
     else if (arg == "--nx-glx")
       opts.print_glx_ext = false;
-#endif  // PDMPMT_HAS_X11
+#endif  // PDMPMT_HAS_GLX
     // unknown option
     else {
       std::cerr << "Error: Unknown option " << arg << ". Try " << progname <<
@@ -222,7 +211,7 @@ int main(int argc, char** argv)
   pdmpmt::opengl::init_extensions();
   // print OpenGL info
   print_info(opts.print_gl_ext);
-#elif PDMPMT_HAS_X11
+#elif PDMPMT_HAS_GLX
   // open default X display (e.g. :0 on WSL1 from the DISPLAY env var)
   auto dsp = XOpenDisplay(nullptr);
   if (!dsp) {
@@ -291,8 +280,8 @@ int main(int argc, char** argv)
     std::cerr << "Error: Unable to create a GLX context for OpenGL" << std::endl;
     return EXIT_FAILURE;
   }
-  // make GLX context current using the roow window for the screen
-  // note: could use DefaultRootWindows since scn is DefaultScreen(dsp)
+  // make GLX context current using the root window for the screen
+  // note: can use DefaultRootWindow since scn is DefaultScreen(dsp)
   if (glXMakeCurrent(dsp, DefaultRootWindow(dsp), glc) != True) {
     std::cerr <<
       "Error: Unable to make GLX context current using default root window" <<
