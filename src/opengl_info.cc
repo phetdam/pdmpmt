@@ -26,6 +26,9 @@
 #if PDMPMT_HAS_GLX
 #include <GL/glx.h>
 #endif  // PDMPMT_HAS_GLX
+#if PDMPMT_HAS_X11
+#include <X11/Xlib.h>
+#endif  // PDMPMT_HAS_X11
 
 #include "pdmpmt/opengl.hh"
 #ifdef _WIN32
