@@ -101,8 +101,20 @@ if(OpenGL_FOUND AND WIN32 OR (X11_FOUND AND OpenGL_GLX_FOUND))
         opengl_info_h opengl_info_help PROPERTIES
         PASS_REGULAR_EXPRESSION "Usage:"
     )
-    # TODO: add tests for brief options (no extension printing) when we have
-    # finally decided what the options should be
+    # -nx-gl option (no OpenGL extensions)
+    add_test(NAME opengl_info_nx_gl COMMAND opengl_info -nx-gl)
+    set_tests_properties(
+        opengl_info_nx_gl PROPERTIES
+        FAIL_REGULAR_EXPRESSION "OpenGL extensions"
+    )
+    # -nx-glx option (no GLX extensions)
+    if(X11_FOUND AND OpenGL_GLX_FOUND)
+        add_test(NAME opengl_info_nx_glx COMMAND opengl_info -nx-glx)
+        set_tests_properties(
+            opengl_info_nx_glx PROPERTIES
+            FAIL_REGULAR_EXPRESSION "GLX (client|server) extensions"
+        )
+    endif()
 else()
     set(opengl_info_requires "OpenGL")
     # if not on Windows, need X11 + GLX
