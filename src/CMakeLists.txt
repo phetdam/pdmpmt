@@ -81,7 +81,6 @@ else()
 endif()
 
 # opengl_info: print OpenGL platform + version info
-# TODO: get this working for X Windows too
 if(OpenGL_FOUND AND WIN32 OR (X11_FOUND AND OpenGL_GLX_FOUND))
     add_executable(opengl_info opengl_info.cc)
     target_link_libraries(opengl_info PRIVATE OpenGL::GL pdmpmt++)
@@ -113,6 +112,15 @@ if(OpenGL_FOUND AND WIN32 OR (X11_FOUND AND OpenGL_GLX_FOUND))
         set_tests_properties(
             opengl_info_nx_glx PROPERTIES
             FAIL_REGULAR_EXPRESSION "GLX (client|server) extensions"
+        )
+    endif()
+    # when built with X11 and GLX, if there is no display, skip the test
+    if(X11_FOUND)
+        set_tests_properties(
+            opengl_info
+            opengl_info_nx_gl
+            opengl_info_nx_glx PROPERTIES
+            SKIP_REGULAR_EXPRESSION "Unable to open default display"
         )
     endif()
 else()
