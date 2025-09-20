@@ -342,30 +342,44 @@ if(NOT WIN32 AND ray-cpp_PIP_FOUND)
     # Windows path that is returned from Python
     cmake_path(CONVERT ${ray-cpp_ROOT_DIR} TO_CMAKE_PATH_LIST ray-cpp_ROOT_DIR)
     set(ray-cpp_INCLUDE_DIRS ${ray-cpp_ROOT_DIR}/include)
-    # find the main Ray library
+    # find the main Ray API library
     find_library(
-        ray-cpp_LIBRARIES
+        ray-cpp_LIBRARY
         NAMES ray_api
         HINTS ${ray-cpp_ROOT_DIR}
         PATH_SUFFIXES lib
         NO_CACHE
         REQUIRED
     )
-    # create target
-    # TODO: this could be a SHARED IMPORTED target if we set IMPORTED_LOCATION
-    add_library(pdmpmt::ray_api INTERFACE IMPORTED)
+    # create shared IMPORTED target for ray_api library
+    add_library(pdmpmt::ray_api SHARED IMPORTED)
+    set_target_properties(
+        pdmpmt::ray_api PROPERTIES
+        IMPORTED_LOCATION "${ray-cpp_LIBRARY}"
+    )
     target_include_directories(pdmpmt::ray_api INTERFACE ${ray-cpp_INCLUDE_DIRS})
     # note: binary Python wheels for Linux still use the pre-C++11 ABI. another
     # example would by PyTorch; this is also a required compile definition. see
     # https://github.com/ray-project/ray/issues/26031
     # TODO: may not need this?
     target_compile_definitions(pdmpmt::ray_api INTERFACE _GLIBCXX_USE_CXX11_ABI=0)
-    target_link_libraries(pdmpmt::ray_api INTERFACE ${ray-cpp_LIBRARIES})
-    # build Ray example (kind of janky)
-    # note: has issues with SO_REUSEPORT on WSL1. see
+    # build Ray example source as shared library. this is necessary to properly
+    # have the Plus, Counter::* symbols available for export. we use MODULE
+    # instead of SHARED since there are no headers and Ray will dlopen() this
+    add_library(ray_example_lib MODULE ${ray-cpp_ROOT_DIR}/example/example.cc)
+    target_link_libraries(ray_example_lib PRIVATE pdmpmt::ray_api)
+    # build Ray example source as executable. yes this is somewhat redundant
+    # in the case of the example, but in a real-life setting, you would
+    # probably have extern "C" symbols exported from shared objects separate
+    # from the actual application logic that is creating a ray::Task.
+    # note: has issues with SO_REUSEPORT on WSL1 (although it still runs). see
     # https://github.com/grpc/grpc/issues/28936 and others
-    add_executable(ray-example ${ray-cpp_ROOT_DIR}/example/example.cc)
-    target_link_libraries(ray-example PRIVATE pdmpmt::ray_api)
+    # note: by default, Ray will look for dynamic libraries to load in the
+    # directory that the running application resides in
+    add_executable(ray_example ${ray-cpp_ROOT_DIR}/example/example.cc)
+    target_link_libraries(ray_example PRIVATE pdmpmt::ray_api)
+    # smoke test for the Ray example
+    add_test(NAME ray_example COMMAND ray_example)
 else()
     message(
         STATUS
