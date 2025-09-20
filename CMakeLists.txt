@@ -381,9 +381,10 @@ if(NOT WIN32 AND ray-cpp_PIP_FOUND)
     # smoke test for the Ray example
     add_test(NAME ray_example COMMAND ray_example)
 else()
+    message(STATUS "Skipping ray_example (Ray C++ API not supported on Windows)")
     message(
         STATUS
-        "Skipping pdmpmt::ray_api (Ray C++ API not supported on Windows)"
+        "Skipping ray_example_lib (Ray C++ API not supported on Windows)"
     )
 endif()
 
