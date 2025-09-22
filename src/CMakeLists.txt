@@ -140,7 +140,6 @@ endif()
 if(TARGET pdmpmt::ray_api)
     add_library(ray_mcpi_remote MODULE ray_mcpi.cc)
     target_link_libraries(ray_mcpi_remote PRIVATE pdmpmt++ pdmpmt::ray_api)
-    # defining PDMPMT_BUILD_RAY_MCPI_REMOTE strips out helpers and main()
     set_target_properties(
         ray_mcpi_remote PROPERTIES
         DEFINE_SYMBOL PDMPMT_BUILD_RAY_MCPI_REMOTE
