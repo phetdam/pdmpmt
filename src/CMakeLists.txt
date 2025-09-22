@@ -132,3 +132,30 @@ else()
     message(STATUS "Skipping opengl_info (requires ${opengl_info_requires})")
     unset(opengl_info_requires)
 endif()
+
+# ray_mcpi_remote: DSO for ray_mcpi
+# we need this because Ray resolves function names registered at load-time with
+# RAY_REMOTE by scanning the dynamic symbol tables of the DSOs it loads. the
+# load locations are determined via search directories
+if(TARGET pdmpmt::ray_api)
+    add_library(ray_mcpi_remote MODULE ray_mcpi.cc)
+    target_link_libraries(ray_mcpi_remote PRIVATE pdmpmt++ pdmpmt::ray_api)
+    # defining PDMPMT_BUILD_RAY_MCPI_REMOTE strips out helpers and main()
+    set_target_properties(
+        ray_mcpi_remote PROPERTIES
+        DEFINE_SYMBOL PDMPMT_BUILD_RAY_MCPI_REMOTE
+    )
+else()
+    message(STATUS "Skipping ray_mcpi_remote (requires Ray C++ API)")
+endif()
+
+# ray_mcpi: compute pi using Monte Carlo via Ray's C++ API
+if(TARGET pdmpmt::ray_api)
+    add_executable(ray_mcpi ray_mcpi.cc)
+    target_link_libraries(ray_mcpi PRIVATE pdmpmt++ pdmpmt::ray_api)
+    add_test(NAME ray_mcpi COMMAND ray_mcpi)
+    # the same default Ray runtime is started + stopped
+    set_tests_properties(ray_mcpi PROPERTIES RESOURCE_LOCK ray_runtime)
+else()
+    message(STATUS "Skipping ray_mcpi (requires Ray C++ API)")
+endif()
