@@ -23,6 +23,7 @@
 #include <ray/api.h>
 
 #include "pdmpmt/mcpi.hh"
+#include "pdmpmt/ray.hh"
 
 // when compiling as DSO, we need to ensure symbols are appropriately exported
 #if defined(PDMPMT_BUILD_RAY_MCPI_REMOTE)
@@ -85,73 +86,6 @@ RAY_REMOTE(unit_circle_samples);
 namespace {
 
 /**
- * Ray runtime context.
- *
- * This ensures that the Ray runtime is correctly shut down on program exit.
- */
-class ray_runtime_context {
-public:
-  /**
-   * Default ctor.
-   *
-   * Calls the equivalent of `ray::Init()`.
-   *
-   * @param stop_on_abort `true` to ensure Ray shutdown before `abort()`
-   */
-  ray_runtime_context(bool stop_on_abort = true)
-  {
-    ray::Init();
-    // on error, Ray will rudely abort, so calling ray::Shutdown() is desirable
-    if (stop_on_abort)
-      stop_on_abort_ = set_abort_handler();
-  }
-
-  /**
-   * Ctor.
-   *
-   * Delegates arguments to `Init(ray::RayConfig&)` overload.
-   *
-   * @param stop_on_abort `true` to ensure Ray shutdown before `abort()`
-   */
-  ray_runtime_context(ray::RayConfig& cfg, bool stop_on_abort = true)
-  {
-    ray::Init(cfg);
-    // on error, Ray will rudely abort, so calling ray::Shutdown() is desirable
-    if (stop_on_abort)
-      stop_on_abort_ = set_abort_handler();
-  }
-
-  /**
-   * Dtor.
-   *
-   * Ensures that the Ray runtime is cleaned up before exit.
-   */
-  ~ray_runtime_context()
-  {
-    // TODO: maybe put in a try-catch
-    ray::Shutdown();
-  }
-
-  /**
-   * Indicate if `ray::Shutdown()` is called if the program aborts.
-   */
-  bool stop_on_abort() const noexcept { return stop_on_abort_; }
-
-private:
-  bool stop_on_abort_{};
-
-  /**
-   * Installs the necessary signal handler for `SIGABRT` for Ray shutdown.
-   *
-   * On success, `true` is returned, otherwise `false` is returned.
-   */
-  bool set_abort_handler() noexcept
-  {
-    return SIG_ERR != std::signal(SIGABRT, [](int) { ray::Shutdown(); });
-  }
-};
-
-/**
  * Helper function to block and collect Ray object references into a vector.
  *
  * @tparam T type
@@ -185,7 +119,7 @@ int main(int argc, char** argv)
   constexpr auto n_tasks = 500u;
   // initialize Ray runtime context
   // note: ray::Init() doesn't seem to work well with CLI arguments
-  ray_runtime_context ctx;
+  pdmpmt::ray_runtime_context ctx;
   // print parameters
   std::cout <<
     "n_samples: " << n_samples << "\n" <<
