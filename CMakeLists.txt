@@ -380,6 +380,10 @@ if(NOT WIN32 AND ray-cpp_PIP_FOUND)
     target_link_libraries(ray_example PRIVATE pdmpmt::ray_api)
     # smoke test for the Ray example
     add_test(NAME ray_example COMMAND ray_example)
+    # the same default Ray runtime is started + stopped
+    # TODO: can we have some nanny process that calls ray::Init() and
+    # ray::Shutdown() and just have the tests connect to the existing runtime?
+    set_tests_properties(ray_example PROPERTIES RESOURCE_LOCK ray_runtime)
 else()
     message(STATUS "Skipping ray_example (Ray C++ API not supported on Windows)")
     message(
