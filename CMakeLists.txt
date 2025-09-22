@@ -359,7 +359,7 @@ if(NOT WIN32 AND ray-cpp_PIP_FOUND)
     )
     target_include_directories(pdmpmt::ray_api INTERFACE ${ray-cpp_INCLUDE_DIRS})
     # note: binary Python wheels for Linux still use the pre-C++11 ABI. another
-    # example would by PyTorch; this is also a required compile definition. see
+    # example would be PyTorch; this is also a required compile definition. see
     # https://github.com/ray-project/ray/issues/26031
     # TODO: may not need this?
     target_compile_definitions(pdmpmt::ray_api INTERFACE _GLIBCXX_USE_CXX11_ABI=0)
