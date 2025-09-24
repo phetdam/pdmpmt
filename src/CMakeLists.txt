@@ -4,10 +4,10 @@ cmake_minimum_required(VERSION ${CMAKE_MINIMUM_REQUIRED_VERSION})
 add_subdirectory(pdmpmt)
 
 # thrust_demo: Thrust (NVIDIA CCCL) demo program
-# TODO: see if we can use host C++ compiler only + use shared CUDA runtime
+# TODO: see if we can use host C++ compiler only
 if(CUDAToolkit_FOUND)
     add_executable(thrust_demo thrust_demo.cu)
-    target_link_libraries(thrust_demo PRIVATE pdmpmt++)
+    target_link_libraries(thrust_demo PRIVATE CUDA::cudart pdmpmt++)
     add_test(NAME thrust_demo COMMAND thrust_demo)
 else()
     message(STATUS "Skipping thrust_demo (requires CUDA Toolkit)")
