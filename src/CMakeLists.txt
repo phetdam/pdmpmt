@@ -149,6 +149,19 @@ else()
 endif()
 
 # ray_mcpi: compute pi using Monte Carlo via Ray's C++ API
+#
+# TODO:
+#
+# now we know that the Ray C++ API is very limited and essentially
+# requires a Ray cluster's lifetime to be started and stopped by the calling
+# process. we therefore want to have a "Ray job server" that will start and
+# manage a Ray cluster, while listening to a socket/pipe for job client
+# requests. each "request" can be construed as a separate test for the Ray job
+# server to run, and should essentially just be a string request name.
+#
+# whenever Ray's C++ API begins to support Windows, we will have to adjust this
+# approach. for now, we can just start with bare-bones socket stuff.
+#
 if(TARGET pdmpmt::ray_api)
     add_executable(ray_mcpi ray_mcpi.cc)
     target_link_libraries(ray_mcpi PRIVATE pdmpmt++ pdmpmt::ray_api)
