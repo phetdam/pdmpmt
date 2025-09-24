@@ -15,9 +15,14 @@
 namespace pdmpmt {
 
 /**
- * Ray runtime context manageer.
+ * Ray runtime context manager.
  *
  * This ensures that the Ray runtime is correctly shut down on program exit.
+ *
+ * @note Every C++ process using the Ray C++ API *must* call `ray::Init()` and
+ *  `ray::Shutdown()`. This of course dashes any hope of using one process to
+ *  start a Ray cluster, have separate processes connect to and submit tasks,
+ *  and then have the first process eventually do the shutdown.
  */
 class ray_runtime_context {
 public:
