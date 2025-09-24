@@ -145,40 +145,6 @@ if(OpenCL_FOUND)
         pdmpmt_opencl_target_version INTERFACE
         CL_TARGET_OPENCL_VERSION=${PDMPMT_OPENCL_TARGET}
     )
-    # print OpenCL platform info
-    try_run(
-        cl_info_run_res
-        cl_info_compile_res
-        ${CMAKE_CURRENT_BINARY_DIR}
-        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cl_info.cc
-        COMPILE_DEFINITIONS -DCL_TARGET_OPENCL_VERSION=${PDMPMT_OPENCL_TARGET}
-        LINK_LIBRARIES OpenCL::OpenCL
-        # for consistency with project
-        CXX_STANDARD ${CMAKE_CXX_STANDARD}
-        CXX_STANDARD_REQUIRED TRUE
-        # compile and runtime output
-        COMPILE_OUTPUT_VARIABLE cl_info_compile_out
-        RUN_OUTPUT_VARIABLE cl_info_run_out
-    )
-    # shouldn't fail to compile
-    if(NOT cl_info_compile_res)
-        message(FATAL_ERROR "Failed to compile cl_info.cc: ${cl_info_compile_out}")
-    endif()
-    # shouldn't fail to run either
-    if(cl_info_run_res OR cl_info_run_res STREQUAL "FAILED_TO_RUN")
-        message(FATAL_ERROR "Failed to run cl_info: ${cl_info_run_res}")
-    endif()
-    # reformat program output for message(STATUS)
-    string(REGEX REPLACE "[ \r\n]+$" "" cl_info_run_out "${cl_info_run_out}")
-    string(REPLACE "\n" "\n-- " cl_info_run_out "${cl_info_run_out}")
-    # print program output and clean up
-    message(STATUS "${cl_info_run_out}")
-    # clean up variables
-    foreach(step run compile)
-        foreach(type res out)
-            unset(cl_info_${step}_${type})
-        endforeach()
-    endforeach()
 else()
     message(STATUS "OpenCL version: None")
 endif()
