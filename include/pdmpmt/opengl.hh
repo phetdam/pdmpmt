@@ -24,22 +24,17 @@
 #include <string_view>
 #include <utility>
 
+// note: included earlier for feature macros
+#include "pdmpmt/features.h"
+
 // note: on Windows the path is actually gl/GL.h
 #include <GL/gl.h>
 // include GLX if available
-#if !defined(_WIN32) && defined(__has_include)
-#if __has_include(<GL/glx.h>)
+#if PDMPMT_HAS_GLX
 #include <GL/glx.h>
-#define PDMPMT_HAS_GLX 1
-#endif  // __has_include(<GL/glx.h>)
-#endif  // !defined(_WIN32) && defined(__has_include)
-
-#ifndef PDMPMT_HAS_GLX
-#define PDMPMT_HAS_GLX 0
 #endif  // PDMPMT_HAS_GLX
 
 #include "pdmpmt/common.h"
-#include "pdmpmt/features.h"
 #include "pdmpmt/warnings.h"
 
 #ifdef _WIN32
