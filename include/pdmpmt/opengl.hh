@@ -518,7 +518,7 @@ inline auto& operator<<(std::ostream& out, extensions_proxy_type)
       out << " ";
     out << glGetStringi(GL_EXTENSIONS, i);
   }
-// use old glGetString(NUM_EXTENSIONS)
+// use old glGetString(GL_EXTENSIONS)
 #else
   out << glGetString(GL_EXTENSIONS);
 #endif  // !defined(GL_NUM_EXTENSIONS)
