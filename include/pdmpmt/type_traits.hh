@@ -416,6 +416,36 @@ template <typename T>
 constexpr bool is_legacy_forward_iterator_v = is_legacy_forward_iterator<T>::value;
 
 /**
+ * Traits type to get the value type of an iterator-like type.
+ *
+ * The type is required to be indirectly readable and pre-incrementable.
+ *
+ * @tparam T type
+ */
+template <typename T, typename = void>
+struct iter_value {};
+
+/**
+ * True specialization for a matching iterator-like type.
+ *
+ * @tparam T type
+ */
+template <typename T>
+struct iter_value<
+  T,
+  std::enable_if_t<is_indirectly_readable_v<T> && is_pre_incrementable_v<T>> > {
+  using type = std::decay_t<decltype(*std::declval<T>())>;
+};
+
+/**
+ * SFINAE helper to get the value type of an iterator-like type.
+ *
+ * @tparam T type
+ */
+template <typename T>
+using iter_value_t = typename iter_value<T>::type;
+
+/**
  * Traits type modeling a range.
  *
  * This differs from the C++20 range concept since it works with the legacy
