@@ -328,12 +328,16 @@ inline double mcpi(std::size_t n_samples)
  *
  * @todo Create a parallel version for potentially better speedup.
  *
+ * @note Although this function could be evaluated in a constant expression if
+ *  made `constexpr`, the number of operations required typically exceeds the
+ *  default compiler limit on the number `constexpr` operations.
+ *
  * @tparam T Floating-point type
  *
  * @param n Number of axis sub-intervals (square root of total samples)
  */
 template <typename T = double>
-constexpr T quasi_mcpi(std::size_t n, constraint_t<std::is_floating_point_v<T>> = 0)
+T quasi_mcpi(std::size_t n, constraint_t<std::is_floating_point_v<T>> = 0)
 {
   // total points in unit circle
   std::size_t n_in = 0u;
