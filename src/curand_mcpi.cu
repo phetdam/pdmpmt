@@ -4,6 +4,7 @@
  * @brief CUDA C++ program computing pi using Monte Carlo with cuRAND
  */
 
+#include <chrono>
 #include <cstdlib>
 #include <iostream>
 #include <utility>
@@ -16,6 +17,7 @@
 
 #include "pdmpmt/common.h"
 #include "pdmpmt/cuda_runtime.hh"
+#include "pdmpmt/scoped_timer.hh"
 
 namespace {
 
@@ -302,38 +304,50 @@ int main()
     std::endl;
   // seed + sample count
   constexpr auto seed = 8888u;
-  constexpr auto n_samples = 10'000'000u;
+  constexpr auto n_samples = 25'000'000u;
   // number of threads per block + number of blocks + total thread count
   constexpr auto n_block_threads = 256u;
   constexpr auto n_blocks = 2048u;
   constexpr auto n_threads = n_block_threads * n_blocks;
-  // create cuRAND Mersenne Twister generator using best possible memory order
-  curand_generator gen{CURAND_RNG_PSEUDO_MT19937};
-  curand_check << curandSetPseudoRandomGeneratorSeed(gen, seed);
-  curand_check << curandSetGeneratorOrdering(gen, CURAND_ORDERING_PSEUDO_BEST);
-  // create device vectors for x and y point coordinates in (0, 1]
-  thrust::device_vector<float> xs(n_samples);
-  thrust::device_vector<float> ys(n_samples);
-  // create device vector to hold per-thread counts of points in circle
-  thrust::device_vector<unsigned> cts(n_threads);
-  // create spans for device memory from the vectors
-  span xs_view{xs};
-  span ys_view{ys};
-  span cts_view{cts};
-  // fill device vectors with uniform values + block until completion
-  curand_check << curandGenerateUniform(gen, xs_view.data(), xs_view.size());
-  curand_check << curandGenerateUniform(gen, ys_view.data(), ys_view.size());
-  cudaDeviceSynchronize();
-  PDMPMT_CUDA_THROW_IF_ERROR();
-  // launch kernel to count number of points in the quarter-unit circle
-  unit_circle_check<<<n_blocks, n_block_threads>>>(xs_view, ys_view, cts_view);
-  cudaDeviceSynchronize();
-  PDMPMT_CUDA_THROW_IF_ERROR();
-  // accumulate all values to get final count + compute pi
-  auto n_in = thrust::reduce(thrust::device, cts.begin(), cts.end(), 0u);
-  auto pi = (4. * n_in) / n_samples;
-  // print
+  // raw time taken to estimate pi
+  pdmpmt::scoped_timer::duration time;
+  // estimate pi using cuRAND Mersenne Twister
+  // note: MSVC requires default captures for constexpr variables (this is a
+  // compiler conformance bug) so we specify default captures
+  auto pi = [=, &time]
+  {
+    pdmpmt::scoped_timer timer{time};
+    // create cuRAND Mersenne Twister generator using best possible memory order
+    curand_generator gen{CURAND_RNG_PSEUDO_MT19937};
+    curand_check << curandSetPseudoRandomGeneratorSeed(gen, seed);
+    curand_check << curandSetGeneratorOrdering(gen, CURAND_ORDERING_PSEUDO_BEST);
+    // create device vectors for x and y point coordinates in (0, 1]
+    thrust::device_vector<float> xs(n_samples);
+    thrust::device_vector<float> ys(n_samples);
+    // create device vector to hold per-thread counts of points in circle
+    thrust::device_vector<unsigned> cts(n_threads);
+    // create spans for device memory from the vectors
+    span xs_view{xs};
+    span ys_view{ys};
+    span cts_view{cts};
+    // fill device vectors with uniform values + block until completion
+    curand_check << curandGenerateUniform(gen, xs_view.data(), xs_view.size());
+    curand_check << curandGenerateUniform(gen, ys_view.data(), ys_view.size());
+    cudaDeviceSynchronize();
+    PDMPMT_CUDA_THROW_IF_ERROR();
+    // launch kernel to count number of points in the quarter-unit circle
+    unit_circle_check<<<n_blocks, n_block_threads>>>(xs_view, ys_view, cts_view);
+    cudaDeviceSynchronize();
+    PDMPMT_CUDA_THROW_IF_ERROR();
+    // accumulate all values to get final count + compute pi
+    auto n_in = thrust::reduce(thrust::device, cts.begin(), cts.end(), 0u);
+    return (4. * n_in) / n_samples;
+  }();
+  // convert to ms
+  auto ms_time = std::chrono::duration_cast<std::chrono::milliseconds>(time);
+  // print estimate and statistics
   std::cout << "pi (n_threads=" << n_threads << ", n_samples=" << n_samples <<
-    ", seed=" << seed << "): " << pi << std::endl;
+    ", seed=" << seed << "): " << pi << " in " << ms_time.count() << " ms" <<
+    std::endl;
   return EXIT_SUCCESS;
 }
