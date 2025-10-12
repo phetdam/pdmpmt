@@ -76,6 +76,22 @@ template <typename T>
 using entropy_source_t = std::enable_if_t<is_entropy_source<T>::value>;
 
 /**
+ * Indicate if a 2D point lies within the unit circle.
+ *
+ * @tparam T Floating-point type
+ * @tparam U Floating-point type
+ */
+template <typename T, typename U>
+bool in_unit_circle(
+  T x,
+  U y,
+  constraint_t<std::is_floating_point_v<T> && std::is_floating_point_v<U>> = 0)
+{
+  // note: no square root is needed
+  return x * x + y * y <= std::common_type_t<T, U>{1};
+}
+
+/**
  * Return number of samples in [-1, 1] x [-1, 1] that fall in the unit circle.
  *
  * We make a copy of the PRNG instance as otherwise its state will be changed.
@@ -101,8 +117,9 @@ auto unit_circle_samples(std::size_t n_samples, Rng rng)
   for (std::size_t i = 0; i < n_samples; i++) {
     auto x = udist(rng);
     auto y = udist(rng);
-    // no need for sqrt here since the target norm is 1
-    if (x * x + y * y <= 1.)
+    // note: we can't call in_unit_circle(udist(rng), udinst(rng)) since the
+    // evaluation order is not specified by the compiler
+    if (in_unit_circle(x, y))
       n_inside++;
   }
   return n_inside;
