@@ -82,13 +82,13 @@ using entropy_source_t = std::enable_if_t<is_entropy_source<T>::value>;
  * @tparam U Floating-point type
  */
 template <typename T, typename U>
-bool in_unit_circle(
+constexpr bool in_unit_circle(
   T x,
   U y,
   constraint_t<std::is_floating_point_v<T> && std::is_floating_point_v<U>> = 0)
 {
   // note: no square root is needed
-  return x * x + y * y <= std::common_type_t<T, U>{1};
+  return (x * x + y * y <= std::common_type_t<T, U>{1});
 }
 
 /**
@@ -119,8 +119,7 @@ auto unit_circle_samples(std::size_t n_samples, Rng rng)
     auto y = udist(rng);
     // note: we can't call in_unit_circle(udist(rng), udinst(rng)) since the
     // evaluation order is not specified by the compiler
-    if (in_unit_circle(x, y))
-      n_inside++;
+    n_inside += in_unit_circle(x, y);
   }
   return n_inside;
 }
@@ -307,6 +306,42 @@ inline double mcpi(std::size_t n_samples, std::uint_fast64_t seed)
 inline double mcpi(std::size_t n_samples)
 {
   return mcpi(n_samples, std::random_device{}());
+}
+
+/**
+ * Estimate pi using quasi Monte Carlo.
+ *
+ * This serial implementation partitions `[0, 1]` x `[0, 1]` into `n * n`
+ * squares and then samples a point in the middle of each square. Therefore,
+ * for `i`, `j` in `{0, ... n - 1}`, the `(i, j)` point has coordinates
+ * `((i + 0.5) / n, (j + 0.5) / n)`, which is exactly in the center.
+ *
+ * By using a quasirandom stratification approach we can cover the interval
+ * very evenly and avoid any patterning that can arise from PRNG usage.
+ * Sampling is also significantly cheaper as no RNG state manipulation is
+ * required and so many more points can be used in the integration.
+ *
+ * @tparam T Floating-point type
+ *
+ * @param n Number of axis sub-intervals (square root of total samples)
+ */
+template <typename T = double>
+constexpr T quasi_mcpi(std::size_t n, constraint_t<std::is_floating_point_v<T>> = 0)
+{
+  // total points in unit circle
+  std::size_t n_in = 0u;
+  // loop over coordinates
+// MSVC complains about C5219 due to narrowing size_t to double
+PDMPMT_MSVC_WARNING_PUSH()
+PDMPMT_MSVC_WARNING_DISABLE(5219)
+  for (decltype(n) i = 0u; i < n; i++)
+    for (decltype(n) j = 0u; j < n; j++)
+      n_in += detail::in_unit_circle((i + T{0.5}) / n, (j + T{0.5}) / n);
+PDMPMT_MSVC_WARNING_POP()
+  // return pi estimate. note that operations are ordered to minimize the
+  // chance of the division causing an overflow or other scaling issues
+  // note: static_cast<T>(n * n) is redundant but appeases MSVC
+  return 4 * (static_cast<T>(n_in) / static_cast<T>(n * n));
 }
 
 /**
