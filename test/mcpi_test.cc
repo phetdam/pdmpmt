@@ -1,8 +1,11 @@
 /**
  * @file mcpi_test.cc
  * @author Derek Huang
- * @brief Unit test for the C++ implementation of Monte Carlo pi estimation.
+ * @brief C++ Monte Carlo pi estimation tests.
  * @copyright MIT License
+ *
+ * This also serves as a crude benchmarking program in lieu of using a more
+ * formal benchmarking library like the Google benchmarking library.
  */
 
 #include "pdmpmt/mcpi.h"
@@ -41,7 +44,6 @@ protected:
   // default number of jobs to use at once
   static constexpr std::size_t n_jobs_ = 8;
   // double pi, if using C++20 we can use std::numbers instead
-  // static constexpr auto pi_ = boost::math::constants::pi<double>();
 #if PDMPMT_HAS_CC20
   static inline constexpr auto pi_ = std::numbers::pi;
 #else
@@ -125,6 +127,15 @@ TEST_F(MCPiTestCC, OpenMPTest)
 #else
   PDMPMT_NO_OMP_GTEST_SKIP();
 #endif  // _OPENMP
+}
+
+/**
+ * Test the C++ quasirandom estimation of pi using Monte Carlo works.
+ */
+TEST_F(MCPiTestCC, QuasiTest)
+{
+  // 6,250,000 points used in total
+  EXPECT_NEAR(pi_, pdmpmt::quasi_mcpi(2500u), pi_tol_);
 }
 
 }  // namespace
