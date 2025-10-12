@@ -304,6 +304,7 @@ endif()
 find_package(GTest 1.10)
 if(GTest_FOUND)
     message(STATUS "Google Test version: ${GTest_VERSION}")
+    include(GoogleTest)  # enable test discovery
 else()
     message(STATUS "Google Test version: None")
 endif()

@@ -1,20 +1,17 @@
 cmake_minimum_required(VERSION ${CMAKE_MINIMUM_REQUIRED_VERSION})
 
 if(GTest_FOUND)
-    # pdmpmt_test: C++ unit test program
-    # TODO: move mcpi tests out into separate programs
-    add_executable(pdmpmt_test block_test.cc mcpi_test.cc)
-    target_link_libraries(pdmpmt_test PRIVATE GTest::gtest_main pdmpmt pdmpmt++)
+    # mcpi_test: C++ Monte Carlo pi estimation test program
+    add_executable(mcpi_test mcpi_test.cc)
+    target_link_libraries(mcpi_test PRIVATE GTest::gtest_main pdmpmt pdmpmt++)
     # link OpenMP if OpenMP is available (only need C++ target)
     if(OpenMP_FOUND)
-        target_link_libraries(pdmpmt_test PRIVATE OpenMP::OpenMP_CXX)
+        target_link_libraries(mcpi_test PRIVATE OpenMP::OpenMP_CXX)
     endif()
-endif()
-
-# enable test discovery for Google Test
-if(GTest_FOUND)
-    include(GoogleTest)
-    gtest_discover_tests(pdmpmt_test)
+    # register Google Tests tests with CTest
+    gtest_discover_tests(mcpi_test)
+else()
+    message(STATUS "Skipping mcpi_test (Google Test required)")
 endif()
 
 # criteria for running Dask tests
@@ -43,3 +40,6 @@ else()
         "Skipping pdmpmt_pytest_tests (requires Python 3, NumPy, Dask, pytest)"
     )
 endif()
+
+# add unit test program subdirectory
+add_subdirectory(pdmpmt_test)
