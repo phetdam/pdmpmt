@@ -171,3 +171,8 @@ if(TARGET pdmpmt::ray_api)
 else()
     message(STATUS "Skipping ray_mcpi (requires Ray C++ API)")
 endif()
+
+# quasi_mcpi: compute using quasi Monte Carlo via stratified sampling
+add_executable(quasi_mcpi quasi_mcpi.cc)
+target_link_libraries(quasi_mcpi PRIVATE pdmpmt++)
+add_test(NAME quasi_mcpi COMMAND quasi_mcpi)
