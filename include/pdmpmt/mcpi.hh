@@ -136,6 +136,10 @@ inline auto unit_circle_samples(std::size_t n_samples, std::uint_fast64_t seed)
  *
  * @todo When compiling as CUDA C++ this can only be used from host code.
  *
+ * @note Generating multiple seeds for different PRNGs and then sampling does
+ *  not produce good sampling owing to the interleaving of the sequences.
+ *  Ideally you would want some fast skip-ahead for parallel RNG tasks.
+ *
  * @tparam Rng *UniformRandomBitGenerator* or other entropy source
  *
  * @param n_seeds Number of PRNG seeds to generate
