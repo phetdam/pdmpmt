@@ -1,5 +1,5 @@
 /**
- * @file quasi_mcpi.hh
+ * @file quasi_mcpi.cc
  * @author Derek Huang
  * @brief C++ program computing pi using quasi Monte Carlo
  * @copyright MIT License
