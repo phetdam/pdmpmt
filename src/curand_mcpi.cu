@@ -312,9 +312,7 @@ int main()
   // raw time taken to estimate pi
   pdmpmt::scoped_timer::duration time;
   // estimate pi using cuRAND Mersenne Twister
-  // note: MSVC requires default captures for constexpr variables (this is a
-  // compiler conformance bug) so we specify default captures
-  auto pi = [=, &time]
+  auto pi = [&time]
   {
     pdmpmt::scoped_timer timer{time};
     // create cuRAND Mersenne Twister generator using best possible memory order

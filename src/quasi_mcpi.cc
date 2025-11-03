@@ -19,9 +19,7 @@ int main()
   // time taken to estimate pi
   pdmpmt::scoped_timer::duration time;
   // compute pi using n_int * n_int points
-  // note: MSVC requires default captures (this is compiler conformance bug) to
-  // use the value of n_int despite n_int being constexpr
-  auto pi_hat = [=, &time]
+  auto pi_hat = [&time]
   {
     pdmpmt::scoped_timer timer{time};
     return pdmpmt::quasi_mcpi(n_int);
