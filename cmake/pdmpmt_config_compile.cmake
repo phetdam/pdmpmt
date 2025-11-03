@@ -11,6 +11,7 @@ cmake_minimum_required(VERSION 3.15)
 #
 macro(pdmpmt_config_compile)
     # add MSVC-specific compile options
+    # TODO: add /Zc:lambda for conformant lambda processing
     if(MSVC)
         # CMake adds /O2 by default for release version
         add_compile_options(
