@@ -38,6 +38,10 @@ macro(pdmpmt_config_compile)
             $<$<COMPILE_LANGUAGE:C,CXX>:/wd5045>
             # pplwin.h: class with virtual functions has non-virtual dtor
             $<$<COMPILE_LANGUAGE:C,CXX>:/wd5204>
+            # enable standards-conformant handling of lambdas. this resolves
+            # issues with MSVC require explicit capture of identifiers that
+            # refer to constexpr or static variables
+            $<$<COMPILE_LANGUAGE:CXX>:/Zc:lambda>
             # ensure CUDA compiler makes MSVC use /W3. we don't want to have
             # the warning level too high when using NVCC because those headers
             # tend to trigger MSVC a lot when using /Wall
