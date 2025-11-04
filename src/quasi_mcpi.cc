@@ -17,17 +17,15 @@ int main()
   // number of intervals to make on an axis
   constexpr auto n_int = 5000u;
   // time taken to estimate pi
-  pdmpmt::scoped_timer::duration time;
+  std::chrono::milliseconds time;
   // compute pi using n_int * n_int points
   auto pi_hat = [&time]
   {
     pdmpmt::scoped_timer timer{time};
     return pdmpmt::quasi_mcpi(n_int);
   }();
-  // convert time to milliseconds
-  auto ms_time = std::chrono::duration_cast<std::chrono::milliseconds>(time);
   // print result and other info
   std::cout << "pi (n_points=" << (n_int * n_int) << "): " << pi_hat <<
-    " in " << ms_time.count() << " ms" << std::endl;
+    " in " << time.count() << " ms" << std::endl;
   return EXIT_SUCCESS;
 }

@@ -14,11 +14,14 @@ namespace pdmpmt {
 
 /**
  * Simple scoped timer class measuring wall time.
+ *
+ * @tparam T `std::chrono::duration` specialization
  */
+template <typename T>
 class scoped_timer {
 public:
   using clock_type = std::chrono::steady_clock;
-  using duration = clock_type::duration;
+  using duration = T;
   using time_point = std::chrono::time_point<clock_type>;
 
   /**
@@ -28,7 +31,7 @@ public:
    *
    * @param out Duration value to update on scope exit
    */
-  scoped_timer(duration& out) : out_{out}
+  scoped_timer(T& out) : out_{out}
   {
     begin_ = clock_type::now();
   }
@@ -40,12 +43,12 @@ public:
    */
   ~scoped_timer()
   {
-    out_ = clock_type::now() - begin_;
+    out_ = std::chrono::duration_cast<T>(clock_type::now() - begin_);
   }
 
 private:
   time_point begin_;
-  duration& out_;
+  T& out_;
 };
 
 }  // namespace pdmpmt

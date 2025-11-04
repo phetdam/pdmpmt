@@ -310,7 +310,7 @@ int main()
   constexpr auto n_blocks = 2048u;
   constexpr auto n_threads = n_block_threads * n_blocks;
   // raw time taken to estimate pi
-  pdmpmt::scoped_timer::duration time;
+  std::chrono::milliseconds time;
   // estimate pi using cuRAND Mersenne Twister
   auto pi = [&time]
   {
@@ -341,11 +341,9 @@ int main()
     auto n_in = thrust::reduce(thrust::device, cts.begin(), cts.end(), 0u);
     return (4. * n_in) / n_samples;
   }();
-  // convert to ms
-  auto ms_time = std::chrono::duration_cast<std::chrono::milliseconds>(time);
   // print estimate and statistics
   std::cout << "pi (n_threads=" << n_threads << ", n_samples=" << n_samples <<
-    ", seed=" << seed << "): " << pi << " in " << ms_time.count() << " ms" <<
+    ", seed=" << seed << "): " << pi << " in " << time.count() << " ms" <<
     std::endl;
   return EXIT_SUCCESS;
 }
