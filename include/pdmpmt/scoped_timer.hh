@@ -31,7 +31,7 @@ public:
    *
    * @param out Duration value to update on scope exit
    */
-  scoped_timer(T& out) : out_{out}
+  scoped_timer(T& out) noexcept : out_{out}
   {
     begin_ = clock_type::now();
   }
