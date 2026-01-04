@@ -43,14 +43,16 @@ function(pdmpmt_match_pip_requirement spec)
     else()
         set(status_or_error STATUS)
     endif()
-    # get package name
-    string(REGEX REPLACE "^([0-9a-zA-Z_-]+).+" "\\1" pkg_name "${spec}")
+    # get package name from spec
+    string(REGEX REPLACE "^([0-9a-zA-Z_-]+).*" "\\1" pkg_name "${spec}")
     if(NOT pkg_name)
         message(FATAL_ERROR "Unable to get package name from spec ${spec}")
     endif()
-    # get version requirements list separate from package name
-    string(REGEX REPLACE "^[0-9a-zA-Z_-]+(.+)" "\\1" version_reqs "${spec}")
-    if(NOT version_reqs)
+    # get version requirements list separate from package name.
+    string(REGEX REPLACE "^[0-9a-zA-Z_-]+(.*)" "\\1" version_reqs "${spec}")
+    # if we can't get version requirements, only an error if spec and package
+    # name are equal (spec only has package name, no version reqs)
+    if(NOT version_reqs AND NOT pkg_name STREQUAL spec)
         message(
             FATAL_ERROR
             "Unable to get version requirements from spec ${spec}"
@@ -83,7 +85,7 @@ function(pdmpmt_match_pip_requirement spec)
     # ok, managed to find package. parse version specs and check against each
     foreach(req ${version_reqs})
         # get operator
-        string(REGEX REPLACE "(>|>=|<|<=|==).+" "\\1" ver_op "${req}")
+        string(REGEX REPLACE "([>=<]+).+" "\\1" ver_op "${req}")
         # get CMake if() version comparison operator + reverse operator
         if(ver_op STREQUAL ">")
             set(ver_cmp VERSION_GREATER)
@@ -94,10 +96,10 @@ function(pdmpmt_match_pip_requirement spec)
         elseif(ver_op STREQUAL "<")
             set(ver_cmp VERSION_LESS)
             set(ver_op_neg ">=")
-        elseif(ver_cmp STREQUAL "<=")
+        elseif(ver_op STREQUAL "<=")
             set(ver_cmp VERSION_LESS_EQUAL)
             set(ver_op_neg ">")
-        elseif(ver_cmp STREQUAL "==")
+        elseif(ver_op STREQUAL "==")
             set(ver_cmp VERSION_EQUAL)
             set(ver_op_neg "!=")
         else()
@@ -107,7 +109,7 @@ function(pdmpmt_match_pip_requirement spec)
             )
         endif()
         # get actual version in question
-        string(REGEX REPLACE "(>|>=|<|<=|==)(.+)" "\\2" version "${req}")
+        string(REGEX REPLACE "[>=<]+(.+)" "\\1" version "${req}")
         if(NOT version)
             message(FATAL_ERROR "Missing version in package spec ${spec}")
         endif()
@@ -143,7 +145,7 @@ endfunction()
 #
 # Each package specifier should be a subset of the Python requirements specs:
 #
-#   spec = package-name version-specs
+#   spec = package-name | package-name version-specs
 #   package-name = [0-9a-zA-Z_-]+
 #   version-specs = version-spec | version-specs "," version-spec
 #   version-spec = ( ">" | ">=" | "<" | "<=" | "==" ) version
@@ -157,7 +159,8 @@ endfunction()
 #           distributed>=2025.2
 #           pytest>=8
 #       OPTIONAL
-#           ray-cpp>=2.40
+#           ray-cpp>2.30
+#           PyYAML               # note: any version allowed
 #   )
 #
 # This function supersedes the original pdmpmt_find_pip_package() function
