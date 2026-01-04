@@ -69,7 +69,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 include(pdmpmt_config_compile)
-include(pdmpmt_find_pip_package)
+include(pdmpmt_find_pip_packages)
 include(pdmpmt_write_build_info)
 
 # set major minor patch version (because we want all-caps prefix)
@@ -330,11 +330,14 @@ endif()
 
 # if we have Python 3, find relevant packages
 if(Python3_FOUND)
-    pdmpmt_find_pip_package(dask MIN_VERSION 2025.2)
-    pdmpmt_find_pip_package(distributed MIN_VERSION 2025.2)
-    pdmpmt_find_pip_package(pytest MIN_VERSION 8)
-    # note: ray-cpp must be separately installed from ray
-    pdmpmt_find_pip_package(ray-cpp MIN_VERSION 2.40)
+    pdmpmt_find_pip_packages(
+        OPTIONAL
+            dask>=2025.2
+            distributed>=2025.3
+            pytest>=8
+            # note: ray-cpp must be separately installed from ray
+            ray-cpp>=2.40
+    )
 endif()
 # if ray-cpp is found create an imported target to link against
 # note: not supported on Windows. we also would have to use find_file to locate

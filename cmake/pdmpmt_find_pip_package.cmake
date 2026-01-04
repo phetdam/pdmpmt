@@ -11,6 +11,8 @@ cmake_minimum_required(VERSION 3.15)
 ##
 # Check that the given Python package has been installed with pip.
 #
+# DEPRECATED: Use the more flexible pdmpmt_find_pip_packages() instead.
+#
 # On completion, the function sets $[pkg}_PIP_FOUND to TRUE if the package was
 # found, FALSE otherwise. On success, the version is defined:
 #
