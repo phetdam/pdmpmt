@@ -15,7 +15,9 @@
 #include <cpuid.h>
 #endif  // !defined(_MSC_VER) && !defined(__GNUC__)
 
+#include <cstddef>
 #include <cstring>
+#include <string_view>
 
 namespace pdmpmt {
 
@@ -154,6 +156,19 @@ public:
       return assoc_ == 1u;
     }
 
+    /**
+     * Check for equality with another `entry`.
+     */
+    bool operator==(const entry& other) const noexcept
+    {
+      return (
+        line_size_ == other.line_size_ &&
+        parts_ == other.parts_ &&
+        assoc_ == other.assoc_ &&
+        sets_ == other.sets_
+      );
+    }
+
   private:
     unsigned line_size_{};  // cache line size in bytes
     unsigned parts_{};      // cache line partition size (lines sharing a tag)
@@ -263,6 +278,22 @@ public:
   }
 
   /**
+   * Check for equality with another `cpu_cache_info`.
+   */
+  bool operator==(const cpu_cache_info& other) const noexcept
+  {
+    return (
+      leaf_ == other.leaf_ &&
+      !std::strcmp(vendor_, other.vendor_) &&
+      l1i_ == other.l1i_ &&
+      l1d_ == other.l1d_ &&
+      l2c_ == other.l2c_ &&
+      l3c_ == other.l3c_ &&
+      l4c_ == other.l4c_
+    );
+  }
+
+  /**
    * Return the leaf value used for querying CPU cache information.
    *
    * For Intel CPUs this should be 4 while for AMD this should be `0x8000001D`.
@@ -313,5 +344,24 @@ private:
 };
 
 }  // namespace pdmpmt
+
+namespace std {
+
+/**
+ * `std::hash` specialization for the `cpu_cache_info`.
+ *
+ * This uses the `std::string_view` hash specialization to hash object bytes.
+ */
+template <>
+struct hash<pdmpmt::cpu_cache_info> {
+  auto operator()(const pdmpmt::cpu_cache_info& info) const noexcept
+  {
+    std::hash<std::string_view> hf;
+    // hash bytes
+    return hf({reinterpret_cast<const char*>(&info), sizeof info});
+  }
+};
+
+}  // namespace
 
 #endif  // PDMPMT_CPU_CACHE_INFO_HH_
