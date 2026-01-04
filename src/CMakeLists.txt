@@ -176,3 +176,11 @@ endif()
 add_executable(quasi_mcpi quasi_mcpi.cc)
 target_link_libraries(quasi_mcpi PRIVATE pdmpmt++)
 add_test(NAME quasi_mcpi COMMAND quasi_mcpi)
+
+# cpu_affinity: demo program that prints and sets thread affinity
+if(LINUX)
+    add_executable(cpu_affinity cpu_affinity.cc)
+    add_test(NAME cpu_affinity COMMAND cpu_affinity)
+else()
+    message(STATUS "Skipping cpu_affinity (currently only available on Linux)")
+endif()
