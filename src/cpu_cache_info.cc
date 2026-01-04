@@ -263,6 +263,9 @@ int main()
       "Logical CPU " << i << ":\n" <<
       "  L1I: " << info.l1i().size<1024>() << "K\n" <<
       "  L1D: " << info.l1d().size<1024>() << "K\n" <<
+      // note: L2 cache topology is not reflected on e.g. NUMA architectures
+      // like Alder Lake processors where L2 cache topology is more intricate.
+      // L3 caches are also typically shared by all physical/logical CPUs
       "  L2C: " << info.l2c().size<(1 << 20)>() << "M\n" <<
       "  L3C: " << info.l3c().size<(1 << 20)>() << "M\n" << std::flush;
     // unset for next iteration
