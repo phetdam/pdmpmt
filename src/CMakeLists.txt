@@ -184,3 +184,8 @@ if(LINUX)
 else()
     message(STATUS "Skipping cpu_affinity (currently only available on Linux)")
 endif()
+
+# cpu_cache_info: prints CPU cache information for each logical CPU
+add_executable(cpu_cache_info cpu_cache_info.cc)
+target_link_libraries(cpu_cache_info PRIVATE pdmpmt++)
+add_test(NAME cpu_cache_info COMMAND cpu_cache_info)
