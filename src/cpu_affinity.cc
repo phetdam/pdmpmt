@@ -414,6 +414,8 @@ public:
 
   /**
    * Implicitly convert into `cpu_set_t*` for C function interop.
+   *
+   * This can also be used to determine if the `cpu_set` was moved from.
    */
   operator cpu_set_t*() const noexcept
   {
@@ -465,6 +467,21 @@ private:
   {
     from(other.size(), no_zero);
     std::memcpy(set_, other.set_, alloc_size_);
+  }
+
+  /**
+   * Initialize from another CPU set object by move.
+   *
+   * After move, the moved-from object has `nullptr` data and zero sizes.
+   */
+  void from(cpu_set&& other) noexcept
+  {
+    set_ = other.set_;
+    alloc_size_ = other.alloc_size_;
+    size_ = other.size_;
+    other.set_ = nullptr;
+    other.alloc_size_ = 0u;
+    other.size_ = 0u;
   }
 
   /**
