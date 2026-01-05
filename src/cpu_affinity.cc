@@ -565,8 +565,7 @@ int main()
   cpus = cpu_set::current();
   print_info(cpus);
   // clear and repeat for each available CPU number
-  auto n_cpus = get_nprocs_conf();
-  for (decltype(n_cpus) i = 0; i < n_cpus; i++) {
+  for (auto i = 0u; i < cpus.size(); i++) {
     cpus = {};
     cpus[i] = true;
     // if EINVAL, CPU is not online/insufficient perms, so don't error
@@ -584,7 +583,8 @@ int main()
     // if current CPU is not i affinity switch failed
     std::cout << cpus << " " << cpu_set::fmt("*") << cpus << " current: ";
     auto cur_cpu = sched_getcpu();
-    if (i == cur_cpu)
+    // note: cast to appease compiler warning about signed/unsigned mismatch
+    if (i == static_cast<decltype(i)>(cur_cpu))
       std::cout << cur_cpu << std::endl;
     else
       std::cout << "EINVAL (no migration)" << std::endl;
