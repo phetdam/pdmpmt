@@ -26,14 +26,9 @@ else()
     set(_run_dask_tests FALSE)
 endif()
 
-# run pytest test if possible
-# TODO: find way to run tests individually
+# run pytest tests if possible
 if(_run_dask_tests)
-    add_test(
-        NAME pdmpmt_pytest_tests
-        COMMAND ${Python3_EXECUTABLE} -m pytest
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-    )
+    pdmpmt_pytest_add_tests(FROM "${PROJECT_SOURCE_DIR}")
 else()
     message(
         STATUS

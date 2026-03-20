@@ -70,6 +70,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 include(pdmpmt_config_compile)
 include(pdmpmt_find_pip_packages)
+include(pdmpmt_pytest_add_tests)
 include(pdmpmt_write_build_info)
 
 # set major minor patch version (because we want all-caps prefix)
