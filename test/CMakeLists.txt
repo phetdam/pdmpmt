@@ -31,7 +31,7 @@ endif()
 if(_run_dask_tests)
     add_test(
         NAME pdmpmt_pytest_tests
-        COMMAND pytest WORKING_DIRECTORY
+        COMMAND ${Python3_EXECUTABLE} -m pytest
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     )
 else()
