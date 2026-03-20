@@ -47,7 +47,7 @@ public:
   // value for invalid handle
 #if defined(_WIN32)
   // cannot be constexpr as INVALID_HANDLE_VALUE is not a valid address
-  static const handle_type bad_handle = INVALID_HANDLE_VALUE;
+  static inline const handle_type bad_handle = INVALID_HANDLE_VALUE;
 #else
   static constexpr handle_type bad_handle = -1;
 #endif  // !defined(_WIN32)
