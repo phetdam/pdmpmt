@@ -88,7 +88,7 @@ public:
   {
 #if defined(_WIN32)
     CloseHandle(handle_);
-    DeleteFileW(path.c_str());
+    DeleteFileW(path_.c_str());
 #else
     close(handle_);
     unlink(path_.c_str());
