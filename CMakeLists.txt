@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.23)
 
 project(
     pdmpmt
@@ -306,13 +306,20 @@ else()
     message(CHECK_FAIL "not found")
 endif()
 
-# Google Test for unit test runners
+# GoogleTest for unit test runners
 find_package(GTest 1.10)
 if(GTest_FOUND)
-    message(STATUS "Google Test version: ${GTest_VERSION}")
+    message(STATUS "GoogleTest version: ${GTest_VERSION}")
     include(GoogleTest)  # enable test discovery
 else()
-    message(STATUS "Google Test version: None")
+    message(STATUS "GoogleTest version: None")
+endif()
+# also explicitly check for GoogleMock as some Linux platforms distribute
+# GoogleTest and GoogleMock separately. we look for the defined targets
+if(TARGET GTest::gmock)
+    message(STATUS "GoogleMock version: ${GTest_VERSION}")
+else()
+    message(STATUS "GoogleMock version: None")
 endif()
 
 # find Python (note: may add Development component later)

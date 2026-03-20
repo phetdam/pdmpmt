@@ -48,4 +48,15 @@
 #define PDMPMT_HAS_GLX 0
 #endif  // PDMPMT_HAS_GLX
 
+// GoogleMock
+#ifdef __has_include
+#if __has_include(<gmock/gmock.h>)
+#define PDMPMT_HAS_GMOCK 1
+#endif  // __has_include(<gmock/gmock.h>)
+#endif  // __has_include
+
+#ifndef PDMPMT_HAS_GMOCK
+#define PDMPMT_HAS_GMOCK 0
+#endif  // PDMPMT_HAS_GMOCK
+
 #endif  // PDMPMT_FEATURES_H_
