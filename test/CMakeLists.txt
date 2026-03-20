@@ -38,3 +38,8 @@ endif()
 
 # add unit test program subdirectory
 add_subdirectory(pdmpmt_test)
+
+# file_mutex_mt_test: test file_mutex inter-thread synchronization
+add_executable(file_mutex_mt_test file_mutex_mt_test.cc)
+target_link_libraries(file_mutex_mt_test PRIVATE pdmpmt++)
+add_test(NAME file_mutex_mt_test COMMAND file_mutex_mt_test)
