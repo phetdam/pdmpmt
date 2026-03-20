@@ -24,11 +24,16 @@ dynamic = ["version"]
 [project.urls]
 homepage = "https://github.com/phetdam/pdmpmt"
 
-[project.optional_dependencies]
+[project.optional-dependencies]
 tests = ["pytest>=6.0.1"]
 
 [tool.setuptools.dynamic]
 version = {attr = "pdmpmt.__version__"}
+
+# only search for pdmpmt package
+# TODO: may want to move package tree to src to use auto-discovery feature
+[tool.setuptools.packages.find]
+where = ["."]
 
 [tool.pytest.ini_options]
 addopts = "-rsxXP"
