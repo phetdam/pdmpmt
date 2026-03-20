@@ -8,6 +8,8 @@ cmake_minimum_required(VERSION 3.20)
 # This requires that Python has already been found.
 #
 
+include_guard(GLOBAL)
+
 ##
 # Match a package spec against a list of pip freeze version requirements.
 #

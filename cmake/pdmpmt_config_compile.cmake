@@ -6,6 +6,8 @@ cmake_minimum_required(VERSION 3.15)
 # Sets up project-wide compilation options.
 #
 
+include_guard(GLOBAL)
+
 ##
 # Configure project-wide compilation options.
 #

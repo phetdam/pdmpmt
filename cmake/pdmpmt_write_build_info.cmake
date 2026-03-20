@@ -6,6 +6,8 @@ cmake_minimum_required(VERSION 3.15)
 # Write a build info string based off of a Git hash.
 #
 
+include_guard(GLOBAL)
+
 ##
 # Writes the build info string to the given output variable.
 #
