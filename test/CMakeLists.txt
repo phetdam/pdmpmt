@@ -32,7 +32,7 @@ if(_run_dask_tests)
 else()
     message(
         STATUS
-        "Skipping pdmpmt_pytest_tests (requires Python 3, NumPy, Dask, pytest)"
+        "Skipping pdmpmt pytest tests (requires Python 3, NumPy, Dask, pytest)"
     )
 endif()
 
