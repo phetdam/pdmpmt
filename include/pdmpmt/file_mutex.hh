@@ -128,14 +128,17 @@ public:
     }
     // othewise, deal with errors
     switch (GetLastError()) {
-    // if file exists then lock failed
+    // if file exists or access denied (not done deleting) then lock failed
     case ERROR_FILE_EXISTS:
+    case ERROR_ACCESS_DENIED:
       return false;
     // other errors
     default:
       // note: cast to avoid narrowing error from DWORD to int
+      // note: using error_code overload causes MSVC to emit C4868
       throw std::system_error{
-        {static_cast<int>(GetLastError()), std::system_category()},
+        static_cast<int>(GetLastError()),
+        std::system_category(),
         "error creating lockfile with CreateFileA()"
       };
     }
