@@ -14,28 +14,6 @@ else()
     message(STATUS "Skipping mcpi_test (Google Test required)")
 endif()
 
-# criteria for running Dask tests
-if(
-    Python3_NumPy_FOUND AND
-    dask_PIP_FOUND AND
-    distributed_PIP_FOUND AND
-    pytest_PIP_FOUND
-)
-    set(_run_dask_tests TRUE)
-else()
-    set(_run_dask_tests FALSE)
-endif()
-
-# run pytest tests if possible
-if(_run_dask_tests)
-    pdmpmt_pytest_add_tests(FROM "${PROJECT_SOURCE_DIR}")
-else()
-    message(
-        STATUS
-        "Skipping pdmpmt pytest tests (requires Python 3, NumPy, Dask, pytest)"
-    )
-endif()
-
 # add unit test program subdirectory
 add_subdirectory(pdmpmt_test)
 

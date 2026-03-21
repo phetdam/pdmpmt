@@ -327,6 +327,9 @@ endif()
 find_package(Python3 COMPONENTS Interpreter NumPy)
 if(Python3_FOUND)
     message(STATUS "Python version: ${Python3_VERSION}")
+    # get exact pip path from Python3_EXECUTABLE
+    cmake_path(GET Python3_EXECUTABLE PARENT_PATH PDMPMT_PYTHON3_BINDIR)
+    set(PDMPMT_PIP "${PDMPMT_PYTHON3_BINDIR}/pip")
 else()
     message(STATUS "Python version: None")
 endif()
@@ -433,17 +436,50 @@ configure_file(
 )
 message(STATUS "Generated ${PDMPMT_VERSION_HEADER}")
 
-# generate __init__.py
-set(PDMPMT_INIT_PY pdmpmt/__init__.py)
-# variables consumed:
-#
-#   PDMPMT_PY_VERSION
-#
-configure_file(
-    ${PDMPMT_INIT_PY}.in ${CMAKE_CURRENT_SOURCE_DIR}/${PDMPMT_INIT_PY}
-    NEWLINE_STYLE LF @ONLY
-)
-message(STATUS "Generated ${PDMPMT_INIT_PY}")
+# Python-specific build steps
+if(Python3_FOUND)
+    # generate __init__.py
+    set(PDMPMT_INIT_PY pdmpmt/__init__.py)
+    # variables consumed:
+    #
+    #   PDMPMT_PY_VERSION
+    #
+    configure_file(
+        ${PDMPMT_INIT_PY}.in ${CMAKE_CURRENT_SOURCE_DIR}/${PDMPMT_INIT_PY}
+        NEWLINE_STYLE LF @ONLY
+    )
+    message(STATUS "Generated ${PDMPMT_INIT_PY}")
+    # pdmpmt_python_package: pdmpmt Python package
+    # TODO: implement pdmpmt_add_pip_package() to use pip install -e . as a
+    # build step on a add_custom_target() target
+    add_custom_target(
+        pdmpmt_python_package ALL
+        COMMAND ${PDMPMT_PIP} install -qq -e .
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        COMMENT "Building Python package for pdmpmt_python_package"
+        VERBATIM
+    )
+    # criteria for running Dask tests needed for pytest tests
+    if(
+        Python3_NumPy_FOUND AND
+        dask_PIP_FOUND AND
+        distributed_PIP_FOUND AND
+        pytest_PIP_FOUND
+    )
+        set(_run_dask_tests TRUE)
+    else()
+        set(_run_dask_tests FALSE)
+    endif()
+    # add pytest tests if possible
+    if(_run_dask_tests)
+        pdmpmt_pytest_add_tests(pdmpmt_python_package)
+    else()
+        message(
+            STATUS
+            "Skipping pdmpmt pytest tests (requires Python 3, NumPy, Dask, pytest)"
+        )
+    endif()
+endif()
 
 # pdmpmt++: C++ header-only library implementation
 add_library(pdmpmt++ INTERFACE)
