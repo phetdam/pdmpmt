@@ -42,7 +42,7 @@ TEST_F(UlongBlockTest, AllocTest)
   constexpr auto size = 100u;
   block_ = pdmpmt_block_ulong_alloc(size);
   // validity check
-  ASSERT_TRUE(block_.data) << "block data must not be NULL";
+  ASSERT_TRUE(!!block_.data) << "block data must not be NULL";
   // expected size
   EXPECT_EQ(size, block_.size);
 }
@@ -55,12 +55,12 @@ TEST_F(UlongBlockTest, CallocTest)
   constexpr auto size = 128u;
   block_ = pdmpmt_block_ulong_calloc(size);
   // validity check
-  ASSERT_TRUE(block_.data) << "block data must not be NULL";
+  ASSERT_TRUE(!!block_.data) << "block data must not be NULL";
   // expected size
   EXPECT_EQ(size, block_.size);
   // data elements all expected to be empty
-  EXPECT_EQ(0, block_.data[0]);
-  EXPECT_EQ(0, block_.data[size - 1]);
+  EXPECT_EQ(0u, block_.data[0]);
+  EXPECT_EQ(0u, block_.data[size - 1]);
 }
 
 }  // namespace
