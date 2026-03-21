@@ -40,6 +40,11 @@ macro(pdmpmt_config_compile)
             $<$<COMPILE_LANGUAGE:C,CXX>:/wd5045>
             # pplwin.h: class with virtual functions has non-virtual dtor
             $<$<COMPILE_LANGUAGE:C,CXX>:/wd5204>
+            # treat angle-bracket includes as system headers and suppress their
+            # warnings unless we instantiate an included template
+            $<$<COMPILE_LANGUAGE:C,CXX>:/external:anglebrackets>
+            $<$<COMPILE_LANGUAGE:C,CXX>:/external:W0>
+            $<$<COMPILE_LANGUAGE:C,CXX>:/external:templates->
             # enable standards-conformant handling of lambdas. this resolves
             # issues with MSVC require explicit capture of identifiers that
             # refer to constexpr or static variables
