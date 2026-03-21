@@ -7,9 +7,9 @@ name = "pdmpmt"
 description = "Python experiments on mixed-hardware parallel computing."
 readme = "README.rst"
 requires-python = ">=3.8"
-license = {text = "MIT License"}
+license = "MIT"
+license-files = ["LICENSE"]
 classifiers = [
-    "License :: OSI Approved :: MIT License",
     "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX",
     "Programming Language :: Python :: 3"
@@ -32,8 +32,15 @@ version = {attr = "pdmpmt.__version__"}
 
 # only search for pdmpmt package
 # TODO: may want to move package tree to src to use auto-discovery feature
+# TODO: might want to get off of setuptools as it is hardcoded to use "build"
+# as the build directory and does too much directory recursion when using pip
+# install ., causing a directory structure like build/lib/build/lib/... which
+# cannot be worked around without some setup.py hacking. editable installs are
+# ok using the package.find spec here but "real" installs are broken.
 [tool.setuptools.packages.find]
 where = ["."]
+include = ["pdmpmt"]
+namespaces = false
 
 [tool.pytest.ini_options]
 addopts = "-rsxXP"
