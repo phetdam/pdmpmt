@@ -25,10 +25,10 @@ int main()
   // get lockfile path + ensure any previous lockfile is removed
   auto path = std::filesystem::temp_directory_path() / "file_mutex_mt_test.lock";
   if (std::filesystem::remove(path))
-    std::cerr << "lockfile " << path << " removed" << std::endl;
-  // create mutex + print lockfile location
+    std::cout << "removed " << path << std::endl;
+  std::cout << "target: " << path << std::endl;
+  // create mutex
   pdmpmt::file_mutex mut{path};
-  std::cout << "lockfile " << path << " created" << std::endl;
   // launch threads inserting IDs into tids
   std::cout << "spawning " << n_threads << " threads... " << std::flush;
   {
