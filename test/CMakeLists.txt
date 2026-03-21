@@ -20,4 +20,15 @@ add_subdirectory(pdmpmt_test)
 # file_mutex_mt_test: test file_mutex inter-thread synchronization
 add_executable(file_mutex_mt_test file_mutex_mt_test.cc)
 target_link_libraries(file_mutex_mt_test PRIVATE pdmpmt++)
-add_test(NAME file_mutex_mt_test COMMAND file_mutex_mt_test)
+# -h, --help
+add_test(NAME file_mutex_mt_test_h COMMAND file_mutex_mt_test -h)
+add_test(NAME file_mutex_mt_test_help COMMAND file_mutex_mt_test --help)
+set_tests_properties(
+    file_mutex_mt_test_h
+    file_mutex_mt_test_help PROPERTIES
+    PASS_REGULAR_EXPRESSION "Usage:"
+)
+# run for different thread counts
+add_test(NAME file_mutex_mt_test_n100 COMMAND file_mutex_mt_test -n 100)
+add_test(NAME file_mutex_mt_test_n250 COMMAND file_mutex_mt_test -n 250)
+add_test(NAME file_mutex_mt_test_n400 COMMAND file_mutex_mt_test -n 400)
