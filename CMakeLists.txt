@@ -454,6 +454,8 @@ if(Python3_FOUND)
     # build step on a add_custom_target() target
     add_custom_target(
         pdmpmt_python_package ALL
+        # note: wouldn't be helpful for a multi-config build. but we can't
+        # change this until we get off setuptools or change directory layout
         COMMAND ${PDMPMT_PIP} install -qq -e .
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
         COMMENT "Building Python package for pdmpmt_python_package"
