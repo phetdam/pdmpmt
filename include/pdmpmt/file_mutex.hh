@@ -15,12 +15,18 @@
 #include <Windows.h>
 #else
 #include <fcntl.h>
+#include <limits.h>       // for portable NAME_MAX on POSIX systems
+#include <poll.h>
+#include <sys/inotify.h>
 #include <unistd.h>
 #endif  // !defined(_WIN32)
 
 #include <filesystem>
+#include <string_view>
 #include <system_error>
 #include <utility>
+
+#include "pdmpmt/scope_exit.hh"
 
 namespace pdmpmt {
 
@@ -65,17 +71,71 @@ public:
   file_mutex(const file_mutex&) = delete;
 
   /**
-   * Lock the mutex.
+   * Lock the mutex, blocking if the mutex cannot be acquired.
    *
-   * This simply spins on `try_lock()` for simplicity.
+   * On Linux, inotify(7) is used to implement the `try_lock()` then block
+   * logic, monitoring the directory containing the lockfile for file deletion
+   * events. If the received event corresponds to the lockfile being deleted,
+   * then we `try_lock()` again, and if unsuccessful, block again to continue
+   * polling the inotify descriptor for more file deletion events.
    *
-   * @todo For better performance this should be implemented by monitoring file
-   *  system events using OS interfaces, e.g. inotify on Linux or the
-   *  `Find(First|Next)ChangeNotificationW()` functions on Windows.
+   * Using inotify is much more efficient than using a spinlock, as the latter
+   * produces more volatile timings and consumes much more user + kernel CPU.
+   *
+   * @todo Stop using spinning `try_lock()` for Windows and use the directory
+   *  change notification functions to follow the inotify model.
    */
   void lock()
   {
+    // TODO: use Find(First|Next)ChangeNotificationW() functions on Windows to
+    // obtain directory change notifications like with Linux inotify
+#if defined(_WIN32)
     while (!try_lock());
+#else
+    // first attempt to try_lock() directly
+    if (try_lock())
+      return;
+    // blocked, so get fd to inotify instance
+    auto ifd = inotify_init();
+    if (ifd < 0)
+      throw std::system_error{
+        errno, std::system_category(), "inotify_init() error"
+      };
+    // ensure we close the inotify fd on scope exit. when the inotify fd is
+    // closed, all associated watches will also be freed
+    scope_exit ifd_guard{[ifd] { close(ifd); }};
+    // watch the lockfile directory for deletion events
+    auto wd = inotify_add_watch(ifd, path_.parent_path().c_str(), IN_DELETE);
+    if (wd < 0)
+      throw std::system_error{
+        errno, std::system_category(), "inotify_add_watch() error"
+      };
+    // begin poll() loop blocking for read events on inotify fd
+    pollfd pfd{ifd, POLLIN};
+    while (true) {
+      // block for result
+      // note: should always return 1 except on error since we block
+      if (poll(&pfd, 1, -1) < 0)
+        throw std::system_error{errno, std::system_category(), "poll() error"};
+      // if no POLLIN (inotify event to read), go back to blocking
+      if (!(pfd.revents & POLLIN))
+        continue;
+      // buffer large enough for one variable-size inotify event + pointer
+      alignas(inotify_event) char ebuf[sizeof(inotify_event) + NAME_MAX + 1U];
+      auto iev = reinterpret_cast<const inotify_event*>(ebuf);
+      // read() event
+      if (read(ifd, ebuf, sizeof ebuf) < 0)
+        throw std::system_error{errno, std::system_category(), "read() error"};
+      // if lockfile deleted, we try_lock(), and break if successful
+      // note: need to check wd since event queue can overflow (iev->wd -1)
+      if (
+        (iev->wd == wd) &&
+        (iev->mask & IN_DELETE) &&
+        (std::string_view{iev->name} == path_.filename().c_str()) && try_lock()
+      )
+        break;
+    }
+#endif  // !defined(_WIN32)
   }
 
   /**
