@@ -450,13 +450,14 @@ if(Python3_FOUND)
     )
     message(STATUS "Generated ${PDMPMT_INIT_PY}")
     # pdmpmt_python_package: pdmpmt Python package
-    # TODO: implement pdmpmt_add_pip_package() to use pip install -e . as a
-    # build step on a add_custom_target() target
+    # TODO: implement pdmpmt_add_pip_package() to use pip install as a build
+    # step on a add_custom_target() target (needs more consideration)
     add_custom_target(
         pdmpmt_python_package ALL
         # note: wouldn't be helpful for a multi-config build. but we can't
         # change this until we get off setuptools or change directory layout
-        COMMAND ${PDMPMT_PIP} install -qq -e .
+        # note: disabled since we want an actual, not editable, install
+        # COMMAND ${PDMPMT_PIP} install -qq -e .
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
         COMMENT "Building Python package for pdmpmt_python_package"
         VERBATIM
