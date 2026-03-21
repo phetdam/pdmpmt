@@ -73,11 +73,11 @@ public:
   /**
    * Lock the mutex, blocking if the mutex cannot be acquired.
    *
-   * On Linux, inotify(7) is used to implement the `try_lock()` then block
-   * logic, monitoring the directory containing the lockfile for file deletion
-   * events. If the received event corresponds to the lockfile being deleted,
-   * then we `try_lock()` again, and if unsuccessful, block again to continue
-   * polling the inotify descriptor for more file deletion events.
+   * On Linux, inotify is used to implement the `try_lock()` then block logic,
+   * monitoring the directory containing the lockfile for file deletion events.
+   * If the received event corresponds to the lockfile being deleted, then we
+   * `try_lock()` again, and if unsuccessful, block again to continue polling
+   * the inotify descriptor for more file deletion events.
    *
    * Using inotify is much more efficient than using a spinlock, as the latter
    * produces more volatile timings and consumes much more user + kernel CPU.
