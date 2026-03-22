@@ -497,7 +497,7 @@ target_include_directories(
 # on Windows some headers require linking against system libraries. although
 # CMake automatically adds kernel32, user32, etc. to the linker line, it's best
 # to make it clear that these dependencies actually exist
-if(MSVC)
+if(WIN32)
     target_link_libraries(pdmpmt++ INTERFACE kernel32)
 endif()
 
