@@ -5,6 +5,7 @@
  * @copyright MIT License
  */
 
+#include <chrono>
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
@@ -17,6 +18,8 @@
 #include <vector>
 
 #include "pdmpmt/file_mutex.hh"
+#include "pdmpmt/scoped_timer.hh"
+#include "pdmpmt/warnings.h"
 
 namespace {
 
@@ -126,7 +129,9 @@ int main(int argc, char** argv)
   pdmpmt::file_mutex mut{path};
   // launch threads inserting IDs into tids
   std::cout << "spawning " << opts.n_threads << " threads... " << std::flush;
+  std::chrono::milliseconds ttime;
   {
+    pdmpmt::scoped_timer _{ttime};
     std::vector<std::thread> threads(opts.n_threads);
     // start threads
     for (auto& thread : threads)
@@ -142,6 +147,11 @@ int main(int argc, char** argv)
       thread.join();
   }
   std::cout << "done" << std::endl;
+// suppress MSVC C5219
+PDMPMT_MSVC_WARNING_PUSH()
+PDMPMT_MSVC_WARNING_DISABLE(5219)
+  std::cout << "time: " << (ttime.count() / 1000.) << "s" << std::endl;
+PDMPMT_MSVC_WARNING_POP()
   // tids should have size n_threads
   if (tids.size() == opts.n_threads) {
     std::cout << "result:   OK"  << std::endl;
