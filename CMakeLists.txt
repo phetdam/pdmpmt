@@ -494,6 +494,12 @@ target_include_directories(
     $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
+# on Windows some headers require linking against system libraries. although
+# CMake automatically adds kernel32, user32, etc. to the linker line, it's best
+# to make it clear that these dependencies actually exist
+if(MSVC)
+    target_link_libraries(pdmpmt++ INTERFACE kernel32)
+endif()
 
 include(CTest)
 
