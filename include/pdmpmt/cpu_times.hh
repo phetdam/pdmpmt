@@ -138,6 +138,8 @@ using cpu_nanoseconds = cpu_times_from_t<std::chrono::nanoseconds>;
 using cpu_microseconds = cpu_times_from_t<std::chrono::microseconds>;
 using cpu_milliseconds = cpu_times_from_t<std::chrono::milliseconds>;
 using cpu_seconds = cpu_times_from_t<std::chrono::seconds>;
+using cpu_minutes = cpu_times_from_t<std::chrono::minutes>;
+using cpu_hours = cpu_times_from_t<std::chrono::hours>;
 
 namespace detail {
 
