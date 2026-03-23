@@ -130,6 +130,7 @@ int main(int argc, char** argv)
   pdmpmt::file_mutex mut{path};
   // launch threads inserting IDs into tids
   std::cout << "spawning " << opts.n_threads << " threads... " << std::flush;
+  // time work within braced context
   // note: using fractional seconds to emulate time(1)
   pdmpmt::cpu_times<double> ttime;
   {
