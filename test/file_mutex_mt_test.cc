@@ -17,6 +17,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "pdmpmt/cpu_times.hh"
 #include "pdmpmt/file_mutex.hh"
 #include "pdmpmt/scoped_timer.hh"
 #include "pdmpmt/warnings.h"
@@ -129,7 +130,8 @@ int main(int argc, char** argv)
   pdmpmt::file_mutex mut{path};
   // launch threads inserting IDs into tids
   std::cout << "spawning " << opts.n_threads << " threads... " << std::flush;
-  std::chrono::milliseconds ttime;
+  // note: using fractional seconds to emulate time(1)
+  pdmpmt::cpu_times<std::chrono::duration<double>> ttime;
   {
     pdmpmt::scoped_timer _{ttime};
     std::vector<std::thread> threads(opts.n_threads);
@@ -150,7 +152,7 @@ int main(int argc, char** argv)
 // suppress MSVC C5219
 PDMPMT_MSVC_WARNING_PUSH()
 PDMPMT_MSVC_WARNING_DISABLE(5219)
-  std::cout << "time: " << (ttime.count() / 1000.) << "s" << std::endl;
+  std::cout << ttime << std::endl;
 PDMPMT_MSVC_WARNING_POP()
   // tids should have size n_threads
   if (tids.size() == opts.n_threads) {
