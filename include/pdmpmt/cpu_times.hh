@@ -105,6 +105,40 @@ struct is_cpu_times<cpu_times<T, std::ratio<N, D>> > : std::true_type {};
 template <typename T>
 constexpr bool is_cpu_times_v = is_cpu_times<T>::value;
 
+/**
+ * Traits type to obtain a `cpu_times` from a `std::chrono::duration`.
+ *
+ * @tparam T type
+ */
+template <typename T>
+struct cpu_times_from {};
+
+/**
+ * Partial specialization for a `std::chrono::duration`.
+ *
+ * @tparam T Tick type
+ * @tparam N `std::ratio` numerator
+ * @tparam D `std::ratio` denominator
+ */
+template <typename T, std::intmax_t N, std::intmax_t D>
+struct cpu_times_from<std::chrono::duration<T, std::ratio<N, D>>> {
+  using type = cpu_times<T, std::ratio<N, D>>;
+};
+
+/**
+ * SFINAE helper for obtaining a `cpu_times` from a `std::chrono::duration`.
+ *
+ * @tparam T type
+ */
+template <typename T>
+using cpu_times_from_t = typename cpu_times_from<T>::type;
+
+// helper types like those provided for std::chrono::duration
+using cpu_nanoseconds = cpu_times_from_t<std::chrono::nanoseconds>;
+using cpu_microseconds = cpu_times_from_t<std::chrono::microseconds>;
+using cpu_milliseconds = cpu_times_from_t<std::chrono::milliseconds>;
+using cpu_seconds = cpu_times_from_t<std::chrono::seconds>;
+
 namespace detail {
 
 /**
