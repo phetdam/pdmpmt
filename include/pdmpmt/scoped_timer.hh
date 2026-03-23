@@ -15,7 +15,8 @@
 #include <Windows.h>
 #include <processthreadsapi.h>
 #else
-#include <sys/times.h>
+#include <sys/resource.h>
+#include <sys/time.h>
 #include <unistd.h>
 #endif  // !defined(_WIN32)
 
@@ -67,19 +68,22 @@ private:
    *
    * In addition to the starting wall time point this also contains the user
    * and kernel starting time points encapsulated in a platform-specific
-   * structure or structures, e.g. `tms` for Linux, `FILETIME`s for Windows.
+   * structure or structures, e.g. `timeval` for Linux, `FILETIME` for Windows.
    *
    * @tparam T_ Tick type
    * @tparam P_ Period type
    */
   template <typename T_, typename P_>
   struct start_times<cpu_times<T_, P_>> {
-    time_point real_;  // starting wall time point
+    time_point real_;     // starting wall time point
 #if defined(_WIN32)
-    FILETIME user_;    // starting user CPU time point
-    FILETIME sys_;     // starting system CPU time point
+    FILETIME user_;       // starting user CPU time point
+    FILETIME sys_;        // starting system CPU time point
 #else
-    tms pt_;           // starting process user + system CPU times
+    timeval self_user_;   // starting user CPU time for self
+    timeval self_sys_;    // starting system CPU time for self
+    timeval child_user_;  // starting user CPU time for children
+    timeval child_sys_;   // starting system CPU time for children
 #endif  // !defined(_WIN32)
   };
 
@@ -98,9 +102,11 @@ public:
   /**
    * Ctor.
    *
-   * Marks the starting time point.
+   * Marks the starting time point and for a `cpu_times<T, P>` uses the
+   * appropriate system APIs to query user and kernel CPU times. On Windows,
+   * `GetProcessTimes()` is used, while on Linux, `getrusage()` is used.
    *
-   * @param out Duration value to update on scope exit
+   * @param out `std::chrono::duration` or `cpu_times<T, P>` to update
    */
   scoped_timer(T& out) noexcept(!is_cpu_times_v<T> || !win32) : out_{out}
   {
@@ -118,10 +124,19 @@ public:
           std::system_category(),
           "GetProcessTimes() error"
         };
-// on Linux use times()
+// on Linux use getrusage() with RUSAGE_SELF and RUSAGE_CHILDREN
 #else
-      // note: not checking error since &st_.pt_ is in current address space
-      times(&st_.pt_);
+      // get user + system times for self + children
+      // note: not checking error since we won't have EFAULT and EINVAL here
+      rusage sru;
+      rusage cru;
+      getrusage(RUSAGE_SELF, &sru);
+      getrusage(RUSAGE_CHILDREN, &cru);
+      // copy relevant values
+      st_.self_user_ = sru.ru_utime;
+      st_.self_sys_ = sru.ru_stime;
+      st_.child_user_ = cru.ru_utime;
+      st_.child_sys_ = cru.ru_stime;
 #endif  // !defined(_WIN32)
     }
   }
@@ -129,7 +144,10 @@ public:
   /**
    * Dtor.
    *
-   * Marks the ending time point and updates the reference to the duration.
+   * Marks the ending time point and updates the reference to the duration. If
+   * a `cpu_times<T, P>` is being updated, system timings are retrieved in the
+   * native format, converted to the appropriate `std::chrono` duration, and
+   * then cast to the duration type for `cpu_times<T, P>`.
    */
   ~scoped_timer()
   {
@@ -148,17 +166,12 @@ public:
       // note: discarding error here
       GetProcessTimes(GetCurrentProcess(), &ct, &et, &kt, &ut);
 #else
-      tms ts;
-      times(&ts);
+      rusage sru;
+      rusage cru;
+      // note: again, no checking of errno, as all inputs are correct
+      getrusage(RUSAGE_SELF, &sru);
+      getrusage(RUSAGE_CHILDREN, &cru);
 #endif  // !defined(_WIN32)
-      // on Linux we need to get the clock ticks per second. this is not needed
-      // on Windows since FILETIME values are in units of 100ns
-#ifndef _WIN32
-      // TODO: by default, the clock ticks per second on Linux corresponds to
-      // the USER_HZ constant which is typically 100 (unless configured). we
-      // should be using getrusage() for microsecond-level time resolution
-      auto tps = sysconf(_SC_CLK_TCK);
-#endif  // _WIN32
       // now perform differences. first get wall time duration
       auto real = now - st_.real_;
 // on Windows we must copy the low and high DWORDs into uint64_t since type
@@ -175,20 +188,24 @@ public:
       std::chrono::nanoseconds sys_time{100 * sys_ticks};
 // on Linux we need to sum the differences in the user and system times
 #else
-      // user + kernel ticks for self + children
-      // note: take differences before addition to avoid overflow
-      auto user_ticks = (
-        (ts.tms_utime - st_.pt_.tms_utime) +
-        (ts.tms_cutime - st_.pt_.tms_cutime)
-      );
-      auto sys_ticks = (
-        (ts.tms_stime - st_.pt_.tms_stime) +
-        (ts.tms_cstime - st_.pt_.tms_cstime)
-      );
-      // compute user + kernel durations in nanoseconds. this is because the
-      // tick count may be less than the ticks per second
-      std::chrono::nanoseconds user_time{1000000000 * user_ticks / tps};
-      std::chrono::nanoseconds sys_time{1000000000 * sys_ticks / tps};
+      // user + kernel microseconds for self + children
+      // note: subtract before multiply or add to avoid overflow
+      std::chrono::microseconds user_time{
+        // self times
+        1000000 * (sru.ru_utime.tv_sec - st_.self_user_.tv_sec) +
+        (sru.ru_utime.tv_usec - st_.self_user_.tv_usec) +
+        // child times
+        1000000 * (cru.ru_utime.tv_sec - st_.child_user_.tv_sec) +
+        (cru.ru_utime.tv_usec - st_.child_user_.tv_usec)
+      };
+      std::chrono::microseconds sys_time{
+        // self times
+        1000000 * (sru.ru_stime.tv_sec - st_.self_sys_.tv_sec) +
+        (sru.ru_stime.tv_usec - st_.self_sys_.tv_usec) +
+        // child times
+        1000000 * (cru.ru_stime.tv_sec - st_.child_sys_.tv_sec) +
+        (cru.ru_stime.tv_usec - st_.child_sys_.tv_usec)
+      };
 #endif  // !defined(_WIN32)
       // update cpu_times
       out_ = {
