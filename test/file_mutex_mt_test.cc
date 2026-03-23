@@ -20,7 +20,6 @@
 #include "pdmpmt/cpu_times.hh"
 #include "pdmpmt/file_mutex.hh"
 #include "pdmpmt/scoped_timer.hh"
-#include "pdmpmt/warnings.h"
 
 namespace {
 
@@ -149,12 +148,7 @@ int main(int argc, char** argv)
     for (auto& thread : threads)
       thread.join();
   }
-  std::cout << "done" << std::endl;
-// suppress MSVC C5219
-PDMPMT_MSVC_WARNING_PUSH()
-PDMPMT_MSVC_WARNING_DISABLE(5219)
-  std::cout << ttime << std::endl;
-PDMPMT_MSVC_WARNING_POP()
+  std::cout << "done\n" << ttime << std::endl;
   // tids should have size n_threads
   if (tids.size() == opts.n_threads) {
     std::cout << "result:   OK"  << std::endl;
