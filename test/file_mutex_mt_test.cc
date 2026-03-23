@@ -131,7 +131,7 @@ int main(int argc, char** argv)
   // launch threads inserting IDs into tids
   std::cout << "spawning " << opts.n_threads << " threads... " << std::flush;
   // note: using fractional seconds to emulate time(1)
-  pdmpmt::cpu_times<std::chrono::duration<double>> ttime;
+  pdmpmt::cpu_times<double> ttime;
   {
     pdmpmt::scoped_timer _{ttime};
     std::vector<std::thread> threads(opts.n_threads);

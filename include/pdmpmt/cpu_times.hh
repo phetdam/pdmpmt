@@ -23,14 +23,17 @@ namespace pdmpmt {
  * the Bash `time` command returns by default, which are the real (wall) time,
  * user CPU time, and system (kernel) CPU time.
  *
- * @tparam T `std::chrono::duration` specialization
+ * @note The class is intentionally modeled after `std::chrono::duration`.
+ *
+ * @tparam T Arithmetic or arithmetic-like tick type
+ * @tparam P `std::ratio` representing the tick period
  */
-template <typename T>
+template <typename T, typename P = std::ratio<1>>
 class cpu_times {
 public:
-  using duration = T;
-  using tick_type = typename T::rep;
-  using period = typename T::period;
+  using duration = std::chrono::duration<T, P>;
+  using tick_type = typename duration::rep;
+  using period = typename duration::period;
 
   /**
    * Default ctor.
@@ -44,7 +47,7 @@ public:
    * @param user CPU time spent in user code
    * @param sys CPU time spent in the system (kernel)
    */
-  constexpr cpu_times(T real, T user, T sys)
+  constexpr cpu_times(duration real, duration user, duration sys)
     : real_{real}, user_{user}, sys_{sys}
   {}
 
@@ -64,10 +67,17 @@ public:
   constexpr auto& sys() const noexcept { return sys_;}
 
 private:
-  T real_;
-  T user_;
-  T sys_;
+  duration real_;
+  duration user_;
+  duration sys_;
 };
+
+// user-defined deduction guide for CTAD
+template <typename T, typename P>
+cpu_times(
+  std::chrono::duration<T, P>,
+  std::chrono::duration<T, P>,
+  std::chrono::duration<T, P>) -> cpu_times<T, P>;
 
 /**
  * Traits type for `cpu_times<T>`.
@@ -85,8 +95,7 @@ struct is_cpu_times : std::false_type {};
  * @tparam D `std::ratio` denominator
  */
 template <typename T, std::intmax_t N, std::intmax_t D>
-struct is_cpu_times<cpu_times<std::chrono::duration<T, std::ratio<N, D>>> >
-  : std::true_type {};
+struct is_cpu_times<cpu_times<T, std::ratio<N, D>> > : std::true_type {};
 
 /**
  * Indicate if a type is a valid `cpu_times<T>`.
@@ -99,30 +108,28 @@ constexpr bool is_cpu_times_v = is_cpu_times<T>::value;
 namespace detail {
 
 /**
- * Return the time unit string literal for the given `std::chrono::duration`.
+ * Return the SI time unit suffix corresponding to `std::ratio` seconds.
  *
- * For example, `std::chrono::milliseconds` would map to `"ms"`. If the
- * duration has no mapping, `"???"` is returned.
+ * This function uses seconds as the base time unit and treats `std::ratio`
+ * types as fractional units of a second, e.g. `std::milli` would result in
+ * `"ms"` being returned. If there is no mapping, `"???"` is returned.
  *
- * @tparam T `std::chrono::duration` specialization
+ * @tparam T `std::ratio` specialization
  */
 template <typename T>
 constexpr auto time_suffix() noexcept
 {
-  // std::ratio type
-  using period = typename T::period;
-  // branch
-  if constexpr (std::is_same_v<period, std::nano>)
+  if constexpr (std::is_same_v<T, std::nano>)
     return "ns";
-  else if constexpr (std::is_same_v<period, std::micro>)
+  else if constexpr (std::is_same_v<T, std::micro>)
     return "us";
-  else if constexpr (std::is_same_v<period, std::milli>)
+  else if constexpr (std::is_same_v<T, std::milli>)
     return "ms";
-  else if constexpr (std::is_same_v<period, std::ratio<1>>)
+  else if constexpr (std::is_same_v<T, std::ratio<1>>)
     return "s";
-  else if constexpr (std::is_same_v<period, std::ratio<60>>)
+  else if constexpr (std::is_same_v<T, std::ratio<60>>)
     return "min";
-  else if constexpr (std::is_same_v<period, std::ratio<3600>>)
+  else if constexpr (std::is_same_v<T, std::ratio<3600>>)
     return "h";
   else
     return "???";
@@ -133,18 +140,21 @@ constexpr auto time_suffix() noexcept
 /**
  * Stream the `cpu_times` structure to an output stream.
  *
- * @tparam T `std::chrono::duration` specialization
+ * The format is `"real: <wall time>, user: <user CPU>, sys: <kernel CPU>"`.
+ *
+ * @tparam T Tick period type
+ * @tparam P `std::ratio` tick period
  *
  * @param out Output stream
  * @param times CPU times structure
  */
-template <typename T>
-inline auto& operator<<(std::ostream& out, const cpu_times<T>& times)
+template <typename T, typename P>
+inline auto& operator<<(std::ostream& out, const cpu_times<T, P>& times)
 {
   return out <<
-    "real: " << times.real().count() << detail::time_suffix<T>() << ", " <<
-    "user: " << times.user().count() << detail::time_suffix<T>() << ", " <<
-    "sys: " << times.sys().count() << detail::time_suffix<T>();
+    "real: " << times.real().count() << detail::time_suffix<P>() << ", " <<
+    "user: " << times.user().count() << detail::time_suffix<P>() << ", " <<
+    "sys: " << times.sys().count() << detail::time_suffix<P>();
 }
 
 }  // namespace pdmpmt

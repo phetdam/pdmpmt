@@ -35,11 +35,11 @@ namespace pdmpmt {
  *
  * When the duration type is a `std::chrono::duration` this class measures the
  * wall time from creation to destruction via the difference of `steady_clock`
- * time points. However, if using a `cpu_times<T>` as the duration type,
+ * time points. However, if using a `cpu_times<T, P>` as the duration type,
  * system-specific calls are also made to obtain user and kernel CPU times,
  * which can be useful for profiling CPU consumption.
  *
- * @tparam T `std::chrono::duration` or `cpu_times<T>` specialization
+ * @tparam T `std::chrono::duration` or `cpu_times<T, P>` specialization
  */
 template <typename T>
 class scoped_timer {
@@ -63,16 +63,17 @@ private:
   };
 
   /**
-   * Partial specialization for a `cpu_times<T>`.
+   * Partial specialization for a `cpu_times<T, P>`.
    *
    * In addition to the starting wall time point this also contains the user
    * and kernel starting time points encapsulated in a platform-specific
    * structure or structures, e.g. `tms` for Linux, `FILETIME`s for Windows.
    *
-   * @tparam T_ `std::chrono::duration`
+   * @tparam T_ Tick type
+   * @tparam P_ Period type
    */
-  template <typename T_>
-  struct start_times<cpu_times<T_>> {
+  template <typename T_, typename P_>
+  struct start_times<cpu_times<T_, P_>> {
     time_point real_;  // starting wall time point
 #if defined(_WIN32)
     FILETIME user_;    // starting user CPU time point
@@ -132,7 +133,7 @@ public:
    */
   ~scoped_timer()
   {
-    // for cpu_times<T> structure
+    // for cpu_times<T, P> structure
     if constexpr (is_cpu_times_v<T>) {
       // first record the ending time point to preserve operation ordering
       auto now = clock_type::now();
