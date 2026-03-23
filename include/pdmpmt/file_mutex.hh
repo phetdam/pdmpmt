@@ -29,6 +29,7 @@
 #include <utility>
 
 #include "pdmpmt/scope_exit.hh"
+#include "pdmpmt/warnings.h"
 
 namespace pdmpmt {
 
@@ -89,6 +90,9 @@ public:
    * `ReadDirectoryChangesW()`. These directory change notification functions
    * result in noticeably slower performance when there is high contention. See
    * the corresponding document for more details and exact timing data.
+   *
+   * For the tested Windows locking implementations using the directory change
+   * notification functions and `ReadDirectoryChangesW()` see below.
    */
   void lock()
   {
@@ -98,6 +102,9 @@ public:
     // otherwise run a loop to acquire the lock. on Windows the best-performing
     // implementation is a spinlock, while on Linux, inotify is the best choice
 #if defined(_WIN32)
+    // note: if we were using an alternate implementation, e.g.
+    // find_first_change_lock() or read_directory_changes_lock(), we would
+    // replace the spin with the appropriate function invocation
     while (!try_lock());
 #else
     inotify_lock();
