@@ -207,6 +207,9 @@ private:
   handle_type handle_{bad_handle};  // lockfile handle
 
 #if defined(_WIN32)
+// suppress C4868 which affects the entire scope of a function definition
+PDMPMT_MSVC_WARNING_PUSH()
+PDMPMT_MSVC_WARNING_DISABLE(4868)
   /**
    * Perform a blocking lock for the mutex.
    *
@@ -353,6 +356,7 @@ private:
       // resume looping
     }
   }
+PDMPMT_MSVC_WARNING_POP()
 #else
   /**
    * Perform a blocking lock for the mutex.
