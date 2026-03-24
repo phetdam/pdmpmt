@@ -218,6 +218,11 @@ public:
    * execution it is possible that the thread may be woken up relatively
    * frequently, but will continue to release the lock and sleep until the pool
    * is stopped, e.g. `running()` is `false`, or `pending()` returns zero.
+   *
+   * @todo Revise semantics. We could `wait()` until the pending task queue is
+   *  empty and all threads are *not* running a task (require a boolean or char
+   *  vector for bookkeeping this state), or `wait()` until the pending task
+   *  queue is empty and at least *one* thread is not running.
    */
   void wait() const
   {
