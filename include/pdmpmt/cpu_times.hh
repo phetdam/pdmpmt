@@ -185,7 +185,7 @@ constexpr auto time_suffix() noexcept
  * @param times CPU times structure
  */
 template <typename T, typename P>
-inline auto& operator<<(std::ostream& out, const cpu_times<T, P>& times)
+auto& operator<<(std::ostream& out, const cpu_times<T, P>& times)
 {
   return out <<
     "real: " << times.real().count() << detail::time_suffix<P>() << ", " <<
