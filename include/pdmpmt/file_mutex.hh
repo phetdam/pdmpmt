@@ -74,6 +74,14 @@ public:
   file_mutex(const file_mutex&) = delete;
 
   /**
+   * Deleted move assignment operator.
+   *
+   * Since no move ctor is declared the compiler generates one automatically
+   * unless we explicitly define it as deleted.
+   */
+  file_mutex& operator=(const file_mutex&) = delete;
+
+  /**
    * Lock the mutex, blocking if the mutex cannot be acquired.
    *
    * On Linux, inotify is used to implement the `try_lock()` then block logic,
