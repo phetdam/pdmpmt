@@ -4,7 +4,7 @@ if(GTest_FOUND)
     # pdmpmt_test: C++ unit test program
     add_executable(
         pdmpmt_test
-        block_test.cc file_mutex_test.cc scope_exit_test.cc
+        block_test.cc file_mutex_test.cc scope_exit_test.cc thread_pool_test.cc
     )
     target_link_libraries(pdmpmt_test PRIVATE pdmpmt pdmpmt++)
     # if GoogleMock is available we want to use its main instead
