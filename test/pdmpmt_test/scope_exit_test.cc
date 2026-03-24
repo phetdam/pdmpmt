@@ -35,6 +35,14 @@ TEST_F(ScopeExitTest, NoCopyTest)
 }
 
 /**
+ * Test that `scope_exit` is not copy-assignable.
+ */
+TEST_F(ScopeExitTest, NoCopyAssignTest)
+{
+  EXPECT_FALSE(std::is_copy_assignable_v<pdmpmt::scope_exit>);
+}
+
+/**
  * Test that `scope_exit` is move-constructible.
  */
 TEST_F(ScopeExitTest, MoveTest)
