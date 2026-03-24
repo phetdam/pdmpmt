@@ -17,7 +17,7 @@
 #include <synchapi.h>
 #else
 #include <fcntl.h>
-#include <limits.h>       // for portable NAME_MAX on POSIX systems
+#include <limits.h>              // for portable NAME_MAX on POSIX systems
 #include <poll.h>
 #include <sys/inotify.h>
 #include <unistd.h>
