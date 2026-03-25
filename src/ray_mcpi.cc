@@ -4,10 +4,12 @@
  * @brief C++ library for Monte Carlo pi estimation using Ray's C++ API
  * @copyright MIT License
  *
- * This file gets compiled into both a DSO and an executable because Ray
- * resolves the registered `RAY_REMOTE` functions by loading DSOs from given
- * search directories and scanning them for visible symbols. In a more
- * productionized setting, we would probably want headers for exported symbols
+ * This file gets compiled into both a DSO and an executable for convenience
+ * like the Ray `example.cc` sample. The Ray runtime will load DSOs at runtime
+ * from given search directories to resolve `RAY_REMOTE` registered functions;
+ * these functions do *not* necessarily need be visible.
+ *
+ * In a production setting, we would probably want headers for exported symbols
  * with `RAY_REMOTE` registration so any consuming executable can compile, with
  * the implementations of the free/member functions in a shared library.
  */
@@ -24,27 +26,6 @@
 
 #include "pdmpmt/mcpi.hh"
 #include "pdmpmt/ray.hh"
-
-// when compiling as DSO, we need to ensure symbols are appropriately exported
-#if defined(PDMPMT_BUILD_RAY_MCPI_REMOTE)
-// symbol export macro. although Ray isn't supported on Windows yet, it's not
-// hard for us to be consistent here. we need this anyways since it's possible
-// to compile an ELF DSO with default hidden symbol visibility
-#if defined(_MSC_VER)
-#define PDMPMT_RAY_MCPI_EXPORT __declspec(dllexport)
-#else
-#define PDMPMT_RAY_MCPI_EXPORT __attribute__((visibility("default")))
-#endif  // !defined(_MSC_VER)
-// otherwise, it's fine to keep the visibility hidden
-#else
-// nothing special to do with MSVC
-// TODO: may affect name mangling if we don't have the same __declspec?
-#if defined(_MSC_VER)
-#define PDMPMT_RAY_MCPI_EXPORT
-#else
-#define PDMPMT_RAY_MCPI_EXPORT __attribute__((visibility("hidden")))
-#endif  // !defined(_MSC_VER)
-#endif  // !defined(PDMPMT_BUILD_RAY_MCPI_REMOTE)
 
 // namespace is unnecessary in this context but would realistically be used
 // TODO: consider if we need extern "C". both Itanium and VC140 ABIs are stable
@@ -79,10 +60,12 @@ RAY_REMOTE(unit_circle_samples);
 }  // namespace remote
 }  // namespace pdmpmt
 
-// note: even though helpers + main() are not necessary for the DSO, if these
-// are removed, the linker will place the RAY_REMOTE functions at different
-// addresses which will cause the Ray runtime to fail to look the functions up.
-// this is because Ray function registration maps addresses to names.
+// IMPORTANT: if libray_api.so linkage is not forced then at runtime one will
+// get an error message about the function not being found
+PDMPMT_FORCE_RAY_LIBRARY_LINKAGE();
+
+// helpers + main() only need to be present for the executable not the DSO
+#ifndef PDMPMT_BUILD_RAY_MCPI_REMOTE
 namespace {
 
 /**
@@ -118,7 +101,10 @@ int main(int argc, char** argv)
   constexpr auto seed = 8765u;
   constexpr auto n_tasks = 500u;
   // initialize Ray runtime context
-  // note: ray::Init() doesn't seem to work well with CLI arguments
+  // note: ray::Init() doesn't seem to work well with CLI arguments. even if
+  // you pass --ray_head_args="--port 1234" you still get messages about the
+  // GCS RPC client failing to connect to localhost:6379 (default Ray port is
+  // 6379) despite us changing the port number to 1234 in this case
   pdmpmt::ray_runtime_context ctx;
   // print parameters
   std::cout <<
@@ -140,3 +126,4 @@ int main(int argc, char** argv)
   std::cout << "pi_hat: " << pi_hat << std::endl;
   return EXIT_SUCCESS;
 }
+#endif  // PDMPMT_BUILD_RAY_MCPI_REMOTE
