@@ -92,6 +92,24 @@ private:
   }
 };
 
+#ifdef __GNUC__
+/**
+ * Macro to force `ray_api` library linkage.
+ *
+ * If the `ray_api` library is not marked as `DT_NEEDED` for `ld.so`, then at
+ * runtime, when a `RAY_REMOTE()` function is being executed, one will get an
+ * error message about said function not being found.
+ *
+ * This macro forces linkage by exporting the address of `ray::Shutdown` and
+ * must be used exactly once in each DSO containing `RAY_REMOTE()` functions.
+ *
+ * @note Not available on Windows as the Ray C++ API doesn't work on Windows.
+ */
+#define PDMPMT_FORCE_RAY_LIBRARY_LINKAGE() \
+  extern "C" __attribute__((visibility("default"))) \
+  const auto pdmpmt_force_ray_library_linkage = &::ray::Shutdown
+#endif  // __GNUC__
+
 }  // namespace pdmpmt
 
 #endif  // PDMPMT_RAY_HH_
