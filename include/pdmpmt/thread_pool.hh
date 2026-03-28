@@ -23,19 +23,13 @@ namespace pdmpmt {
  *
  * This class encapsulates the logic for a specified number of worker threads
  * and provides functionality to start and stop the threads, query the number
- * of threads and pending tasks in the queue, and to post tasks.
+ * of threads and pending tasks in the queue, and to post tasks. Condition
+ * variables are used for efficient notification of both worker threads and
+ * external threads that are waiting on the pending task queue to be empty.
  *
  * @note The implementation here is relatively simple and is best suited for
  *  CPU-bound tasks. If the tasks are mostly I/O-bound then the worker threads
  *  will be blocked waiting for I/O instead of being useful.
- *
- * @par
- *
- * @note It would be more efficient if we didn't have a `wait()` function to
- *  allow a calling thread to block until all pending tasks were consumed, as
- *  then we could notify one thread instead of all threads blocked on the
- *  condition variable. However, `wait()` is very helpful to have, as the
- *  alternative would be to `while (pool.pending())`.
  */
 class thread_pool {
 public:
@@ -115,8 +109,8 @@ public:
    * Post a task for execution.
    *
    * This task will be posted at the rear of the queue for execution. Once the
-   * task is posted, all the threads blocking on the condition variable will be
-   * notified so that they may wake up and begin executing.
+   * task is posted, one worker thread blocking on a condition variable will be
+   * notified so that it may wake up and begin executing the task.
    *
    * @note This function is thread-safe.
    *
@@ -136,7 +130,8 @@ public:
       tasks_.push_back(std::move(task));
     }
     // note: notify outside of lock since we want threads to be awake anyways
-    cv_.notify_all();
+    // note: only need to notify one thread at a time per task
+    cv_push_.notify_one();
     return *this;
   }
 
@@ -147,7 +142,8 @@ public:
    *
    * If the threads are not running, this is a no-op, but if they are, this
    * marks the pool as not running, wakes up any sleeping worker threads so
-   * they can end their task loops, and joins the threads.
+   * they can end their task loops, and joins the threads. Any threads external
+   * to the thread pool blocking on `wait()` are also woken up.
    *
    * @note This function is thread-safe.
    *
@@ -167,7 +163,8 @@ public:
       running_ = false;
     }
     // notify all threads outside of lock (spurious wakeup is fine now)
-    cv_.notify_all();
+    cv_push_.notify_all();
+    cv_pop_.notify_all();
     // join all threads to stop work
     for (auto& thread : threads_)
       thread.join();
@@ -214,10 +211,9 @@ public:
   /**
    * Wait until the pool stops running or until pending task queue is empty.
    *
-   * The thread will block on the condition variable. During the course of task
-   * execution it is possible that the thread may be woken up relatively
-   * frequently, but will continue to release the lock and sleep until the pool
-   * is stopped, e.g. `running()` is `false`, or `pending()` returns zero.
+   * The thread will block on a condition variable until a task is consumed, in
+   * which case it will be notified to wake. Until the pool is stopped, i.e.
+   * `running()` is `false`, or `pending()` returns zero, the thread blocks.
    *
    * @todo Revise semantics. We could `wait()` until the pending task queue is
    *  empty and all threads are *not* running a task (require a boolean or char
@@ -227,15 +223,18 @@ public:
   void wait() const
   {
     std::unique_lock lock{mut_};
-    cv_.wait(lock, [this] { return !running_ || tasks_.empty(); });
+    cv_pop_.wait(lock, [this] { return !running_ || tasks_.empty(); });
   }
 
 private:
-  mutable std::mutex mut_;              // mutex for synchronization
-  mutable std::condition_variable cv_;  // condition variable for notification
-  bool running_{};                      // indicate if pool is running
-  std::vector<std::thread> threads_;    // worker threads
-  std::deque<task_type> tasks_;         // task queue
+  mutable std::mutex mut_;                   // mutex for synchronization
+  // two condition variables: one for indicating that work has been pushed onto
+  // the task queue, one that indicates work has been popped from the queue
+  mutable std::condition_variable cv_push_;
+  mutable std::condition_variable cv_pop_;
+  bool running_{};                           // indicate if pool is running
+  std::vector<std::thread> threads_;         // worker threads
+  std::deque<task_type> tasks_;              // task queue
 
   /**
    * Return the task loop for a worker thread.
@@ -247,8 +246,8 @@ private:
    * condition variable to avoid wasting CPU time.
    *
    * When a sleeping thread is successfully awoken and has reclaimed the lock,
-   * it will consume the next available task, release the lock, notify all idle
-   * worker or outside threads that an event has occurred, and execute.
+   * it will consume the next available task, release the lock, and execute.
+   * Condition variables are notified appropriately.
    */
   task_type task_loop()
   {
@@ -264,10 +263,10 @@ private:
           // if stopped, done
           if (!running_)
             return;
-          // if no work, block on condition variable. if spuriously awoken but
+          // if no work, block until notified of work. if spuriously awoken but
           // we still are running and there is still no work, back to sleep
           if (tasks_.empty())
-            cv_.wait(lock, [this] { return !running_ || !tasks_.empty(); });
+            cv_push_.wait(lock, [this] { return !running_ || !tasks_.empty(); });
           // if properly woken up we either need to stop running, there is work
           // to be done, or both are true. if not running, return
           if (!running_)
@@ -278,11 +277,10 @@ private:
           task = std::move(tasks_.front());
           tasks_.pop_front();
         }
-        // notify all threads blocking on the condition variable that a task
-        // has been consumed. if there are pending tasks, any waiting worker
-        // threads will get to wake up and compete for work. any external
-        // threads blocking on wait() will also be appropriately woken up
-        cv_.notify_all();
+        // notify all external threads blocking on the condition variable that
+        // a task has been consumed. any external threads blocking that are
+        // waiting for pending tasks to be cleared will wake and check
+        cv_pop_.notify_all();
         // run task outside of lock
         task();
       }
