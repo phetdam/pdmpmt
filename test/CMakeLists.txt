@@ -32,3 +32,10 @@ set_tests_properties(
 add_test(NAME file_mutex_mt_test_n100 COMMAND file_mutex_mt_test -n 100)
 add_test(NAME file_mutex_mt_test_n250 COMMAND file_mutex_mt_test -n 250)
 add_test(NAME file_mutex_mt_test_n400 COMMAND file_mutex_mt_test -n 400)
+# note: must run serially since tests share the same lockfile
+set_tests_properties(
+    file_mutex_mt_test_n100
+    file_mutex_mt_test_n250
+    file_mutex_mt_test_n400 PROPERTIES
+    RESOURCE_LOCK file_mutex_mt_test_lock
+)
