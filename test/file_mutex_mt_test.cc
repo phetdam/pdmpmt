@@ -120,13 +120,21 @@ int main(int argc, char** argv)
   }
   // set of thread IDs collected during run
   std::unordered_set<std::thread::id> tids;
-  // get lockfile path + ensure any previous lockfile is removed
+  // get + print lockfile path
   auto path = std::filesystem::temp_directory_path() / "file_mutex_mt_test.lock";
-  if (std::filesystem::remove(path))
-    std::cout << "removed " << path << std::endl;
   std::cout << "target: " << path << std::endl;
   // create mutex
   pdmpmt::file_mutex mut{path};
+  // first attempt to try-lock the mutex. if the try-lock fails, it means that
+  // the lock is held by another process or was previously lost, so error. this
+  // prevents us from infinitely blocking if the lock was lost.
+  {
+    std::unique_lock lock{mut, std::try_to_lock};
+    if (!lock) {
+      std::cerr << "error: " << path << " lockfile already exists" << std::endl;
+      return EXIT_FAILURE;
+    }
+  }
   // launch threads inserting IDs into tids
   std::cout << "spawning " << opts.n_threads << " threads... " << std::flush;
   // time work within braced context
