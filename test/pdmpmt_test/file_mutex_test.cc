@@ -76,9 +76,15 @@ TEST_F(FileMutexTest, ThreadSyncTest)
 {
   // path to lockfile for this test
   auto path = lockfile_path("ThreadSyncTest");
-  // ensure cleaned up + create file mutex
-  std::filesystem::remove(path);
+  // create file mutex
   pdmpmt::file_mutex mut{path};
+  // attempt to try-lock. if this fails, it means the lock is held by another
+  // running instance or the lock was previously lost
+  {
+    std::unique_lock lock{mut, std::try_to_lock};
+    if (!lock)
+      GTEST_FAIL() << "error: " << path << " lockfile already exists";
+  }
   // counter to update to 100
   auto count = 0u;
   // thread task to update count 50 times. we purposefully have the thread
