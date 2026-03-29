@@ -39,3 +39,7 @@ set_tests_properties(
     file_mutex_mt_test_n400 PROPERTIES
     RESOURCE_LOCK file_mutex_mt_test_lock
 )
+
+# file_mutex_mp_worker: file_mutex inter-process synchronization test worker
+add_executable(file_mutex_mp_worker file_mutex_mp_worker.cc)
+target_link_libraries(file_mutex_mp_worker PRIVATE pdmpmt++ pdmpmt_config)
