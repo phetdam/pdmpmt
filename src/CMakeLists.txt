@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION ${CMAKE_MINIMUM_REQUIRED_VERSION})
 
 # build pdmpmt libraries
 add_subdirectory(pdmpmt)
+add_subdirectory(pdmpmt_config)
 
 # thrust_demo: Thrust (NVIDIA CCCL) demo program
 # TODO: see if we can use host C++ compiler only
