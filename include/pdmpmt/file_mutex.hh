@@ -393,7 +393,8 @@ PDMPMT_MSVC_WARNING_POP()
       };
     // begin poll() loop blocking for read events on inotify fd
     pollfd pfd{ifd, POLLIN};
-    while (true) {
+    // note: always try_lock() first before poll() in case lock was released
+    while (!try_lock()) {
       // block for result
       // note: should always return 1 except on error since we block
       if (poll(&pfd, 1, -1) < 0)
