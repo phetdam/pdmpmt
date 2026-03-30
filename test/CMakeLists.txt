@@ -69,7 +69,7 @@ target_link_libraries(file_mutex_mp_test_worker PRIVATE pdmpmt++ pdmpmt_config)
 add_test(NAME file_mutex_mp_test_n100 COMMAND file_mutex_mp_test -n 100)
 add_test(NAME file_mutex_mp_test_n250 COMMAND file_mutex_mp_test -n 250)
 add_test(NAME file_mutex_mp_test_n400 COMMAND file_mutex_mp_test -n 400)
-# note: must run serially since test share the same lock + counter files
+# note: must run serially since tests share the same lock + counter files
 set_tests_properties(
     file_mutex_mp_test_n100
     file_mutex_mp_test_n250
