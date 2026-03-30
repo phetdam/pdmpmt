@@ -40,6 +40,22 @@ set_tests_properties(
     RESOURCE_LOCK file_mutex_mt_test_lock
 )
 
+# file_mutex_mp_master: file_mutex inter-process synchronization test master
+add_executable(file_mutex_mp_master file_mutex_mp_master.cc)
+target_link_libraries(file_mutex_mp_master PRIVATE pdmpmt++ pdmpmt_config)
+if(WIN32)
+    target_link_libraries(file_mutex_mp_master PRIVATE kernel32)
+endif()
+
 # file_mutex_mp_worker: file_mutex inter-process synchronization test worker
 add_executable(file_mutex_mp_worker file_mutex_mp_worker.cc)
 target_link_libraries(file_mutex_mp_worker PRIVATE pdmpmt++ pdmpmt_config)
+
+# file_mutex multiprocess synchronization tests
+# TODO: doesn't take arguments yet
+add_test(NAME file_mutex_mp_test_n100 COMMAND file_mutex_mp_master -n 100)
+# note: must run serially since test share the same lock + counter files
+set_tests_properties(
+    file_mutex_mp_test_n100 PROPERTIES
+    RESOURCE_LOCK file_mutex_mp_test_lock
+)
