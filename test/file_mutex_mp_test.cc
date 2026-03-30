@@ -1,5 +1,5 @@
 /**
- * @file file_mutex_mp_master.cc
+ * @file file_mutex_mp_test.cc
  * @author Derek Huang
  * @brief C++ master program testing `file_mutex` process synchronization
  * @copyright MIT License
@@ -25,7 +25,9 @@
 #include <iostream>
 #include <limits>
 #include <mutex>
+#include <stdexcept>
 #include <string>
+#include <string_view>
 #include <system_error>
 // Win32 implementation needs PROCESS_INFORMATION vector
 #ifdef _WIN32
@@ -33,13 +35,14 @@
 #endif  // _WIN32
 
 #include "pdmpmt/config/paths.hh"
+#include "pdmpmt/cpu_times.hh"
 #include "pdmpmt/file_mutex.hh"
 #include "pdmpmt/scoped_timer.hh"
 
 namespace {
 
 // default + max number of worker processes
-constexpr auto n_workers_default = 100u;
+constexpr auto n_workers_default = 250u;
 constexpr auto n_workers_max = (std::numeric_limits<unsigned>::max)();
 // program name and usage
 const auto progname = std::filesystem::path{__FILE__}.stem().string();
@@ -67,15 +70,67 @@ struct cli_options {
   unsigned workers = n_workers_default;
 };
 
-// TODO: parse options with parse_args()
+/**
+ * Parse incoming command-line arguments.
+ *
+ * @param opts Command-line options to fill
+ * @param argc Argument count from `main()`
+ * @param argv Argument vector from `main()`
+ * @returns `true` on success, `false` on error
+ */
+bool parse_args(cli_options& opts, int argc, char** argv)
+{
+  for (int i = 1; i < argc; i++) {
+    // convenience view
+    std::string_view arg{argv[i]};
+    // -h, --help
+    if (arg == "-h" || arg == "--help") {
+      opts.help = true;
+      return true;
+    }
+    // -n WORKERS
+    else if (arg == "-n") {
+      // no argument value
+      if (++i >= argc) {
+        std::cerr << "Error: -n missing number of workers" << std::endl;
+        return false;
+      }
+      // parse argument
+      try {
+        auto n_workers = std::stoul(argv[i]);
+        // cannot be zero or greater than max
+        if (!n_workers)
+          throw std::invalid_argument{"number of workers cannot be zero"};
+        if (n_workers > n_workers_max)
+          throw std::out_of_range{
+            "number of workers " + std::string{argv[i]} +
+            " exceeded maximum " + std::to_string(n_workers_max)
+          };
+        // ok, populate worker count
+        opts.workers = static_cast<unsigned>(n_workers);
+      }
+      catch (const std::exception& exc) {
+        std::cerr << "Error: -n exception: " << exc.what() << std::endl;
+        return false;
+      }
+    }
+    // unknown
+    else {
+      std::cerr << "Error: Unknown argument " << arg << std::endl;
+      return false;
+    }
+  }
+  return true;
+}
 
 // path to worker process
 // note: need .exe suffix for full path for Win32 CreateProcessW()
-const auto worker_path = pdmpmt::config::library_dir() / "file_mutex_mp_worker"
+const auto worker_path = pdmpmt::config::library_dir() /
+  "file_mutex_mp_test_worker"
 #ifdef _WIN32
-".exe"
+  ".exe"
 #endif  // _WIN32
-;
+  ;
 
 /**
  * Launch the specified number of worker processes and wait until done.
@@ -181,13 +236,14 @@ void launch_workers(unsigned n_workers)
 
 }  // namespace
 
-int main(int argc, char** /*argv*/)
+int main(int argc, char** argv)
 {
-  // command-line options
-  // TODO: parse using parse_args()
+  // parse command-line options
   cli_options opts;
-  // FIXME: always print usage if any extra arguments are given
-  if (argc > 1) {
+  if (!parse_args(opts, argc, argv))
+    return EXIT_FAILURE;
+  // print help
+  if (opts.help) {
     std::cout << program_usage << std::endl;
     return EXIT_SUCCESS;
   }
@@ -214,7 +270,16 @@ int main(int argc, char** /*argv*/)
     ofs << 0u << std::endl;
   }
   // launch workers and wait
-  launch_workers(opts.workers);
+  std::cout << "launching " << opts.workers << " processes... " << std::flush;
+  // use scoped timer for profiling
+  pdmpmt::cpu_times<double> times;
+  {
+    pdmpmt::scoped_timer _{times};
+    launch_workers(opts.workers);
+  }
+  std::cout << "done" << std::endl;
+  // print times
+  std::cout << times << std::endl;
   // read counter
   auto count = 0u;
   {

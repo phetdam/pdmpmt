@@ -1,5 +1,5 @@
 /**
- * @file file_mutex_mp_worker.cc
+ * @file file_mutex_mp_test_worker.cc
  * @author Derek Huang
  * @brief C++ worker program testing `file_mutex` process synchronization
  */
