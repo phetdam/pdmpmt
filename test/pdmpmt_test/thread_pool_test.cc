@@ -130,7 +130,7 @@ TEST_F(ThreadPoolTest, FutureTest)
   std::vector<std::future<unsigned>> futs(10u);
   // entropy source + distribution for sleep in milliseconds
   std::mt19937 rng{8888u};
-  std::uniform_int_distribution dist{5u, 50u};
+  std::uniform_int_distribution dist{5u, 15u};
   // post tasks that randomly sleep and then return their index
   for (auto i = 0u; i < futs.size(); i++)
     futs[i] = pool.post(
