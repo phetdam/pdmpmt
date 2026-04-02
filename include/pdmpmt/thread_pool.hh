@@ -9,14 +9,33 @@
 #define PDMPMT_THREAD_POOL_HH_
 
 #include <condition_variable>
+#include <exception>
 #include <future>
 #include <deque>
 #include <functional>
+#include <memory>
 #include <mutex>
 #include <thread>
+#include <tuple>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace pdmpmt {
+
+namespace detail {
+
+/**
+ * Tag type indicating an overload with `std::future` integration.
+ */
+struct use_future_type {};
+
+}  // namespace detail
+
+/**
+ * Tag global indicating an overload with `std::future` integration.
+ */
+inline constexpr detail::use_future_type use_future;
 
 /**
  * Thread pool implementation that consumes tasks in FIFO order.
@@ -108,17 +127,11 @@ public:
   /**
    * Post a task for execution.
    *
-   * This task will be posted at the rear of the queue for execution. Once the
+   * The task will be posted at the rear of the queue for execution. Once the
    * task is posted, one worker thread blocking on a condition variable will be
    * notified so that it may wake up and begin executing the task.
    *
    * @note This function is thread-safe.
-   *
-   * @par
-   *
-   * @note Although notifying one thread may seem more efficient compared to
-   *  notifying all threads, given that threads blocking on `wait()` would need
-   *  to be notified, we are forced to notify all threads.
    *
    * @param task Task to execute
    */
@@ -135,7 +148,56 @@ public:
     return *this;
   }
 
-  // TODO: add tag overload of post() for std::future interop
+  /**
+   * Post a task and arguments for execution and obtain a future to the result.
+   *
+   * This `post()` overload provides `std::future` integration, enabling the
+   * caller to block for the task's result. Do *not* dicsard the future before
+   * the shared state has been updated as otherwise behavior is undefined.
+   *
+   * @tparam F *Callable* to copy or move
+   * @tparam Ts *Callable* argument types
+   *
+   * @param f Callable to invoke
+   * @param args Arguments to forward and invoke with
+   * @returns `std::future` to obtain the result from
+   */
+  template <typename F, typename... Ts>
+  auto post(detail::use_future_type, F&& f, Ts&&... args)
+  {
+    // deduced return type
+    using R = std::invoke_result_t<F, Ts...>;
+    // create promise and obtain future
+    // note: using shared_ptr to allow closure to be copy-constructible
+    auto promise = std::make_shared<std::promise<R>>();
+    auto future = promise->get_future();
+    // form appropriate task with the moved promise, callable, and arguments
+    auto task = [
+      f = std::forward<F>(f),
+      // see https://stackoverflow.com/a/49902823/14227825. in C++20 we can
+      // directly initialize with the std::forward<Ts>(args)... expansion
+      args = std::tuple{std::forward<Ts>(args)...},
+      prom = std::move(promise)
+    ]() noexcept
+    {
+      try {
+        // if no value returned set_value() is called separately
+        if constexpr (std::is_same_v<R, void>) {
+          std::apply(f, args);
+          prom->set_value();
+        }
+        // otherwise directly set value
+        else
+          prom->set_value(std::apply(f, args));
+      }
+      catch (...) {
+        prom->set_exception(std::current_exception());
+      }
+    };
+    // lock to push new task and return future
+    post(std::move(task));
+    return future;
+  }
 
   /**
    * Request that the worker threads stop executing.
