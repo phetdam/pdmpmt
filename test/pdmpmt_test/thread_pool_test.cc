@@ -7,11 +7,16 @@
 
 #include "pdmpmt/thread_pool.hh"
 
+#include <chrono>
 #include <future>
 #include <mutex>
+#include <numeric>
+#include <random>
+#include <thread>
 #include <type_traits>
 #include <vector>
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace {
@@ -113,6 +118,45 @@ TEST_F(ThreadPoolTest, CounterTest)
   // counter should be 1000 + number of pending tasks should be zero
   EXPECT_EQ(1000u, count);
   EXPECT_EQ(0u, pool.pending());
+}
+
+/**
+ * Test simple `std::future` integration using several threads.
+ */
+TEST_F(ThreadPoolTest, FutureTest)
+{
+  pdmpmt::thread_pool pool{4u};
+  // futures
+  std::vector<std::future<unsigned>> futs(10u);
+  // entropy source + distribution for sleep in milliseconds
+  std::mt19937 rng{8888u};
+  std::uniform_int_distribution dist{5u, 50u};
+  // post tasks that randomly sleep and then return their index
+  for (auto i = 0u; i < futs.size(); i++)
+    futs[i] = pool.post(
+      pdmpmt::use_future,
+      [&rng, &dist](auto i)
+      {
+        std::this_thread::sleep_for(std::chrono::milliseconds{dist(rng)});
+        return i;
+      },
+      // note: yes, we could capture by copy, but this is to show forwarding
+      i
+    );
+  // block for values
+  std::vector<unsigned> values(futs.size());
+  std::transform(
+    futs.begin(),
+    futs.end(),
+    values.begin(),
+    [](auto& f) { return f.get(); }
+  );
+  // check
+  std::vector<unsigned> iota(futs.size());
+  std::iota(iota.begin(), iota.end(), 0u);
+  // note: would be nice if we could use some value generator but GoogleTest
+  // can't do container comparison without a value_type member
+  EXPECT_THAT(values, ::testing::Pointwise(::testing::Eq(), iota));
 }
 
 }  // namespace
