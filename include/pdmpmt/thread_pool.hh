@@ -282,6 +282,7 @@ private:
         // waiting for pending tasks to be cleared will wake and check
         cv_pop_.notify_all();
         // run task outside of lock
+        // TODO: may want to try-catch to avoid crashing on exception
         task();
       }
     };
