@@ -152,8 +152,10 @@ public:
    * Post a task and arguments for execution and obtain a future to the result.
    *
    * This `post()` overload provides `std::future` integration, enabling the
-   * caller to block for the task's result. Do *not* dicsard the future before
+   * caller to block for the task's result. Do *not* discard the future before
    * the shared state has been updated as otherwise behavior is undefined.
+   *
+   * @note This function is thread-safe.
    *
    * @tparam F *Callable* to copy or move
    * @tparam Ts *Callable* argument types
