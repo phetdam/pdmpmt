@@ -30,9 +30,11 @@ namespace {
 /**
  * CPU set representing a thread's CPU affinity mask.
  *
- * This uses the dynamically-allocated `cpu_set_t` on Linux to suport more than
+ * This uses a dynamically-allocated `cpu_set_t` on Linux to support more than
  * 64 processors. On Windows threads can only set affinity within their process
  * group and thus 64 logical processors are the maximum.
+ *
+ * @todo Not yet implemented for Windows due to processor group complications.
  */
 class cpu_set {
 private:
@@ -42,6 +44,7 @@ private:
    */
   static constexpr std::size_t max_cpus = 64u;
 #endif  // _WIN32
+
   /**
    * CPU set entry.
    *
