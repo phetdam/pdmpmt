@@ -135,9 +135,9 @@ TEST_F(ThreadPoolTest, FutureTest)
   for (auto i = 0u; i < futs.size(); i++)
     futs[i] = pool.post(
       pdmpmt::use_future,
-      [&rng, &dist](auto i)
+      [dur = dist(rng)](auto i)
       {
-        std::this_thread::sleep_for(std::chrono::milliseconds{dist(rng)});
+        std::this_thread::sleep_for(std::chrono::milliseconds{dur});
         return i;
       },
       // note: yes, we could capture by copy, but this is to show forwarding
