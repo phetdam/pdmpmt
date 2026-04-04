@@ -21,21 +21,9 @@
 #include <utility>
 #include <vector>
 
+#include "pdmpmt/future.hh"
+
 namespace pdmpmt {
-
-namespace detail {
-
-/**
- * Tag type indicating an overload with `std::future` integration.
- */
-struct use_future_type {};
-
-}  // namespace detail
-
-/**
- * Tag global indicating an overload with `std::future` integration.
- */
-inline constexpr detail::use_future_type use_future;
 
 /**
  * Thread pool implementation that consumes tasks in FIFO order.
@@ -133,6 +121,9 @@ public:
    *
    * @note This function is thread-safe.
    *
+   * @todo Update to have `std::async` call signature and use a wrapper lambda
+   *  to ensure that all task invocations swallow exceptions.
+   *
    * @param task Task to execute
    */
   auto& post(task_type task)
@@ -151,46 +142,51 @@ public:
   /**
    * Post a task and arguments for execution and obtain a future to the result.
    *
-   * This `post()` overload provides `std::future` integration, enabling the
-   * caller to block for the task's result. Do *not* discard the future before
-   * the shared state has been updated as otherwise behavior is undefined.
+   * This `post()` wrapper provides `std::future` integration, enabling the
+   * caller to block for the task's result. Furthermore, if a `std::future`
+   * rvalue is provided whose value type is convertible to the corresponding
+   * parameter of the callable, `get()` will automatically be called during
+   * task execution to enable simple task dependencies.
    *
    * @note This function is thread-safe.
    *
    * @tparam F *Callable* to copy or move
-   * @tparam Ts *Callable* argument types
+   * @tparam Ts *Callable* argument types or `std::future` rvalue references
    *
    * @param f Callable to invoke
    * @param args Arguments to forward and invoke with
    * @returns `std::future` to obtain the result from
    */
   template <typename F, typename... Ts>
-  auto post(detail::use_future_type, F&& f, Ts&&... args)
+  auto promise(F&& f, Ts&&... args)
   {
     // deduced return type
-    using R = std::invoke_result_t<F, Ts...>;
+    using R = std::invoke_result_t<F, result_type_t<Ts>...>;
     // create promise and obtain future
     // note: using shared_ptr to allow closure to be copy-constructible
     auto promise = std::make_shared<std::promise<R>>();
     auto future = promise->get_future();
+    // type of tuple created using CTAD from arguments
+    using tuple_type = decltype(std::tuple{std::forward<Ts>(args)...});
     // form appropriate task with the moved promise, callable, and arguments
     auto task = [
       f = std::forward<F>(f),
       // see https://stackoverflow.com/a/49902823/14227825. in C++20 we can
-      // directly initialize with the std::forward<Ts>(args)... expansion
-      args = std::tuple{std::forward<Ts>(args)...},
+      // directly initialize with the std::forward<Ts>(args)... expansion, but
+      // for the sake of having a copyable callable, we use shared_ptr
+      args = std::make_shared<tuple_type>(std::forward<Ts>(args)...),
       prom = std::move(promise)
     ]() noexcept
     {
       try {
         // if no value returned set_value() is called separately
         if constexpr (std::is_same_v<R, void>) {
-          std::apply(f, args);
+          apply(f, *args);
           prom->set_value();
         }
         // otherwise directly set value
         else
-          prom->set_value(std::apply(f, args));
+          prom->set_value(apply(f, *args));
       }
       catch (...) {
         prom->set_exception(std::current_exception());
@@ -346,7 +342,6 @@ private:
         // waiting for pending tasks to be cleared will wake and check
         cv_pop_.notify_all();
         // run task outside of lock
-        // TODO: may want to try-catch to avoid crashing on exception
         task();
       }
     };
