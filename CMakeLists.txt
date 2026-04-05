@@ -180,16 +180,28 @@ if(OpenGL_FOUND)
         # convert 1.1 -> 1_1 for macro checking
         string(REPLACE "." "_" gl_ver_suffix "${gl_ver}")
         # for Windows, check_symbol_exists seems to fail regardless if we use
-        # CMAKE_REQUIRED_DIRS or OPENGL_INCLUDE_DIR, even with conversion to a
-        # CMake-style path. that's why for Windows we instead use try_compile
+        # CMAKE_REQUIRED_INCLUDES or OPENGL_INCLUDE_DIR, even with conversion
+        # to a CMake-style path. that's why for Windows we use try_compile, but
+        # if we do so, then we need to explicitly maintain cache entries
         if(WIN32)
-            # first, configure gl_check (use native newlines)
+            # if cache variable exists then no try_compile
+            # note: try_compile may be re-running because we re-configure
+            if(DEFINED CACHE{gl_version_found_${gl_ver_suffix}})
+                # set variable + continue or short-circuit appropriately
+                if(gl_version_found_${gl_ver_suffix})
+                    set(PDMPMT_OPENGL_GL_VERSION ${gl_ver})
+                    continue()
+                else()
+                    break()
+                endif()
+            endif()
+            # otherwise, configure gl_check (use native newlines)
             # variables consumed: gl_ver_suffix
             configure_file(cmake/gl_check.cc.in gl_check.cc @ONLY)
             # now attempt to compile
             message(CHECK_START "Looking for GL_VERSION_${gl_ver_suffix}")
             try_compile(
-                gl_version_found
+                gl_version_found_${gl_ver_suffix}
                 ${CMAKE_CURRENT_BINARY_DIR}
                 ${CMAKE_CURRENT_BINARY_DIR}/gl_check.cc
                 # for consistency, use same C++ standard
@@ -197,7 +209,7 @@ if(OpenGL_FOUND)
                 # note: use OUTPUT_VARIABLE if we need compiler output
             )
             # report success/fail. we short-circuit if necessary
-            if(gl_version_found)
+            if(gl_version_found_${gl_ver_suffix})
                 message(CHECK_PASS "found")
                 set(PDMPMT_OPENGL_GL_VERSION ${gl_ver})
             else()
@@ -234,13 +246,24 @@ if(OPENGL_GLU_FOUND)
     foreach(glu_minor 1 2 3)
         # same issue with checking OpenGL header version
         if(WIN32)
-            # first, configure glu_check (use native newlines)
+            # if cache variable exists then no try_compile
+            # note: try_compile may be re-running because we re-configure
+            if(DEFINED CACHE{glu_version_found_${glu_minor}})
+                # set variable + continue or short-circuit appropriately
+                if(glu_version_found_${glu_minor})
+                    set(PDMPMT_GLU_VERSION 1.${glu_minor})
+                    continue()
+                else()
+                    break()
+                endif()
+            endif()
+            # otherwise, configure glu_check (use native newlines)
             # variables consumed: glu_minor
             configure_file(cmake/glu_check.cc.in glu_check.cc @ONLY)
             # now attempt to compile
             message(CHECK_START "Looking for GLU_VERSION_1_${glu_minor}")
             try_compile(
-                glu_version_found
+                glu_version_found_${glu_minor}
                 ${CMAKE_CURRENT_BINARY_DIR}
                 ${CMAKE_CURRENT_BINARY_DIR}/glu_check.cc
                 # for consistency, use same C++ standard
@@ -248,7 +271,7 @@ if(OPENGL_GLU_FOUND)
                 # note: use OUTPUT_VARIABLE if we need compiler output
             )
             # report success/fail. we short-circuit if necessary
-            if(glu_version_found)
+            if(glu_version_found_${glu_minor})
                 message(CHECK_PASS "found")
                 set(PDMPMT_GLU_VERSION 1.${glu_minor})
             else()
