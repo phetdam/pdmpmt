@@ -5,9 +5,13 @@
  * @copyright MIT License
  */
 
+// note: Windows requires _WIN32_WINNT >= 0x0601, which is _WIN32_WINNT_WIN7 in
+// sdkddkver.h, for correct conditional compilation of some function decls
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include <processthreadsapi.h>
+#include <processtopologyapi.h>
 #else
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE  // for CPU_SET(), etc.
@@ -34,7 +38,11 @@ namespace {
  * 64 processors. On Windows threads can only set affinity within their process
  * group and thus 64 logical processors are the maximum.
  *
- * @todo Not yet implemented for Windows due to processor group complications.
+ * @note The current implementation works on the basis of logical processors
+ *  and is not NUMA-aware. Also, since on Windows a thread can only set its
+ *  affinity within a processor group, or change an affinity mask that is
+ *  applied to all processor groups (although the primary processor group can
+ *  be changed), it is less useful on Windows.
  */
 class cpu_set {
 private:
@@ -50,6 +58,8 @@ private:
    *
    * This is a proxy type used to abstract testing and setting of the CPU set
    * mask at a given CPU index less than `size()`.
+   *
+   * @tparam S `cpu_set` or `const cpu_set`
    */
   template <typename S>
   class entry {
@@ -97,7 +107,7 @@ private:
     {
 #if defined(_WIN32)
       // on Windows need to guard against shifting too much
-      return (cpu_ < max_cpus) && !!(set_->set_ & (1u << cpu_));
+      return (cpu_ < max_cpus) && !!(set_->set_ & (KAFFINITY{1u} << cpu_));
 #else
       return !!CPU_ISSET_S(cpu_, set_->alloc_size_, set_->set_);
 #endif  // !defined(_WIN32)
@@ -117,9 +127,9 @@ private:
       // on Windows need to guard against shifting too much
       if (cpu_ < max_cpus) {
         if (add)
-          set_->set_ |= (1u << cpu_);
+          set_->set_ |= (KAFFINITY{1u} << cpu_);
         else
-          set_->set_ &= ~(1u << cpu_);
+          set_->set_ &= ~(KAFFINITY{1u} << cpu_);
       }
 #else
       if (add)
@@ -131,7 +141,7 @@ private:
     }
 
   private:
-    S* set_;           // CPU set
+    S* set_;           // CPU set type
     std::size_t cpu_;  // CPU index
   };
 
@@ -291,27 +301,51 @@ public:
   /**
    * Construct the CPU set with the current thread's CPU affinity mask.
    *
-   * This represents the CPU for the `get_nprocs_conf()` CPUs available.
+   * This represents the CPUs available for thread scheduling out of the
+   * `get_nprocs_conf()` CPUs available on Linux. On Windows, this represents
+   * the CPU affinity mask for the thread in its current processor group.
    */
   static auto current()
   {
     cpu_set cpus;
+#if defined(_WIN32)
+    // get group and affinity mask for current thread
+    GROUP_AFFINITY aff;
+    if (!GetThreadGroupAffinity(GetCurrentThread(), &aff))
+      throw std::system_error{
+        static_cast<int>(GetLastError()), std::system_category(),
+        "GetThreadGroupAffinity() error"
+      };
+    // set affinity mask
+    cpus.set_ = aff.Mask;
+#else
     if (sched_getaffinity(0, cpus.alloc_size_, cpus) < 0)
       throw std::system_error{
         {errno, std::system_category()},
         "call to sched_getaffinity() for current thread"
       };
+#endif  // !defined(_WIN32)
     return cpus;
   }
 
   /**
    * Default ctor.
    *
-   * Constructs a zeroed CPU set representing `get_nprocs_conf()` CPUs.
+   * Constructs a zeroed CPU set representing `get_nprocs_conf()` logical CPUs
+   * on Linux and `GetMaximumProcessorCount()` logical CPUs on Windows. The
+   * CPU count on Windows is for the thread's current processor group.
    */
   cpu_set()
   {
+#if defined(_WIN32)
+    // get group and procesor number of current thread
+    PROCESSOR_NUMBER pn;
+    GetCurrentProcessorNumberEx(&pn);
+    // initialize using number of processors in group
+    from(GetMaximumProcessorCount(pn.Group));
+#else
     from(get_nprocs_conf());
+#endif  // !defined(_WIN32)
   }
 
   /**
@@ -379,8 +413,17 @@ public:
 
   /**
    * Return the allocated CPU set size in bytes.
+   *
+   * On Windows this is always fixed to `sizeof set_` which is 8 octets.
    */
-  auto alloc_size() const noexcept { return alloc_size_; }
+  auto alloc_size() const noexcept
+  {
+#if defined(_WIN32)
+    return sizeof set_;
+#else
+    return alloc_size_;
+#endif  // !defined(_WIN32)
+  }
 
   /**
    * Return the number of CPUs that can be represented by the CPU set.
@@ -392,7 +435,19 @@ public:
    */
   auto count() const noexcept
   {
+#if defined(_WIN32)
+    // number of CPUs the thread can run on (activated bits) + mask copy
+    std::size_t n = 0u;
+    auto cpus = set_;
+    // count bits in CPU mask + return
+    while (cpus) {
+      n += cpus & 0b1;
+      cpus >>= 1;
+    }
+    return n;
+#else
     return static_cast<std::size_t>(CPU_COUNT_S(alloc_size_, set_));
+#endif  // !defined(_WIN32)
   }
 
   /**
@@ -415,6 +470,19 @@ public:
     return entry{*this, cpu};
   }
 
+#if defined(_WIN32)
+  /**
+   * Implicitly convert into `KAFFINITY` for C function interop.
+   *
+   * This can also be used to determine if the `cpu_set` was moved from.
+   *
+   * @note `KAFFINITY`, `ULONG_PTR`, and `DWORD_PTR` are all the same type.
+   */
+  operator KAFFINITY() const noexcept
+  {
+    return set_;
+  }
+#else
   /**
    * Implicitly convert into `cpu_set_t*` for C function interop.
    *
@@ -424,10 +492,17 @@ public:
   {
     return set_;
   }
+#endif  // !defined(_WIN32)
 
 private:
+  // on Windows, we have a fixed mask, while on Linux we also need to track the
+  // number of bytes allocated for the dynamically allocated cpu_set_t
+#if defined(_WIN32)
+  KAFFINITY set_;           // CPU set
+#else
   cpu_set_t* set_;          // CPU set
   std::size_t alloc_size_;  // CPU set allocation size
+#endif  // !defined(_WIN32)
   std::size_t size_;        // number of CPUs representable by the set
 
   /**
@@ -442,15 +517,19 @@ private:
 
   /**
    * Initialize using a given maximum CPU count without zeroing.
+   *
+   * On Windows we only need to set the number of CPUs in the set.
    */
   void from(std::size_t cpus, no_zero_tag)
   {
+#ifndef _WIN32
     // allocate CPU set
     set_ = CPU_ALLOC(cpus);
     if (!set_)
       throw std::system_error{{errno, std::system_category()}, "CPU_ALLOC()"};
     // record allocation size + max CPU count
     alloc_size_ = CPU_ALLOC_SIZE(cpus);
+#endif  // _WIN32
     size_ = cpus;
   }
 
@@ -460,7 +539,12 @@ private:
   void from(std::size_t cpus)
   {
     from(cpus, no_zero);
-    CPU_ZERO_S(alloc_size_, set_);  // zero bits
+    // zero bits
+#if defined(_WIN32)
+    set_ = 0u;
+#else
+    CPU_ZERO_S(alloc_size_, set_);
+#endif  // !defined(_WIN32)
   }
 
   /**
@@ -469,31 +553,45 @@ private:
   void from(const cpu_set& other)
   {
     from(other.size(), no_zero);
+#if defined(_WIN32)
+    set_ = other.set_;
+#else
     std::memcpy(set_, other.set_, alloc_size_);
+#endif  // !defined(_WIN32)
   }
 
   /**
    * Initialize from another CPU set object by move.
    *
-   * After move, the moved-from object has `nullptr` data and zero sizes.
+   * After move, the moved-from object has zeroed data and zero size[s].
    */
   void from(cpu_set&& other) noexcept
   {
     set_ = other.set_;
+#ifndef _WIN32
     alloc_size_ = other.alloc_size_;
+#endif  // _WIN32
     size_ = other.size_;
+#if defined(_WIN32)
+    other.set_ = 0u;
+#else
     other.set_ = nullptr;
     other.alloc_size_ = 0u;
+#endif  // !defined(_WIN32)
     other.size_ = 0u;
   }
 
   /**
    * Deallocate the CPU set if not moved from.
+   *
+   * On Windows nothing needs to be done since we only have an integral mask.
    */
   void destroy() noexcept
   {
+#ifndef _WIN32
     if (set_)
       CPU_FREE(set_);
+#endif  // _WIN32
   }
 };
 
@@ -543,15 +641,27 @@ auto& operator<<(const cpu_set::text_formatter& out, const cpu_set& cpus)
   return out.out() << "]";
 }
 
+/**
+ * Return the current logical processor number the thread is running on.
+ */
+auto current_processor()
+{
+#if defined(_WIN32)
+  return GetCurrentProcessorNumber();
+#else
+  return sched_getcpu();
+#endif  // !defined(_WIN32)
+}
+
 }  // namespace
 
 int main()
 {
-  // helper to print CPU set + current CPU number
+  // helper to print CPU set + current logical CPU number
   auto print_info = [](const cpu_set& cpus)
   {
     std::cout << cpus << " " << cpu_set::fmt("*") << cpus << " current: " <<
-      sched_getcpu() << std::endl;
+      current_processor() << std::endl;
   };
   // get CPU set with current thread's process affinity + print
   auto cpus = cpu_set::current();
@@ -559,11 +669,19 @@ int main()
   // modify + set thread affinity
   for (auto i = 0u; i < cpus.size(); i += 2u)
     cpus[i] = false;
+#if defined(_WIN32)
+  if (!SetThreadAffinityMask(GetCurrentThread(), cpus))
+    throw std::system_error{
+      static_cast<int>(GetLastError()), std::system_category(),
+      "SetThreadAffinityMask() for current thread failed"
+    };
+#else
   if (sched_setaffinity(0, cpus.alloc_size(), cpus) < 0)
     throw std::system_error{
       {errno, std::system_category()},
       "call to sched_setaffinity() for current thread failed"
     };
+#endif  // !defined(_WIN32)
   // get thread affinity again + print
   cpus = cpu_set::current();
   print_info(cpus);
@@ -571,6 +689,20 @@ int main()
   for (auto i = 0u; i < cpus.size(); i++) {
     cpus = {};
     cpus[i] = true;
+#if defined(_WIN32)
+    // if ERROR_INVALID_PARAMETER, CPU is not online/allowed, so don't error
+    if (!SetThreadAffinityMask(GetCurrentThread(), cpus)) {
+      switch (GetLastError()) {
+      case ERROR_INVALID_PARAMETER:
+        break;
+      default:
+        throw std::system_error{
+          static_cast<int>(GetLastError()), std::system_category(),
+          "SetThreadAffinityMask() for current thread failed"
+        };
+      }
+    }
+#else
     // if EINVAL, CPU is not online/insufficient perms, so don't error
     if (sched_setaffinity(0, cpus.alloc_size(), cpus) < 0) {
       switch (errno) {
@@ -583,14 +715,21 @@ int main()
         };
       }
     }
+#endif  // !defined(_WIN32)
     // if current CPU is not i affinity switch failed
     std::cout << cpus << " " << cpu_set::fmt("*") << cpus << " current: ";
-    auto cur_cpu = sched_getcpu();
+    auto cur_cpu = current_processor();
     // note: cast to appease compiler warning about signed/unsigned mismatch
     if (i == static_cast<decltype(i)>(cur_cpu))
       std::cout << cur_cpu << std::endl;
     else
-      std::cout << "EINVAL (no migration)" << std::endl;
+      std::cout <<
+#if defined(_WIN32)
+        "ERROR_INVALID_PARAMETER"
+#else
+        "EINVAL"
+#endif  // !defined(_WIN32)
+        " (no migration)" << std::endl;
   }
   // set the thread's process affinity
   return EXIT_SUCCESS;
