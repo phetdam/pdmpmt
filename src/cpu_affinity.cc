@@ -731,6 +731,6 @@ int main()
 #endif  // !defined(_WIN32)
         " (no migration)" << std::endl;
   }
-  // set the thread's process affinity
+  // done
   return EXIT_SUCCESS;
 }
