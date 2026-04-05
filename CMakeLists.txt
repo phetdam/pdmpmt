@@ -93,6 +93,51 @@ else()
 endif()
 message(STATUS "Build version: ${PDMPMT_VERSION}")
 
+# if using MSVC print some extra information
+if(MSVC)
+    message(STATUS "MSVC version: ${MSVC_VERSION}")
+    message(STATUS "MSVC toolset: ${MSVC_TOOLSET_VERSION}")
+endif()
+# on Windows get the default _WIN32_WINNT value
+if(WIN32)
+    try_run(
+        sdkddkver_res
+        sdkddkver_compile_res
+        ${CMAKE_CURRENT_BINARY_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/sdkddkver.cc
+        # for consistency, use same C++ standard
+        CXX_STANDARD ${CMAKE_CXX_STANDARD}
+        COMPILE_OUTPUT_VARIABLE sdkddkver_compile_out
+        RUN_OUTPUT_VARIABLE sdkddkver_out
+    )
+    # should not fail
+    if(NOT sdkddkver_compile_res)
+        message(
+            FATAL_ERROR
+            "sdkddkver.cc failed to compile:\n${sdkddkver_compile_out}"
+        )
+    endif()
+    if(sdkddkver_res)
+        message(FATAL_ERROR "sdkddkver had non-zero exit:\n${sdkddkver_out}")
+    endif()
+    # set PDMPMT_WIN32_WINNT (need to strip trailing newline) + clean up
+    string(STRIP "${sdkddkver_out}" PDMPMT_WIN32_WINNT)
+    unset(sdkddkver_res)
+    unset(sdkddkver_compile_res)
+    unset(sdkddkver_compile_out)
+    unset(sdkddkver_out)
+    # pdmpmt_sdkddkver: interface target for the default _WIN32_WINNT
+    # definition and other Windows header version macros
+    add_library(pdmpmt_sdkddkver INTERFACE)
+    add_library(pdmpmt::sdkddkver ALIAS pdmpmt_sdkddkver)
+    target_compile_definitions(
+        pdmpmt_sdkddkver INTERFACE
+        _WIN32_WINNT=${PDMPMT_WIN32_WINNT}
+    )
+    # print _WIN32_WINNT value
+    message(STATUS "_WIN32_WINNT: ${PDMPMT_WIN32_WINNT}")
+endif()
+
 # find CUDA Toolkit
 # note: we choose CUDA Toolkit 12 as then NVCC can support C++20
 # note: bumped minimum CUDA Toolkit version from 12.2 to 12.4 due to upgrading
