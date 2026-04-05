@@ -29,6 +29,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "pdmpmt/warnings.h"
+
 namespace {
 
 /**
@@ -194,7 +196,13 @@ public:
             if constexpr (N == 2u)  // first character as "on" character
               return '-';
             else
+// MSVC emits C5258 as it somehow thinks that this particular use of chars[0]
+// either through &chars or via capture of chars[0] by copy doesn't require
+// explicit capture for its use. not entirely sure why MSVC concludes this
+PDMPMT_MSVC_WARNING_PUSH()
+PDMPMT_MSVC_WARNING_DISABLE(5258)
               return chars[0];
+PDMPMT_MSVC_WARNING_POP()
           }(),
           [&chars]
           {

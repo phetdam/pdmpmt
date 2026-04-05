@@ -180,6 +180,7 @@ add_test(NAME quasi_mcpi COMMAND quasi_mcpi)
 
 # cpu_affinity: demo program that prints and sets thread affinity
 add_executable(cpu_affinity cpu_affinity.cc)
+target_link_libraries(cpu_affinity PRIVATE pdmpmt++)
 add_test(NAME cpu_affinity COMMAND cpu_affinity)
 
 # cpu_cache_info: prints CPU cache information for each logical CPU
