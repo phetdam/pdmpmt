@@ -277,7 +277,7 @@ PDMPMT_MSVC_WARNING_POP()
    *
    * @param on Character to represent online CPU
    */
-  static constexpr auto fmt(char on) noexcept
+  static constexpr auto fmt(char on = '*') noexcept
   {
     return text_format{on};
   }
@@ -725,7 +725,7 @@ int main()
     }
 #endif  // !defined(_WIN32)
     // if current CPU is not i affinity switch failed
-    std::cout << cpus << " " << cpu_set::fmt("*") << cpus << " current: ";
+    std::cout << cpus << " " << cpu_set::fmt() << cpus << " current: ";
     auto cur_cpu = current_processor();
     // note: cast to appease compiler warning about signed/unsigned mismatch
     if (i == static_cast<decltype(i)>(cur_cpu))
