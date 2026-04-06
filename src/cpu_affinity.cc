@@ -668,7 +668,7 @@ int main()
   // helper to print CPU set + current logical CPU number
   auto print_info = [](const cpu_set& cpus)
   {
-    std::cout << cpus << " " << cpu_set::fmt("*") << cpus << " current: " <<
+    std::cout << cpus << " " << cpu_set::fmt() << cpus << " current: " <<
       current_processor() << std::endl;
   };
   // get CPU set with current thread's process affinity + print
