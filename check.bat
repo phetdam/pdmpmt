@@ -103,7 +103,6 @@ if !TEST_ACTION!==print_usage (
     exit /b 0
 )
 :: run CTest tests
-echo !BUILD_CONFIG!
 ctest --test-dir build_windows_x64 -C !BUILD_CONFIG! -j%NUMBER_OF_PROCESSORS% ^
     !CTEST_ARGS!
 exit /b 0
