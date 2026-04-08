@@ -13,7 +13,9 @@
 #define WIN32_LEAN_AND_MEAN
 #endif  // WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include <jobapi2.h>
 #include <processthreadsapi.h>
+#include <winnt.h>
 #else
 #include <sys/resource.h>
 #include <sys/time.h>
@@ -21,9 +23,11 @@
 #endif  // !defined(_WIN32)
 
 #include <chrono>
-// need std::uint64_t for performing arithmetic on FILETIME DWORDs
+// need std::uint64_t for performing arithmetic on LARGE_INTEGER structures and
+// std::memcpy() to reinterpret the LARGE_INTEGER as a std::uint64_t
 #ifdef _WIN32
 #include <cstdint>
+#include <cstring>
 #endif  // _WIN32
 #include <system_error>
 
@@ -38,12 +42,7 @@ namespace pdmpmt {
  * wall time from creation to destruction via the difference of `steady_clock`
  * time points. However, if using a `cpu_times<T, P>` as the duration type,
  * system-specific calls are also made to obtain user and kernel CPU times,
- * which can be useful for profiling CPU consumption.
- *
- * @todo Use `CreateJobObject() and `QueryInformationJobObject()` on Windows
- *  to obtain a `JOBOBJECT_BASIC_ACCOUNTING_INFORMATION` with the total parent
- *  and child process user and kernel CPU times. The current implementation
- *  using `GetProcessTimes()` doesn't include child process times.
+ * which include CPU user and kernel time consumed by child processes.
  *
  * @tparam T `std::chrono::duration` or `cpu_times<T, P>` specialization
  */
@@ -56,7 +55,7 @@ public:
 
 private:
   /**
-   * Starting time point structure.
+   * Starting time state structure.
    *
    * The base specialization contains only the `time_point` member indicating
    * the beginning time point for the wall time measurement.
@@ -64,7 +63,7 @@ private:
    * @tparam T_ `std::chrono::duration`
    */
   template <typename T_>
-  struct start_times {
+  struct start_state {
     time_point real_;  // starting wall time point
   };
 
@@ -73,17 +72,19 @@ private:
    *
    * In addition to the starting wall time point this also contains the user
    * and kernel starting time points encapsulated in a platform-specific
-   * structure or structures, e.g. `timeval` for Linux, `FILETIME` for Windows.
+   * structure or structures, e.g. `timeval` for Linux, `LARGE_INTEGER` for
+   * Windows. On Windows, the job object `HANDLE` is also encapsulated.
    *
    * @tparam T_ Tick type
    * @tparam P_ Period type
    */
   template <typename T_, typename P_>
-  struct start_times<cpu_times<T_, P_>> {
+  struct start_state<cpu_times<T_, P_>> {
     time_point real_;     // starting wall time point
 #if defined(_WIN32)
-    FILETIME user_;       // starting user CPU time point
-    FILETIME sys_;        // starting system CPU time point
+    HANDLE job_;          // job object handle
+    LARGE_INTEGER user_;  // starting user CPU time point for self + children
+    LARGE_INTEGER sys_;   // starting system CPU time point for self + children
 #else
     timeval self_user_;   // starting user CPU time for self
     timeval self_sys_;    // starting system CPU time for self
@@ -108,8 +109,8 @@ public:
    * Ctor.
    *
    * Marks the starting time point and for a `cpu_times<T, P>` uses the
-   * appropriate system APIs to query user and kernel CPU times. On Windows,
-   * `GetProcessTimes()` is used, while on Linux, `getrusage()` is used.
+   * appropriate system APIs to query user and kernel CPU times. On Windows, we
+   * create and query a job object, while on Linux, `getrusage()` is used.
    *
    * @param out `std::chrono::duration` or `cpu_times<T, P>` to update
    */
@@ -118,17 +119,39 @@ public:
     st_.real_ = clock_type::now();
     // cpu_times class requires user + system CPU times
     if constexpr (is_cpu_times_v<T>) {
-// on Windows use GetProcessTimes()
+// on Windows create a job object and query user + kernel times
 #if defined(_WIN32)
-      // note: creation and exit time are unused + exit values are unspecified
-      FILETIME ct;
-      FILETIME et;
-      if (!GetProcessTimes(GetCurrentProcess(), &ct, &et, &st_.sys_, &st_.user_))
+      // anonymous job object with default security attributes
+      st_.job_ = CreateJobObjectA(nullptr, nullptr);
+      if (!st_.job_)
         throw std::system_error{
-          static_cast<int>(GetLastError()),
-          std::system_category(),
-          "GetProcessTimes() error"
+          static_cast<int>(GetLastError()), std::system_category(),
+          "CreateJobObjectA() error"
         };
+      // assign current process to job object
+      if (!AssignProcessToJobObject(st_.job_, GetCurrentProcess()))
+        throw std::system_error{
+          static_cast<int>(GetLastError()), std::system_category(),
+          "AssignProcessToJobObject() error"
+        };
+      // query job object for user and system CPU times
+      JOBOBJECT_BASIC_ACCOUNTING_INFORMATION job_info;
+      if (
+        !QueryInformationJobObject(
+          st_.job_,
+          JobObjectBasicAccountingInformation,
+          &job_info,
+          sizeof job_info,
+          nullptr
+        )
+      )
+        throw std::system_error{
+          static_cast<int>(GetLastError()), std::system_category(),
+          "QueryInformationJobObject() error"
+        };
+      // save user and kernel times
+      st_.user_ = job_info.TotalUserTime;
+      st_.sys_ = job_info.TotalKernelTime;
 // on Linux use getrusage() with RUSAGE_SELF and RUSAGE_CHILDREN
 #else
       // get user + system times for self + children
@@ -162,14 +185,18 @@ public:
       auto now = clock_type::now();
       // now get user and kernel CPU times
 #if defined(_WIN32)
-      // creation + unspecified exit time are unused as usual
-      FILETIME ct;
-      FILETIME et;
-      // we only care about the user and kernel times
-      FILETIME ut;
-      FILETIME kt;
-      // note: discarding error here
-      GetProcessTimes(GetCurrentProcess(), &ct, &et, &kt, &ut);
+      JOBOBJECT_BASIC_ACCOUNTING_INFORMATION job_info;
+      // note: ignoring return value here
+      QueryInformationJobObject(
+        st_.job_,
+        JobObjectBasicAccountingInformation,
+        &job_info,
+        sizeof job_info,
+        nullptr
+      );
+      // we no longer need the job handle so close
+      // note: ignoring return value here
+      CloseHandle(st_.job_);
 #else
       rusage sru;
       rusage cru;
@@ -179,18 +206,24 @@ public:
 #endif  // !defined(_WIN32)
       // now perform differences. first get wall time duration
       auto real = now - st_.real_;
-// on Windows we must copy the low and high DWORDs into uint64_t since type
-// punning a union, although allowed by some compilers as an extension, is not
-// allowed under the C++ standard (despite Microsoft docs recommending punning)
+// on Windows we must reinterpret the LARGE_INTEGER into a std::uint64_t using
+// std::memcpy() since type punning a union, although allowed by some compilers
+// as an extension, is not allowed under the C++ standard. we have no idea
+// which of the LARGE_INTEGER union members is active either
 #if defined(_WIN32)
-      // user + kernel ticks computed by copying + shifting
-      std::uint64_t user_ticks = ut.dwHighDateTime;
-      user_ticks = (user_ticks << 32u) + ut.dwLowDateTime;
-      std::uint64_t sys_ticks = kt.dwHighDateTime;
-      sys_ticks = (sys_ticks << 32u) + kt.dwLowDateTime;
+      // starting user + kernel ticks
+      std::uint64_t utks_0;
+      std::uint64_t stks_0;
+      std::memcpy(&utks_0, &st_.user_, sizeof utks_0);
+      std::memcpy(&stks_0, &st_.sys_, sizeof stks_0);
+      // ending user + kernel ticks
+      std::uint64_t utks_1;
+      std::uint64_t stks_1;
+      std::memcpy(&utks_1, &job_info.TotalUserTime, sizeof utks_1);
+      std::memcpy(&stks_1, &job_info.TotalKernelTime, sizeof stks_1);
       // compute user + kernel durations in nanoseconds
-      std::chrono::nanoseconds user_time{100 * user_ticks};
-      std::chrono::nanoseconds sys_time{100 * sys_ticks};
+      std::chrono::nanoseconds user_time{100 * (utks_1 - utks_0)};
+      std::chrono::nanoseconds sys_time{100 * (stks_1 - stks_0)};
 // on Linux we need to sum the differences in the user and system times
 #else
       // user + kernel microseconds for self + children
@@ -225,7 +258,7 @@ public:
   }
 
 private:
-  start_times<T> st_;
+  start_state<T> st_;
   T& out_;
 };
 
