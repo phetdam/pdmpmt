@@ -26,6 +26,9 @@
 #include <filesystem>
 #include <string_view>
 #include <system_error>
+#ifdef _WIN32
+#include <thread>                // for std::this_thread::yield()
+#endif  // _WIN32
 #include <utility>
 
 #include "pdmpmt/scope_exit.hh"
@@ -113,7 +116,10 @@ public:
     // note: if we were using an alternate implementation, e.g.
     // find_first_change_lock() or read_directory_changes_lock(), we would
     // replace the spin with the appropriate function invocation
-    while (!try_lock());
+    // note: using std::this_thread::yield() improves performance a bit when
+    // a large number of threads in a process are contending
+    while (!try_lock())
+      std::this_thread::yield();
 #else
     inotify_lock();
 #endif  // !defined(_WIN32)
