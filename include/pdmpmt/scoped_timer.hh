@@ -40,6 +40,11 @@ namespace pdmpmt {
  * system-specific calls are also made to obtain user and kernel CPU times,
  * which can be useful for profiling CPU consumption.
  *
+ * @todo Use `CreateJobObject() and `QueryInformationJobObject()` on Windows
+ *  to obtain a `JOBOBJECT_BASIC_ACCOUNTING_INFORMATION` with the total parent
+ *  and child process user and kernel CPU times. The current implementation
+ *  using `GetProcessTimes()` doesn't include child process times.
+ *
  * @tparam T `std::chrono::duration` or `cpu_times<T, P>` specialization
  */
 template <typename T>
