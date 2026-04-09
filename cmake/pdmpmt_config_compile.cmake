@@ -49,10 +49,15 @@ macro(pdmpmt_config_compile)
             # issues with MSVC require explicit capture of identifiers that
             # refer to constexpr or static variables
             $<$<COMPILE_LANGUAGE:CXX>:/Zc:lambda>
+            # also forward /Zc:lambda to the CUDA C++ frontend
+            $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/Zc:lambda>
             # ensure CUDA compiler makes MSVC use /W3. we don't want to have
             # the warning level too high when using NVCC because those headers
             # tend to trigger MSVC a lot when using /Wall
             $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/W3>
+            # cccl/cuda/std/__cccl/preprocessor.h(23) emits error if we don't
+            # run MSVC preprocessor under standard-conformant mode
+            $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/Zc:preprocessor>
             # 177-D: function declared but never referenced
             $<$<COMPILE_LANGUAGE:CUDA>:-diag-suppress=177>
         )

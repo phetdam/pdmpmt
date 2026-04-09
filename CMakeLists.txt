@@ -138,6 +138,53 @@ if(WIN32)
     message(STATUS "_WIN32_WINNT: ${PDMPMT_WIN32_WINNT}")
 endif()
 
+# find nvidia-smi to query driver + required CUDA major version. since CUDA 11
+# minor version compatibility is provided between CUDA Toolkit and driver
+find_program(nvidia-smi_EXECUTABLE nvidia-smi)
+# program found
+if(nvidia-smi_EXECUTABLE)
+    # emulate find_package() and indicate found
+    set(nvidia-smi_FOUND TRUE)
+    # run nvidia-smi to get version info
+    execute_process(
+        COMMAND "${nvidia-smi_EXECUTABLE}" --version
+        OUTPUT_VARIABLE nvidia-smi_out
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        # note: if we found nvidia-smi this invocation should not fail
+        COMMAND_ERROR_IS_FATAL ANY
+    )
+    # convert output to list
+    string(REPLACE "\n" ";" nvidia-smi_out "${nvidia-smi_out}")
+    # nvidia-smi version
+    list(GET nvidia-smi_out 0 nvidia-smi_VERSION)
+    string(
+        REGEX REPLACE "NVIDIA-SMI version[ ]+:[ ]+" ""
+        nvidia-smi_VERSION "${nvidia-smi_VERSION}"
+    )
+    # driver version
+    list(GET nvidia-smi_out 2 PDMPMT_CUDA_DRIVER_VERSION)
+    string(
+        REGEX REPLACE "DRIVER version[ ]+:[ ]+" ""
+        PDMPMT_CUDA_DRIVER_VERSION "${PDMPMT_CUDA_DRIVER_VERSION}"
+    )
+    # required CUDA Toolkit major version
+    list(GET nvidia-smi_out 3 PDMPMT_CUDA_REQUIRED_MAJOR)
+    string(
+        REGEX REPLACE "CUDA Version[ ]+:[ ]+([0-9]+).+" "\\1"
+        PDMPMT_CUDA_REQUIRED_MAJOR "${PDMPMT_CUDA_REQUIRED_MAJOR}"
+    )
+    # clean up
+    unset(nvidia-smi_out)
+endif()
+# if nvidia-smi found print info
+if(nvidia-smi_FOUND)
+    message(STATUS "CUDA driver: ${PDMPMT_CUDA_DRIVER_VERSION}")
+    message(STATUS "CUDA required: ${PDMPMT_CUDA_REQUIRED_MAJOR}")
+else()
+    message(STATUS "CUDA driver: None")
+    message(STATUS "CUDA required: None")
+endif()
+
 # minimum CUDA version
 # note: we choose CUDA Toolkit 12 as then NVCC can support C++20
 set(PDMPMT_CUDA_MIN_VERSION 12.2)
@@ -155,13 +202,34 @@ find_package(CUDAToolkit ${PDMPMT_CUDA_MIN_VERSION})
 # if found, configure
 if(CUDAToolkit_FOUND)
     message(STATUS "CUDA version: ${CUDAToolkit_VERSION}")
-    # enable CUDA for project
-    enable_language(CUDA)
-    # same C++ standard and requirement
-    set(CMAKE_CUDA_STANDARD ${CMAKE_CXX_STANDARD})
-    set(CMAKE_CUDA_STANDARD_REQUIRED ${CMAKE_CXX_STANDARD_REQUIRED})
+    # enable CUDA for project if found version has same major version
+    if(
+        PDMPMT_CUDA_REQUIRED_MAJOR AND
+        CUDAToolkit_VERSION_MAJOR VERSION_EQUAL PDMPMT_CUDA_REQUIRED_MAJOR
+    )
+        enable_language(CUDA)
+        # same C++ standard and requirement
+        set(CMAKE_CUDA_STANDARD ${CMAKE_CXX_STANDARD})
+        set(CMAKE_CUDA_STANDARD_REQUIRED ${CMAKE_CXX_STANDARD_REQUIRED})
+        # indicate enabled
+        set(PDMPMT_CUDA_ENABLED TRUE)
+    else()
+        message(
+            WARNING
+            "CUDA Toolkit version ${CUDAToolkit_VERSION} does not have the "
+"required CUDA major version ${PDMPMT_CUDA_REQUIRED_MAJOR}. "
+"CUDA will not be enabled for this project."
+        )
+        set(PDMPMT_CUDA_ENABLED FALSE)
+    endif()
 else()
     message(STATUS "CUDA version: None")
+endif()
+# indicate if CUDA enabled for project
+if(PDMPMT_CUDA_ENABLED)
+    message(STATUS "CUDA enabled: Yes")
+else()
+    message(STATUS "CUDA enabled: No")
 endif()
 
 # OpenMP target version depends on the compiler. MSVC OpenMP support lags
