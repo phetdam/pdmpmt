@@ -138,15 +138,20 @@ if(WIN32)
     message(STATUS "_WIN32_WINNT: ${PDMPMT_WIN32_WINNT}")
 endif()
 
-# find CUDA Toolkit
+# minimum CUDA version
 # note: we choose CUDA Toolkit 12 as then NVCC can support C++20
-# note: bumped minimum CUDA Toolkit version from 12.2 to 12.4 due to upgrading
-# to VS2022 17.10 which causes enable_language(CUDA) to fail due to an elevated
+set(PDMPMT_CUDA_MIN_VERSION 12.2)
+# note: bump minimum CUDA Toolkit version from 12.2 to 12.4 due to upgrading to
+# VS2022 17.10 which causes enable_language(CUDA) to fail due to an elevated
 # CUDA Toolkit version requirement. _ALLOW_COMPILER_AND_STL_VERSION_MISMATCH
 # being defined for nvcc doesn't help because we can't force this as part of
 # the enable_language(CUDA) call unfortunately. for more details see the
 # following: https://stackoverflow.com/a/78576792/14227825
-find_package(CUDAToolkit 12.4)
+if(MSVC AND MSVC_VERSION VERSION_GREATER_EQUAL 1940)
+    set(PDMPMT_CUDA_MIN_VERSION 12.4)
+endif()
+# find CUDA Toolkit
+find_package(CUDAToolkit ${PDMPMT_CUDA_MIN_VERSION})
 # if found, configure
 if(CUDAToolkit_FOUND)
     message(STATUS "CUDA version: ${CUDAToolkit_VERSION}")
