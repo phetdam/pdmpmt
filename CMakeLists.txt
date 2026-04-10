@@ -146,31 +146,27 @@ if(nvidia-smi_EXECUTABLE)
     # emulate find_package() and indicate found
     set(nvidia-smi_FOUND TRUE)
     # run nvidia-smi to get version info
+    # note: --version option was added between versions 545 and 550 so we use
+    # the "old-fashioned" approach of parsing the argument-free output
     execute_process(
-        COMMAND "${nvidia-smi_EXECUTABLE}" --version
+        COMMAND "${nvidia-smi_EXECUTABLE}"
         OUTPUT_VARIABLE nvidia-smi_out
         OUTPUT_STRIP_TRAILING_WHITESPACE
         # note: if we found nvidia-smi this invocation should not fail
         COMMAND_ERROR_IS_FATAL ANY
     )
-    # convert output to list
+    # convert output to list + get line with version info
     string(REPLACE "\n" ";" nvidia-smi_out "${nvidia-smi_out}")
-    # nvidia-smi version
-    list(GET nvidia-smi_out 0 nvidia-smi_VERSION)
+    list(GET nvidia-smi_out 2 nvidia-smi_versions)
+    # get version info from line
+    string(REGEX MATCHALL "[0-9.]+" nvidia-smi_versions "${nvidia-smi_versions}")
+    # nvidia-smi version, driver version, required CUDA major version
+    list(GET nvidia-smi_versions 0 nvidia-smi_VERSION)
+    list(GET nvidia-smi_versions 1 PDMPMT_CUDA_DRIVER_VERSION)
+    list(GET nvidia-smi_versions 2 PDMPMT_CUDA_REQUIRED_MAJOR)
+    # keep only major version
     string(
-        REGEX REPLACE "NVIDIA-SMI version[ ]+:[ ]+" ""
-        nvidia-smi_VERSION "${nvidia-smi_VERSION}"
-    )
-    # driver version
-    list(GET nvidia-smi_out 2 PDMPMT_CUDA_DRIVER_VERSION)
-    string(
-        REGEX REPLACE "DRIVER version[ ]+:[ ]+" ""
-        PDMPMT_CUDA_DRIVER_VERSION "${PDMPMT_CUDA_DRIVER_VERSION}"
-    )
-    # required CUDA Toolkit major version
-    list(GET nvidia-smi_out 3 PDMPMT_CUDA_REQUIRED_MAJOR)
-    string(
-        REGEX REPLACE "CUDA Version[ ]+:[ ]+([0-9]+).+" "\\1"
+        REGEX MATCH "[0-9]+"
         PDMPMT_CUDA_REQUIRED_MAJOR "${PDMPMT_CUDA_REQUIRED_MAJOR}"
     )
     # clean up
