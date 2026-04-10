@@ -60,6 +60,9 @@ macro(pdmpmt_config_compile)
             $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/Zc:preprocessor>
             # 177-D: function declared but never referenced
             $<$<COMPILE_LANGUAGE:CUDA>:-diag-suppress=177>
+            # give nvcc the correct /MD[d] flags since we want to use the
+            # shared VC++ runtime libraries instead of the static ones
+            $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=/MD$<$<CONFIG:Debug>:d>>
         )
     # options are also accepted by Clang
     else()
