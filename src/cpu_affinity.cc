@@ -49,7 +49,7 @@ int main()
   // helper to print CPU set + current logical CPU number
   auto print_info = [](const pdmpmt::cpu_set& cpus)
   {
-    std::cout << cpus << " " << pdmpmt::cpu_set::fmt() << cpus <<
+    std::cout << cpus << " " << pdmpmt::cpu_set::fmt('*') << cpus <<
       " current: " << current_processor() << std::endl;
   };
   // get CPU set with current thread's process affinity + print
@@ -106,7 +106,7 @@ int main()
     }
 #endif  // !defined(_WIN32)
     // if current CPU is not i affinity switch failed
-    std::cout << cpus << " " << pdmpmt::cpu_set::fmt() << cpus << " current: ";
+    std::cout << cpus << " " << pdmpmt::cpu_set::fmt('*') << cpus << " current: ";
     auto cur_cpu = current_processor();
     // note: cast to appease compiler warning about signed/unsigned mismatch
     if (i == static_cast<decltype(i)>(cur_cpu))

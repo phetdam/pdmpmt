@@ -283,7 +283,7 @@ PDMPMT_MSVC_WARNING_POP()
    *
    * @param on Character to represent online CPU
    */
-  static constexpr auto fmt(char on = '*') noexcept
+  static constexpr auto fmt(char on) noexcept
   {
     return text_format{on};
   }
