@@ -74,6 +74,7 @@ endif()
 # curand_mcpi: compute pi using Monte Carlo using Thrust + cuRAND
 # TODO: consider making this also a test in the Google Test runner
 if(CUDAToolkit_FOUND)
+    # TODO: generalize for more CUDA objects for correct dependency tracking
     # CMake C++ flags generator expressions per configuration
     foreach(config ${CMAKE_CONFIGURATION_TYPES})
         string(TOUPPER "${config}" config_upper)
