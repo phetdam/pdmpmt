@@ -93,7 +93,7 @@ if(CUDAToolkit_FOUND)
     add_custom_command(
         OUTPUT curand_mcpi.cu.obj
         COMMAND ${CMAKE_CUDA_COMPILER}
-                --use-local-env
+                $<${MSVC}:--use-local-env>
                 -c
                 -I${PDMPMT_INCLUDE_DIR}
                 -MD -MF curand_mcpi.cu.d
@@ -103,11 +103,10 @@ if(CUDAToolkit_FOUND)
                 -Xcompiler "\"${CMAKE_CXX_FLAGS}\""
                 -Xcompiler ${cuda_flags_genex}
                 # additional flags for MSVC
-                -Xcompiler "\"/Zc:preprocessor /Zc:lambda /MD$<$<CONFIG:Debug>:d>\""
-                -Xcompiler "\"$<IF:$<CONFIG:Debug>,/Od,/O2>\""
+                "$<${MSVC}:-Xcompiler \"/Zc:preprocessor /Zc:lambda /MD$<$<CONFIG:Debug>:d>\">"
                 -o curand_mcpi.cu.obj
                 ${CMAKE_CURRENT_SOURCE_DIR}/curand_mcpi.cu
-        COMMENT "CUDA compile for curand_mcpi.cu"
+        COMMENT "CUDA C++ compile for curand_mcpi.cu"
         DEPFILE curand_mcpi.cu.d
         # note: don't use verbatim since some of the cache variables are typed
         # explicitly to STRING so CMake will automatically quote them. this
