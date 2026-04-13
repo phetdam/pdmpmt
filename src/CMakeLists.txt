@@ -75,7 +75,7 @@ endif()
 # TODO: consider making this also a test in the Google Test runner
 if(CUDAToolkit_FOUND)
     add_executable(curand_mcpi curand_mcpi.cu)
-    target_link_libraries(curand_mcpi PRIVATE CUDA::curand pdmpmt++)
+    target_link_libraries(curand_mcpi PRIVATE CUDA::cudart CUDA::curand pdmpmt++)
     add_test(NAME curand_mcpi COMMAND curand_mcpi)
 else()
     message(STATUS "Skipping curand_mcpi (requires CUDA Toolkit)")
