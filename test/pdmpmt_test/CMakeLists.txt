@@ -8,6 +8,7 @@ if(GTest_FOUND)
         file_mutex_test.cc
         paths_test.cc
         scope_exit_test.cc
+        span_test.cc
         thread_pool_test.cc
     )
     # paths_test.cc requires PDMPMT_CONFIG_BUILD_PATH definition
