@@ -33,6 +33,10 @@ template <typename T>
 class span {
 public:
   using value_type = T;
+  // note: extra iterator type members for compatibility with older GoogleMock
+  // versions that had stronger requirements for container-like types
+  using iterator = T*;
+  using const_iterator = const T*;
 
   /**
    * Ctor.
