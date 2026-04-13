@@ -13,11 +13,11 @@
 #include <thrust/device_vector.h>
 #include <thrust/execution_policy.h>
 #include <thrust/reduce.h>
-#include <thrust/version.h>
 
 #include "pdmpmt/common.h"
 #include "pdmpmt/cuda_runtime.hh"
 #include "pdmpmt/scoped_timer.hh"
+#include "pdmpmt/span.hh"
 
 namespace {
 
@@ -168,110 +168,22 @@ private:
 };
 
 /**
- * Class for a 1D XPU-compatible span.
- *
- * This serves as a lighter version of the C++20 `std::span<T>` that is also
- * appropriately annotated for compilation in device code.
- *
- * @tparam T type
- */
-template <typename T>
-class span {
-public:
-  /**
-   * Ctor.
-   *
-   * Creates an empty span.
-   */
-  span() noexcept = default;
-
-  /**
-   * Ctor.
-   *
-   * @param data Data buffer
-   * @param size Buffer element count.
-   */
-  PDMPMT_XPU_FUNC
-  span(T* data, std::size_t size) noexcept : data_{data}, size_{size} {}
-
-  /**
-   * Ctor.
-   *
-   * Create a span from a Thrust device vector.
-   *
-   * @param vec Thrust device vector
-   */
-  span(thrust::device_vector<T>& vec) noexcept
-    : data_{vec.data().get()}, size_{vec.size()}
-  {}
-
-  /**
-   * Return the data pointer.
-   */
-  PDMPMT_XPU_FUNC
-  auto data() const noexcept { return data_; }
-
-  /**
-   * Return the element count.
-   */
-  PDMPMT_XPU_FUNC
-  auto size() const noexcept { return size_; }
-
-  /**
-   * Return a reference to the `i`th element in the span.
-   */
-  PDMPMT_XPU_FUNC
-  auto& operator[](std::size_t i) noexcept
-  {
-    return data_[i];
-  }
-
-  /**
-   * Return a const reference to the `i`th element in the span.
-   */
-  PDMPMT_XPU_FUNC
-  const auto& operator[](std::size_t i) const noexcept
-  {
-    return data_[i];
-  }
-
-  /**
-   * Return an iterator to the first element in the span.
-   */
-  PDMPMT_XPU_FUNC
-  auto begin() const noexcept
-  {
-    return data_;
-  }
-
-  /**
-   * Return an iterator one past the last element in the span.
-   */
-  PDMPMT_XPU_FUNC
-  auto end() const noexcept
-  {
-    return data_;
-  }
-
-private:
-  T* data_{};
-  std::size_t size_{};
-};
-
-/**
  * Check how many points fall within the quarter-unit circle.
  *
  * All dimensions are assumed to be 1D.
  *
- * @tparam T Floating type
+ * @note This could be templatized but then we would have to explicitly provide
+ *  template parameters to correctly convert `spane<T>` to `span<const T>`.
  *
  * @param cts Per-thread counts of points within the quarter-unit circle
  * @param xs x-axis samples in (0, 1]
- * @param ys y-axis sampels in (0, 1]
+ * @param ys y-axis samples in (0, 1]
  */
-template <typename T>
 PDMPMT_KERNEL
-void unit_circle_check(const span<T> xs, const span<T> ys, span<unsigned> cts)
+void unit_circle_check(
+  pdmpmt::span<const float> xs,
+  pdmpmt::span<const float> ys,
+  pdmpmt::span<unsigned> cts)
 {
   // get number of samples and number of threads
   // note: assumes xs and ys have the same size
@@ -325,9 +237,9 @@ int main()
     // create device vector to hold per-thread counts of points in circle
     thrust::device_vector<unsigned> cts(n_threads);
     // create spans for device memory from the vectors
-    span xs_view{xs};
-    span ys_view{ys};
-    span cts_view{cts};
+    pdmpmt::span xs_view{xs};
+    pdmpmt::span ys_view{ys};
+    pdmpmt::span cts_view{cts};
     // fill device vectors with uniform values + block until completion
     curand_check << curandGenerateUniform(gen, xs_view.data(), xs_view.size());
     curand_check << curandGenerateUniform(gen, ys_view.data(), ys_view.size());
