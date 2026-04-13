@@ -59,4 +59,15 @@
 #define PDMPMT_HAS_GMOCK 0
 #endif  // PDMPMT_HAS_GMOCK
 
+// Thrust
+#ifdef __has_include
+#if __has_include(<thrust/version.h>)
+#define PDMPMT_HAS_THRUST 1
+#endif  // __has_include(<thrust/version.h>)
+#endif  // __has_include
+
+#ifndef PDMPMT_HAS_THRUST
+#define PDMPMT_HAS_THRUST 0
+#endif  // PDMPTM_HAS_THRUST
+
 #endif  // PDMPMT_FEATURES_H_
