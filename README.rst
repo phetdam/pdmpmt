@@ -11,11 +11,20 @@ Examples
 --------
 
 ``mcpi``
-   Monte Carlo estimation of pi by repeated sampling points in [-1, 1] x [-1, 1]
-   and then counting the points that fall in the unit circle. Multiplying the
-   ratio of number of points in the unit circle to the total sample count by 4
-   results in an estimation of pi. However, this estimate tends to be very
-   rough.
+   Monte Carlo estimation of pi by repeatedly sampling points in
+   [-1, 1] x [-1, 1] and then counting the points that fall in the unit circle.
+   Multiplying the ratio of number of points in the unit circle to the total
+   sample count by 4 results in an estimation of pi. However, this estimate
+   tends to be very rough.
+
+``qmcpi``
+   Quasi Monte Carlo estimation of pi that overlays a grid of ``n * n`` points
+   ``((i + 0.5) / n, (j + 0.5) / n)`` for all ``i``, ``j`` from ``0`` through
+   ``n - 1``, and then counts the number of points that fall in the unit circle.
+   Multiplying the ratio of the number of the points in the unit circle to
+   ``n * n`` by 4 results in an estimation of pi with the benefit that given
+   the same computational budget, proportionally more points can be sampled
+   versus using a PRNG, which results in better estimates.
 
 Implementations
 ---------------
