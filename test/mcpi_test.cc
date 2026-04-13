@@ -130,7 +130,16 @@ TEST_F(MCPiTestCC, OpenMPTest)
 }
 
 /**
- * Test the C++ quasirandom estimation of pi using Monte Carlo works.
+ * Test that C++ thread pool estimation of pi using Monte Carlo works.
+ */
+TEST_F(MCPiTestCC, ThreadPoolTest)
+{
+  pdmpmt::thread_pool pool{n_jobs_};
+  EXPECT_NEAR(pi_, pdmpmt::mcpi(pool, n_samples_, seed_), pi_tol_);
+}
+
+/**
+ * Test that C++ quasirandom estimation of pi using Monte Carlo works.
  */
 TEST_F(MCPiTestCC, QuasiTest)
 {
