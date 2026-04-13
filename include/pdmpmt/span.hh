@@ -145,7 +145,7 @@ public:
   PDMPMT_XPU_FUNC
   constexpr auto end() const noexcept
   {
-    return data_;
+    return data_ + size_;
   }
 
 private:
