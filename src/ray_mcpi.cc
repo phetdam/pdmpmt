@@ -46,7 +46,8 @@ namespace remote {
  */
 auto unit_circle_samples(std::size_t n_samples, std::uint_fast32_t seed)
 {
-  return pdmpmt::detail::unit_circle_samples(n_samples, std::mt19937{seed});
+  std::mt19937 rng{seed};
+  return pdmpmt::detail::unit_circle_samples(n_samples, rng);
 }
 
 // convenience type alias

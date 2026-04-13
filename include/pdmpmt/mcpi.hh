@@ -30,6 +30,7 @@
 #include <thrust/random/uniform_real_distribution.h>
 #endif  // __CUDACC__
 
+#include "pdmpmt/thread_pool.hh"
 #include "pdmpmt/type_traits.hh"
 #include "pdmpmt/warnings.h"
 
@@ -94,8 +95,6 @@ constexpr bool in_unit_circle(
 /**
  * Return number of samples in [-1, 1] x [-1, 1] that fall in the unit circle.
  *
- * We make a copy of the PRNG instance as otherwise its state will be changed.
- *
  * @tparam Rng *UniformRandomBitGenerator* or other entropy source
  *
  * @param n_samples Number of samples to use
@@ -103,7 +102,7 @@ constexpr bool in_unit_circle(
  */
 template <typename Rng, typename = entropy_source_t<Rng>>
 PDMPMT_XPU_FUNC
-auto unit_circle_samples(std::size_t n_samples, Rng rng)
+auto unit_circle_samples(std::size_t n_samples, Rng& rng)
 {
 // TODO: replace with cuRAND MT19937 generator for batch generation
 #if defined(__CUDACC__)
@@ -138,10 +137,11 @@ PDMPMT_XPU_FUNC
 inline auto unit_circle_samples(std::size_t n_samples, std::uint_fast64_t seed)
 {
 #if defined(__CUDACC__)
-  return unit_circle_samples(n_samples, thrust::random::ranlux48{seed});
+  thrust::random::ranlux48 rng{seed};
 #else
-  return unit_circle_samples(n_samples, std::mt19937_64{seed});
+  std::mt19937_64 rng{seed};
 #endif  // !defined(__CUDACC__)
+  return unit_circle_samples(n_samples, rng);
 }
 
 /**
@@ -162,14 +162,14 @@ inline auto unit_circle_samples(std::size_t n_samples, std::uint_fast64_t seed)
  * @param rng PRNG instance for whose type seeds will be generated
  */
 template <typename Rng, typename = entropy_source_t<Rng>>
-auto generate_seeds(std::size_t n_seeds, Rng rng)
+auto generate_seeds(std::size_t n_seeds, Rng& rng)
 {
 #if defined(__CUDACC__)
   thrust::device_vector<typename Rng::result_type> seeds(n_seeds);
 #else
   std::vector<typename Rng::result_type> seeds(n_seeds);
 #endif  // !defined(__CUDACC__)
-  std::for_each(seeds.begin(), seeds.end(), [&](auto& x) { x = rng(); });
+  std::for_each(seeds.begin(), seeds.end(), [&rng](auto& x) { x = rng(); });
   return seeds;
 }
 
@@ -187,10 +187,11 @@ auto generate_seeds(std::size_t n_seeds, Rng rng)
 inline auto generate_seeds(std::size_t n_seeds, std::uint_fast64_t start_seed)
 {
 #if defined(__CUDACC__)
-  return generate_seeds(n_seeds, thrust::random::ranlux48{start_seed});
+  thrust::random::ranlux48 rng{start_seed};
 #else
-  return generate_seeds(n_seeds, std::mt19937_64{start_seed});
+  std::mt19937_64 rng{start_seed};
 #endif  // !defined(__CUDACC__)
+  return generate_seeds(n_seeds, rng);
 }
 
 /**
@@ -265,7 +266,7 @@ inline auto mcpi_gather(const C1& in_counts, const C2& tot_counts)
  * @param rng PRNG instance
  */
 template <typename T, typename Rng, typename = detail::entropy_source_t<Rng>>
-inline T mcpi(std::size_t n_samples, const Rng& rng)
+inline T mcpi(std::size_t n_samples, Rng& rng)
 {
   // MSVC complains about size_t to double loss of data
 PDMPMT_MSVC_WARNING_PUSH()
@@ -290,10 +291,11 @@ PDMPMT_MSVC_WARNING_POP()
 inline double mcpi(std::size_t n_samples, std::uint_fast64_t seed)
 {
 #if defined(__CUDACC__)
-  return mcpi<double>(n_samples, thrust::random::ranlux48{seed});
+  thrust::random::ranlux48 rng{seed};
 #else
-  return mcpi<double>(n_samples, std::mt19937_64{seed});
+  std::mt19937_64 rng{seed};
 #endif  // !defined(__CUDACC__)
+  return mcpi<double>(n_samples, rng);
 }
 
 /**
@@ -368,7 +370,7 @@ PDMPMT_MSVC_WARNING_POP()
  * @param n_jobs Number of async jobs to split work over
  */
 template <typename T, typename Rng, typename = detail::entropy_source_t<Rng>>
-T mcpi_async(std::size_t n_samples, const Rng& rng, std::size_t n_jobs)
+T mcpi_async(std::size_t n_samples, Rng& rng, std::size_t n_jobs)
 {
   using N_t = decltype(n_samples);
   // generate the seeds used by jobs for generate samples + the sample counts
@@ -380,9 +382,11 @@ T mcpi_async(std::size_t n_samples, const Rng& rng, std::size_t n_jobs)
   for (N_t i = 0; i < n_jobs; i++) {
     count_futures[i] = std::async(
       std::launch::async,
-      detail::unit_circle_samples<Rng>,
-      tot_counts[i],
-      Rng{seeds[i]}
+      [seed = seeds[i], count = tot_counts[i]]
+      {
+        Rng rng{seed};
+        return detail::unit_circle_samples(count, rng);
+      }
     );
   }
   // get counts inside the unit circle from futures
@@ -410,7 +414,8 @@ T mcpi_async(std::size_t n_samples, const Rng& rng, std::size_t n_jobs)
 template <typename N_t>
 inline double mcpi_async(N_t n_samples, std::uint_fast64_t seed, N_t n_jobs)
 {
-  return mcpi_async<double>(n_samples, std::mt19937_64{seed}, n_jobs);
+  std::mt19937_64 rng{seed};
+  return mcpi_async<double>(n_samples, rng, n_jobs);
 }
 
 /**
@@ -454,7 +459,7 @@ inline double mcpi_async(
  * @param n_threads Number of OpenMP threads to split work over
  */
 template <typename T, typename N_t, typename Rng>
-T mcpi_omp(N_t n_samples, const Rng& rng, unsigned n_threads = 0u)
+T mcpi_omp(N_t n_samples, Rng& rng, unsigned n_threads = 0u)
 {
   // MSVC complains about signed/unsigned mismatch
 PDMPMT_MSVC_WARNING_PUSH()
@@ -489,7 +494,8 @@ PDMPMT_MSVC_WARNING_POP()
 // MSVC complains of signed/unsigned mismatch as i is intmax_t
 PDMPMT_MSVC_WARNING_PUSH()
 PDMPMT_MSVC_WARNING_DISABLE(4365)
-    in_counts[i] = detail::unit_circle_samples(tot_counts[i], Rng{seeds[i]});
+    Rng rnf{seeds[i]};
+    in_counts[i] = detail::unit_circle_samples(tot_counts[i], rng);
 PDMPMT_MSVC_WARNING_POP()
   }
   return detail::mcpi_gather(in_counts, tot_counts);
@@ -513,7 +519,8 @@ template <typename N_t>
 inline auto mcpi_omp(
   N_t n_samples, std::uint_fast64_t seed, unsigned n_threads = 0u)
 {
-  return mcpi_omp<double>(n_samples, std::mt19937_64{seed}, n_threads);
+  std::mt19937_64 rng{seed};
+  return mcpi_omp<double>(n_samples, rng, n_threads);
 }
 
 /**
