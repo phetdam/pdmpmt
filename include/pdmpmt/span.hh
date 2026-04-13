@@ -39,7 +39,7 @@ public:
    *
    * Creates an empty span.
    */
-  span() noexcept = default;
+  constexpr span() noexcept = default;
 
   /**
    * Ctor.
@@ -48,7 +48,9 @@ public:
    * @param size Buffer element count
    */
   PDMPMT_XPU_FUNC
-  span(T* data, std::size_t size) noexcept : data_{data}, size_{size} {}
+  constexpr span(T* data, std::size_t size) noexcept
+    : data_{data}, size_{size}
+  {}
 
 private:
   /**
@@ -77,7 +79,7 @@ public:
    */
   template <typename U, typename = compatible_value_t<U>>
   PDMPMT_XPU_FUNC
-  span(const span<U>& other) noexcept
+  constexpr span(const span<U>& other) noexcept
     : data_{const_cast<T*>(other.data())}, size_{other.size()}
   {}
 
@@ -109,19 +111,21 @@ public:
    * Return the data pointer.
    */
   PDMPMT_XPU_FUNC
-  auto data() const noexcept { return data_; }
+  constexpr auto data() const noexcept { return data_; }
 
   /**
    * Return the element count.
    */
   PDMPMT_XPU_FUNC
-  auto size() const noexcept { return size_; }
+  constexpr auto size() const noexcept { return size_; }
 
   /**
    * Return a reference to the `i`th element in the span.
+   *
+   * @param i Element index
    */
   PDMPMT_XPU_FUNC
-  auto& operator[](std::size_t i) const noexcept
+  constexpr auto& operator[](std::size_t i) const noexcept
   {
     return data_[i];
   }
@@ -130,7 +134,7 @@ public:
    * Return an iterator to the first element in the span.
    */
   PDMPMT_XPU_FUNC
-  auto begin() const noexcept
+  constexpr auto begin() const noexcept
   {
     return data_;
   }
@@ -139,7 +143,7 @@ public:
    * Return an iterator one past the last element in the span.
    */
   PDMPMT_XPU_FUNC
-  auto end() const noexcept
+  constexpr auto end() const noexcept
   {
     return data_;
   }
