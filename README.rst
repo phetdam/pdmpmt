@@ -46,6 +46,8 @@ single-core, single-thread implementation.
 |           |          |          | ``std::async`` [#]_       |
 |           |          |          +---------------------------+
 |           |          |          | OpenMP                    |
+|           |          |          +---------------------------+
+|           |          |          | thread pool [#]_          |
 |           |          +----------+---------------------------+
 |           |          | GPU      | CUDA                      |
 |           +----------+----------+---------------------------+
@@ -59,6 +61,13 @@ single-core, single-thread implementation.
 .. [#] ``std::async`` from ``<future>`` was used for asynchronous
    multithreading, in contrast to synchronous multithreading through OpenMP_
    via ``#pragma omp`` directives.
+
+.. [#] The ``pdmpmt::thread_pool`` thread pool implementation used, defined in
+   ``include/pdmpmt/thread_pool.hh``, synchronizes a pool of ``std::thread``
+   objects via condition variables. This allows idle workers to be put to sleep
+   and selectively awaken threads when new work is posted in the queue. The
+   pool also has some ``std::future`` integration; one can post tasks using
+   ``pool.promise()`` to receive a ``std::future`` to the task result.
 
 .. [#] ``dask.distributed`` from Dask_ was used for asynchronous
    multiprocessing, as parallel execution through multithreading with Python
