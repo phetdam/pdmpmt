@@ -74,7 +74,49 @@ endif()
 # curand_mcpi: compute pi using Monte Carlo using Thrust + cuRAND
 # TODO: consider making this also a test in the Google Test runner
 if(CUDAToolkit_FOUND)
-    add_executable(curand_mcpi curand_mcpi.cu)
+    # CMake C++ flags generator expressions per configuration
+    foreach(config ${CMAKE_CONFIGURATION_TYPES})
+        string(TOUPPER "${config}" config_upper)
+        list(
+            APPEND cuda_flags_genex
+            "$<$<CONFIG:${config}>:${CMAKE_CXX_FLAGS_${config_upper}}>"
+        )
+    endforeach()
+    # CMake CUDA arch spec
+    string(
+        CONCAT cuda_arch_spec
+        "--generate-code=arch=compute_${CMAKE_CUDA_ARCHITECTURES},"
+        "code=[compute_${CMAKE_CUDA_ARCHITECTURES},sm_${CMAKE_CUDA_ARCHITECTURES}]"
+    )
+    # custom CUDA compile command that correctly tracks dependencies
+    add_custom_command(
+        OUTPUT curand_mcpi.cu.obj
+        COMMAND ${CMAKE_CUDA_COMPILER}
+                --use-local-env
+                -c
+                -I${PDMPMT_INCLUDE_DIR}
+                -MD -MF curand_mcpi.cu.d
+                ${CMAKE_CUDA_FLAGS}
+                -std=c++${CMAKE_CXX_STANDARD}
+                "${cuda_arch_spec}"
+                -Xcompiler "\"${CMAKE_CXX_FLAGS}\""
+                -Xcompiler ${cuda_flags_genex}
+                # additional flags for MSVC
+                -Xcompiler "\"/Zc:preprocessor /Zc:lambda /MD$<$<CONFIG:Debug>:d>\""
+                -Xcompiler "\"$<IF:$<CONFIG:Debug>,/Od,/O2>\""
+                -o curand_mcpi.cu.obj
+                ${CMAKE_CURRENT_SOURCE_DIR}/curand_mcpi.cu
+        COMMENT "CUDA compile for curand_mcpi.cu"
+        DEPFILE curand_mcpi.cu.d
+        # note: don't use verbatim since some of the cache variables are typed
+        # explicitly to STRING so CMake will automatically quote them. this
+        # leads to NVCC complaining about unknown options, which are formed
+        # from groups of valid compiler options within extra quotes. where
+        # necessary we insert our own escaped quotes.
+        COMMAND_EXPAND_LISTS
+    )
+    add_executable(curand_mcpi curand_mcpi.cu.obj)
+    set_target_properties(curand_mcpi PROPERTIES LINKER_LANGUAGE CXX)
     target_link_libraries(curand_mcpi PRIVATE CUDA::cudart CUDA::curand pdmpmt++)
     add_test(NAME curand_mcpi COMMAND curand_mcpi)
 else()
