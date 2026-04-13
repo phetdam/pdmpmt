@@ -106,7 +106,6 @@ if(CUDAToolkit_FOUND)
                 "$<${MSVC}:-Xcompiler \"/Zc:preprocessor /Zc:lambda /MD$<$<CONFIG:Debug>:d>\">"
                 -o curand_mcpi.cu.obj
                 ${CMAKE_CURRENT_SOURCE_DIR}/curand_mcpi.cu
-        COMMENT "CUDA C++ compile for curand_mcpi.cu"
         DEPFILE curand_mcpi.cu.d
         # note: don't use verbatim since some of the cache variables are typed
         # explicitly to STRING so CMake will automatically quote them. this
