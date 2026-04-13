@@ -105,6 +105,8 @@ if(CUDAToolkit_FOUND)
                 # additional flags for MSVC
                 "$<${MSVC}:-Xcompiler \"/Zc:preprocessor /Zc:lambda /MD$<$<CONFIG:Debug>:d>\">"
                 -o curand_mcpi.cu.obj
+                # 177-D: function declared but never referenced
+                -diag-suppress 177
                 ${CMAKE_CURRENT_SOURCE_DIR}/curand_mcpi.cu
         COMMENT "CUDA C++ compile for curand_mcpi.cu"
         DEPFILE curand_mcpi.cu.d
