@@ -412,7 +412,7 @@ T mcpi_async(std::size_t n_samples, Rng& rng, std::size_t n_jobs)
  * @param n_jobs Number of async jobs to split work over
  */
 template <typename N_t>
-inline double mcpi_async(N_t n_samples, std::uint_fast64_t seed, N_t n_jobs)
+inline auto mcpi_async(N_t n_samples, std::uint_fast64_t seed, N_t n_jobs)
 {
   std::mt19937_64 rng{seed};
   return mcpi_async<double>(n_samples, rng, n_jobs);
@@ -431,8 +431,9 @@ inline double mcpi_async(N_t n_samples, std::uint_fast64_t seed, N_t n_jobs)
  * @param seed Seed for the 64-bit Mersenne Twister
  */
 template <typename N_t>
-inline double mcpi_async(
-  N_t n_samples, std::uint_fast64_t seed = std::random_device{}())
+inline auto mcpi_async(
+  N_t n_samples,
+  std::uint_fast64_t seed = std::random_device{}())
 {
   auto n_threads = std::thread::hardware_concurrency();
   // can be zero if not well defined or not computable
@@ -441,6 +442,73 @@ inline double mcpi_async(
   // if not explicitly specifying the template parameter, n_threads must be
   // static_cast to N_t in order for template deduction to work correctly
   return mcpi_async<N_t>(n_samples, seed, n_threads);
+}
+
+/**
+ * Parallel estimation of pi through Monte Carlo running in a thread pool.
+ *
+ * If the number of jobs is zero the number of jobs submitted to the pool will
+ * equal the number of threads in the thread pool.
+ *
+ * @tparam T Return type
+ * @tparam Rng *UniformRandomBitGenerator* or other entropy source
+ *
+ * @param pool Thread pool to send tasks to
+ * @param n_samples Number of samples to use
+ * @param rng PRNG instance
+ * @param n_jobs Number of jobs to split work over
+ */
+template <typename T, typename Rng, typename = detail::entropy_source_t<Rng>>
+T mcpi(thread_pool& pool, std::size_t n_samples, Rng& rng, std::size_t n_jobs = 0u)
+{
+  // update number of jobs as necessary
+  if (!n_jobs)
+    n_jobs = pool.size();
+  // generate the seeds used by jobs for generate samples + the sample counts
+  auto seeds = detail::generate_seeds(n_jobs, rng);
+  auto tot_counts = detail::generate_sample_counts(n_samples, n_jobs);
+  // submit unit_circle_samples tasks + block for results
+  std::vector<std::future<std::size_t>> futs(n_jobs);
+  for (std::size_t i = 0u; i < n_jobs; i++) {
+    futs[i] = pool.promise(
+      [seed = seeds[i], count = tot_counts[i]]
+      {
+        Rng rng{seed};
+        return detail::unit_circle_samples(count, rng);
+      }
+    );
+  }
+  // get counts inside the unit circle from futures
+  decltype(tot_counts) in_counts(n_jobs);
+  std::transform(
+    futs.begin(),
+    futs.end(),
+    in_counts.begin(),
+    [](auto& x) { return x.get(); }
+  );
+  return detail::mcpi_gather(in_counts, tot_counts);
+}
+
+/**
+ * Parallel estimation of pi through Monte Carlo running in a thrad pool.
+ *
+ * If the number of jobs is zero the number of jobs submitted to the pool will
+ * equal the number of threads in the thread pool. This implementation uses the
+ * 64-bit Mersenne Twister implemented in `std::mt19937_64`.
+ *
+ * @param pool Thread pool to send tasks to
+ * @param n_samples Number of samples to use
+ * @param seed Seed for the 64-bit Mersenne Twister
+ * @param n_jobs Number of jobs to split work over
+ */
+inline auto mcpi(
+  thread_pool& pool,
+  std::size_t n_samples,
+  std::uint_fast64_t seed,
+  std::size_t n_jobs = 0u)
+{
+  std::mt19937_64 rng{seed};
+  return mcpi<double>(pool, n_samples, rng, n_jobs);
 }
 
 #ifdef _OPENMP
@@ -494,8 +562,8 @@ PDMPMT_MSVC_WARNING_POP()
 // MSVC complains of signed/unsigned mismatch as i is intmax_t
 PDMPMT_MSVC_WARNING_PUSH()
 PDMPMT_MSVC_WARNING_DISABLE(4365)
-    Rng rnf{seeds[i]};
-    in_counts[i] = detail::unit_circle_samples(tot_counts[i], rng);
+    Rng gen{seeds[i]};
+    in_counts[i] = detail::unit_circle_samples(tot_counts[i], gen);
 PDMPMT_MSVC_WARNING_POP()
   }
   return detail::mcpi_gather(in_counts, tot_counts);
