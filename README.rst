@@ -24,8 +24,8 @@ Examples
    Multiplying the ratio of the number of the points in the unit circle to
    ``n * n`` by 4 results in an estimation of pi with the benefit that given
    the same computational budget, proportionally more points can be sampled
-   versus using a PRNG, which results in better estimates. However, the total
-   number of points required for a decent estimate is still quite high.
+   versus using a PRNG, which results in better estimates. However, the value
+   of ``n * n`` is typically quite high.
 
 Implementations
 ---------------
