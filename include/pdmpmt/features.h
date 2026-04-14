@@ -70,4 +70,17 @@
 #define PDMPMT_HAS_THRUST 0
 #endif  // PDMPTM_HAS_THRUST
 
+// CUDA API headers
+// note: cuda.h is the driver API header while cuda_runtime_api.h is the
+// runtime API header. usually cuda_runtime.h is used over cuda_runtime_api.h
+#ifdef __has_include
+#if __has_include(<cuda.h>)
+#define PDMPMT_HAS_CUDA 1
+#endif  // __has_include(<cuda.h>)
+#endif  // __has_include
+
+#ifndef PDMPMT_HAS_CUDA
+#define PDMPMT_HAS_CUDA 0
+#endif  // PDMPMT_HAS_CUDA
+
 #endif  // PDMPMT_FEATURES_H_
