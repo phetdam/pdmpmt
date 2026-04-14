@@ -96,4 +96,32 @@ TEST_F(SpanThrustTest, DeviceVectorTest)
 #endif  // !PDMPMT_HAS_GMOCK
 }
 
+/**
+ * Test that memory type queries work correctly with a host vector.
+ *
+ * @note Could be moved to `span_test.cc` as there is no device code here.
+ */
+TEST_F(SpanThrustTest, IsHostTest)
+{
+  thrust::host_vector v{1, 2, 3, 4, 5};
+  pdmpmt::span s{v};
+  EXPECT_TRUE(s.is_host());
+  EXPECT_FALSE(s.is_device());
+  EXPECT_FALSE(s.is_managed());
+}
+
+/**
+ * Test that memory type queries work correctly with a device vector.
+ *
+ * @note Could be moved to `span_test.cc` as there is no device code here.
+ */
+TEST_F(SpanThrustTest, IsDeviceTest)
+{
+  thrust::device_vector v{1, 2, 3, 4, 5};
+  pdmpmt::span s{v};
+  EXPECT_FALSE(s.is_host());
+  EXPECT_TRUE(s.is_device());
+  EXPECT_FALSE(s.is_managed());
+}
+
 }  // namespace
