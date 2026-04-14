@@ -93,10 +93,10 @@ public:
    *
    * Create a span from a Thrust host vector.
    *
-   * @param vec Thrust host vecto
+   * @param vec Thrust host vector
    */
   span(thrust::host_vector<T>& vec) noexcept
-    : data_{vec.data().get()}, size_{vec.size()}
+    : data_{vec.data()}, size_{vec.size()}
   {}
 
   /**
