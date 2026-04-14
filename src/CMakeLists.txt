@@ -7,8 +7,14 @@ add_subdirectory(pdmpmt_config)
 # thrust_demo: Thrust (NVIDIA CCCL) demo program
 # TODO: see if we can use host C++ compiler only
 if(CUDAToolkit_FOUND)
-    add_executable(thrust_demo thrust_demo.cu)
-    target_link_libraries(thrust_demo PRIVATE CUDA::cudart pdmpmt++)
+    add_executable(thrust_demo)
+    pdmpmt_cuda_compile_group(thrust_demo_cu thrust_demo.cu)
+    pdmpmt_cuda_link_libraries(
+        thrust_demo_cu PRIVATE
+        CUDA::cudart cuda_compile_options pdmpmt++
+    )
+    pdmpmt_cuda_add_groups(thrust_demo thrust_demo_cu)
+    # target_link_libraries(thrust_demo PRIVATE CUDA::cudart pdmpmt++)
     add_test(NAME thrust_demo COMMAND thrust_demo)
 else()
     message(STATUS "Skipping thrust_demo (requires CUDA Toolkit)")
@@ -74,52 +80,14 @@ endif()
 # curand_mcpi: compute pi using Monte Carlo using Thrust + cuRAND
 # TODO: consider making this also a test in the Google Test runner
 if(CUDAToolkit_FOUND)
-    # TODO: generalize for more CUDA objects for correct dependency tracking
-    # CMake C++ flags generator expressions per configuration
-    foreach(config ${CMAKE_CONFIGURATION_TYPES})
-        string(TOUPPER "${config}" config_upper)
-        list(
-            APPEND cuda_flags_genex
-            "$<$<CONFIG:${config}>:${CMAKE_CXX_FLAGS_${config_upper}}>"
-        )
-    endforeach()
-    # CMake CUDA arch spec
-    string(
-        CONCAT cuda_arch_spec
-        "--generate-code=arch=compute_${CMAKE_CUDA_ARCHITECTURES},"
-        "code=[compute_${CMAKE_CUDA_ARCHITECTURES},sm_${CMAKE_CUDA_ARCHITECTURES}]"
+    add_executable(curand_mcpi)
+    pdmpmt_cuda_compile_group(curand_mcpi_cu curand_mcpi.cu)
+    # note: compile options provided via cuda_compile_options
+    pdmpmt_cuda_link_libraries(
+        curand_mcpi_cu PRIVATE
+        CUDA::cudart CUDA::curand cuda_compile_options pdmpmt++
     )
-    # custom CUDA compile command that correctly tracks dependencies
-    add_custom_command(
-        OUTPUT curand_mcpi.cu.obj
-        COMMAND ${CMAKE_CUDA_COMPILER}
-                $<${MSVC}:--use-local-env>
-                -c
-                -I${PDMPMT_INCLUDE_DIR}
-                -MD -MF curand_mcpi.cu.d
-                ${CMAKE_CUDA_FLAGS}
-                -std=c++${CMAKE_CXX_STANDARD}
-                "${cuda_arch_spec}"
-                -Xcompiler "\"${CMAKE_CXX_FLAGS}\""
-                -Xcompiler ${cuda_flags_genex}
-                # additional flags for MSVC
-                "$<${MSVC}:-Xcompiler \"/Zc:preprocessor /Zc:lambda /MD$<$<CONFIG:Debug>:d>\">"
-                -o curand_mcpi.cu.obj
-                # 177-D: function declared but never referenced
-                -diag-suppress 177
-                ${CMAKE_CURRENT_SOURCE_DIR}/curand_mcpi.cu
-        COMMENT "CUDA C++ compile for curand_mcpi.cu"
-        DEPFILE curand_mcpi.cu.d
-        # note: don't use verbatim since some of the cache variables are typed
-        # explicitly to STRING so CMake will automatically quote them. this
-        # leads to NVCC complaining about unknown options, which are formed
-        # from groups of valid compiler options within extra quotes. where
-        # necessary we insert our own escaped quotes.
-        COMMAND_EXPAND_LISTS
-    )
-    add_executable(curand_mcpi curand_mcpi.cu.obj)
-    set_target_properties(curand_mcpi PROPERTIES LINKER_LANGUAGE CXX)
-    target_link_libraries(curand_mcpi PRIVATE CUDA::cudart CUDA::curand pdmpmt++)
+    pdmpmt_cuda_add_groups(curand_mcpi curand_mcpi_cu)
     add_test(NAME curand_mcpi COMMAND curand_mcpi)
 else()
     message(STATUS "Skipping curand_mcpi (requires CUDA Toolkit)")

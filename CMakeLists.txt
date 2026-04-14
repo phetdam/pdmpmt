@@ -69,6 +69,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 include(pdmpmt_config_compile)
+include(pdmpmt_cuda_compile)
 include(pdmpmt_find_pip_packages)
 include(pdmpmt_pytest_add_tests)
 include(pdmpmt_write_build_info)
@@ -203,6 +204,7 @@ if(CUDAToolkit_FOUND)
         PDMPMT_CUDA_REQUIRED_MAJOR AND
         CUDAToolkit_VERSION_MAJOR VERSION_EQUAL PDMPMT_CUDA_REQUIRED_MAJOR
     )
+        # TODO: may no longer need this call since we use our own rules now
         enable_language(CUDA)
         # same C++ standard and requirement
         set(CMAKE_CUDA_STANDARD ${CMAKE_CXX_STANDARD})

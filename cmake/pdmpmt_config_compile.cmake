@@ -11,11 +11,15 @@ include_guard(GLOBAL)
 ##
 # Configure project-wide compilation options.
 #
+# This also defines a CUDA C++ compile group target with CUDA compile options,
+# cuda_compile_options, that one can use in pdmpmt_cuda_link_libraries() to
+# transitively provide compile options to a CUDA C++ compile group.
+#
 macro(pdmpmt_config_compile)
     # add MSVC-specific compile options
-    # TODO: add /Zc:lambda for conformant lambda processing
     if(MSVC)
         # CMake adds /O2 by default for release version
+        # TODO: consider removing CUDA options now that we have custom rules
         add_compile_options(
             $<$<COMPILE_LANGUAGE:C,CXX>:/Wall>
             # C4061: no enum value handled in switch with default case
@@ -69,6 +73,36 @@ macro(pdmpmt_config_compile)
         add_compile_options(
             $<$<COMPILE_LANGUAGE:C,CXX>:-Wall>
             $<$<COMPILE_LANGUAGE:C,CXX>:$<IF:$<CONFIG:Release>,-O3,-g>>
+        )
+    endif()
+    # cuda_compile_options: CUDA C++ compile group interface target for
+    # shared options for most pdmpmt_cuda_compile_group() calls
+    pdmpmt_cuda_compile_group(cuda_compile_options)
+    pdmpmt_cuda_compile_options(
+        cuda_compile_options INTERFACE
+        # 177-D: function declared but never referenced
+        -diag-suppress 177
+    )
+    # MSVC compiler options to pass from NVCC
+    if(MSVC)
+        # note: NVCC often misinterprets tokens starting with "/" as paths so
+        # it's safest to use the -Xcompiler=<value> format. otherwise, you have
+        # to specify explicit escaped quotes for each -Xcompiler value
+        pdmpmt_cuda_compile_options(
+            cuda_compile_options INTERFACE
+            # cccl/cuda/std/__cccl/preprocessor.h(23) emits error if we don't
+            # run MSVC preprocessor under standard-conformant mode
+            -Xcompiler=/Zc:preprocessor
+            # use standards-compliant lambda handling
+            -Xcompiler=/Zc:lambda
+            # warning level + disable for external headers
+            -Xcompiler=/W4
+            -Xcompiler=/external:anglebrackets
+            -Xcompiler=/external:W0
+            -Xcompiler=/external:templates-
+            # ensure nvcc has the correct /MD[d] flags since we want to use the
+            # shared VC++ runtime libraries instead of the static ones
+            -Xcompiler=/MD$<$<CONFIG:Debug>:d>
         )
     endif()
 endmacro()
