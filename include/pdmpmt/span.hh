@@ -19,13 +19,19 @@
 #include <thrust/host_vector.h>
 #endif  // PDMPMT_HAS_THRUST
 
+#if PDMPMT_HAS_CUDA
+#include "pdmpmt/cuda_runtime.hh"
+#endif  // PDMPMT_HAS_CUDA
+
 namespace pdmpmt {
 
 /**
  * Class for a 1D XPU-compatible span.
  *
  * This serves as a lighter version of the C++20 `std::span<T>` that is also
- * appropriately annotated for compilation in device code.
+ * appropriately annotated for compilation in device code. To check whether the
+ * memory backing the span is host, device, or managed memory, use the
+ * `is_host()`, `is_device()`, or `is_managed()` member functions.
  *
  * @tparam T type
  */
@@ -152,9 +158,70 @@ public:
     return data_ + size_;
   }
 
+  /**
+   * Indicate if the span is backed by host memory.
+   *
+   * If compiling without CUDA Toolkit headers `true` will be returned.
+   */
+  bool is_host() const
+  {
+#if PDMPMT_HAS_CUDA
+    switch (memory_type()) {
+    case cudaMemoryTypeHost:
+    case cudaMemoryTypeUnregistered:
+      return true;
+    default:
+      return false;
+    }
+#else
+    return true;
+#endif  // !defined(PDMPMT_HAS_CUDA)
+  }
+
+  /**
+   * Indicate if the span is backed by device memory.
+   *
+   * If compiling without CUDA Toolkit headers `false` will be returned.
+   */
+  bool is_device() const
+  {
+#if PDMPMT_HAS_CUDA
+    return memory_type() == cudaMemoryTypeDevice;
+#else
+    return false;
+#endif  // !PDMPMT_HAS_CUDA
+  }
+
+  /**
+   * Indicate if the span is backed by CUDA managed memory.
+   *
+   * If compiling without CUDA Toolkit headers `false` will be returned.
+   */
+  bool is_managed() const
+  {
+#if PDMPMT_HAS_CUDA
+    return memory_type() == cudaMemoryTypeManaged;
+#else
+    return false;
+#endif  // !PDMPMT_HAS_CUDA
+  }
+
 private:
   T* data_{};
   std::size_t size_{};
+
+#if PDMPMT_HAS_CUDA
+  /**
+   * Return the type of CUDA memory backing the span.
+   */
+  cudaMemoryType memory_type() const
+  {
+    cudaPointerAttributes attrs;
+    cudaPointerGetAttributes(&attrs, data_);
+    PDMPMT_CUDA_THROW_IF_ERROR();
+    return attrs.type;
+  }
+#endif  // PDMPMT_HAS_CUDA
 };
 
 }  // namespace pdmpmt
