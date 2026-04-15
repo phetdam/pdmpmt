@@ -386,6 +386,15 @@ function(pdmpmt_add_cuda_groups target)
     )
     # ensure linker language is C++
     set_target_properties(${target} PROPERTIES LINKER_LANGUAGE CXX)
+    # check if generator is multi-config. if so, we have to include the config
+    # name in the path as otherwise different configs would clobber each other
+    get_property(is_multi GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+    # generator expression for per-config subdirectory prefix
+    if(is_multi)
+        set(subdir_gen "$<CONFIG>/")
+    else()
+        set(subdir_gen "")
+    endif()
     # for each CUDA compile group
     foreach(cuda_group ${ARGN})
         # get CUDA_INCLUDE_DIRS, CUDA_COMPILE_OPTS, and CUDA_SOURCES
@@ -406,12 +415,12 @@ function(pdmpmt_add_cuda_groups target)
             )
             # add command
             add_custom_command(
-                OUTPUT ${cuda_source}.${obj_ext}
+                OUTPUT ${subdir_gen}${cuda_source}.${obj_ext}
                 COMMAND ${CMAKE_CUDA_COMPILER}
                         $<${MSVC}:--use-local-env>
                         -c
                         ${cuda_includes}
-                        -MD -MF ${cuda_source}.d
+                        -MD -MF ${subdir_gen}${cuda_source}.d
                         ${CMAKE_CUDA_FLAGS}
                         -std=c++${CMAKE_CXX_STANDARD}
                         "${cuda_arch_spec}"
@@ -422,13 +431,13 @@ function(pdmpmt_add_cuda_groups target)
                         -Xcompiler "\"${CMAKE_CXX_FLAGS}\""
                         -Xcompiler ${cuda_flags_genex}
                         # ensure for MSVC that we write to separate PDB files
-                        "$<${MSVC}:-Xcompiler \"/Fd${cuda_source}.pdb\">"
+                        "$<${MSVC}:-Xcompiler \"/Fd${subdir_gen}${cuda_source}.pdb\">"
                         # additional CUDA compile options
                         ${cuda_opts}
-                        -o ${cuda_source}.${obj_ext}
+                        -o ${subdir_gen}${cuda_source}.${obj_ext}
                         "${cuda_source_path}"
                 COMMENT "CUDA C++ compile for ${cuda_source}"
-                DEPFILE ${cuda_source}.d
+                DEPFILE ${subdir_gen}${cuda_source}.d
                 # note: don't use verbatim since some cache variables are typed
                 # explicitly to STRING so CMake will automatically quote them.
                 # this leads to NVCC complaining about unknown options, which
@@ -437,7 +446,7 @@ function(pdmpmt_add_cuda_groups target)
                 COMMAND_EXPAND_LISTS
             )
             # update target sources
-            target_sources(${target} PRIVATE ${cuda_source}.${obj_ext})
+            target_sources(${target} PRIVATE ${subdir_gen}${cuda_source}.${obj_ext})
         endforeach()
         # ensure all libraries are linked
         get_property(cuda_libs TARGET ${cuda_group} PROPERTY CUDA_LINK_LIBS)
