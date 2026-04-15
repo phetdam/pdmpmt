@@ -415,6 +415,9 @@ function(pdmpmt_cuda_add_groups target)
                         ${CMAKE_CUDA_FLAGS}
                         -std=c++${CMAKE_CXX_STANDARD}
                         "${cuda_arch_spec}"
+                        # emit device debugging info for Debug config
+                        $<$<CONFIG:Debug>:-G>
+                        # options for host compiler
                         -Xcompiler "\"${CMAKE_CXX_FLAGS}\""
                         -Xcompiler ${cuda_flags_genex}
                         # ensure for MSVC that we write to separate PDB files
