@@ -37,7 +37,7 @@ if(GTest_FOUND)
         if(TARGET GTest::gmock)
             pdmpmt_cuda_link_libraries(pdmpmt_test_cu PRIVATE GTest::gmock)
         endif()
-        pdmpmt_cuda_add_groups(pdmpmt_test pdmpmt_test_cu)
+        pdmpmt_add_cuda_groups(pdmpmt_test pdmpmt_test_cu)
     endif()
     target_link_libraries(pdmpmt_test PRIVATE pdmpmt pdmpmt_config pdmpmt++)
     # if GoogleMock is available we want to use its main instead

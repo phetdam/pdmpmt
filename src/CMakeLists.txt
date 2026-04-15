@@ -13,7 +13,7 @@ if(CUDAToolkit_FOUND)
         thrust_demo_cu PRIVATE
         CUDA::cudart cuda_compile_options pdmpmt++
     )
-    pdmpmt_cuda_add_groups(thrust_demo thrust_demo_cu)
+    pdmpmt_add_cuda_groups(thrust_demo thrust_demo_cu)
     # target_link_libraries(thrust_demo PRIVATE CUDA::cudart pdmpmt++)
     add_test(NAME thrust_demo COMMAND thrust_demo)
 else()
@@ -87,7 +87,7 @@ if(CUDAToolkit_FOUND)
         curand_mcpi_cu PRIVATE
         CUDA::cudart CUDA::curand cuda_compile_options pdmpmt++
     )
-    pdmpmt_cuda_add_groups(curand_mcpi curand_mcpi_cu)
+    pdmpmt_add_cuda_groups(curand_mcpi curand_mcpi_cu)
     add_test(NAME curand_mcpi COMMAND curand_mcpi)
 else()
     message(STATUS "Skipping curand_mcpi (requires CUDA Toolkit)")

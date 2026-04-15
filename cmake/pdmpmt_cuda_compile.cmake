@@ -33,7 +33,7 @@ cmake_minimum_required(VERSION 3.21)
 #   # their include directories, compile options, and link libraries
 #   pdmpmt_cuda_link_libraries(myprog_cu PRIVATE CUDA::cudart CURL::libcurl)
 #   # add group to the host C++ executable to generate the custom build rules
-#   pdmpmt_cuda_add_compile_groups(myprog myprog_cu)
+#   pdmpmt_add_cuda_groups(myprog myprog_cu)
 #
 
 include_guard(GLOBAL)
@@ -363,7 +363,7 @@ endfunction()
 #   target          Library or executable target to build
 #   groups...       CUDA C++ compile groups to add
 #
-function(pdmpmt_cuda_add_groups target)
+function(pdmpmt_add_cuda_groups target)
     # object extension
     if(MSVC)
         set(obj_ext "obj")
@@ -375,7 +375,7 @@ function(pdmpmt_cuda_add_groups target)
         string(TOUPPER "${config}" config_upper)
         list(
             APPEND cuda_flags_genex
-            "$<$<CONFIG:${config}>:${CMAKE_CXX_FLAGS_${config_upper}}>"
+            "$<$<CONFIG:${config}>:\"${CMAKE_CXX_FLAGS_${config_upper}}\">"
         )
     endforeach()
     # CMake CUDA arch spec
@@ -415,8 +415,9 @@ function(pdmpmt_cuda_add_groups target)
                         ${CMAKE_CUDA_FLAGS}
                         -std=c++${CMAKE_CXX_STANDARD}
                         "${cuda_arch_spec}"
-                        # emit device debugging info for Debug config
-                        $<$<CONFIG:Debug>:-G>
+                        # note: used to have $<$<CONFIG:Debug>:-G> here for
+                        # emitting device code debugging info but it *really*
+                        # slows down the overall performance
                         # options for host compiler
                         -Xcompiler "\"${CMAKE_CXX_FLAGS}\""
                         -Xcompiler ${cuda_flags_genex}
