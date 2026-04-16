@@ -438,7 +438,7 @@ function(pdmpmt_add_cuda_groups target)
                         "${cuda_source_path}"
                 COMMENT "CUDA C++ compile for ${cuda_source}"
                 DEPFILE ${subdir_gen}${cuda_source}.d
-                # note: don't use verbatim since some cache variables are typed
+                # note: don't use VERBATIM since some cache variables are typed
                 # explicitly to STRING so CMake will automatically quote them.
                 # this leads to NVCC complaining about unknown options, which
                 # are formed from groups of valid compiler options within extra
