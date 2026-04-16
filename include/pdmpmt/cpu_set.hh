@@ -13,6 +13,7 @@
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include <WinBase.h>
 #include <processthreadsapi.h>
 #include <processtopologyapi.h>
 #else
@@ -653,6 +654,28 @@ inline auto& operator<<(const cpu_set::text_formatter& out, const cpu_set& cpus)
   for (auto i = 0u; i < cpus.size(); i++)
     out.out() << out.fmt().chars()[cpus[i]];
   return out.out() << "]";
+}
+
+/**
+ * Set the logical CPU affinity mask for the current thread.
+ *
+ * `SetThreadAffinityMask()` is used on Windows while `sched_setaffinity()` is
+ * used on Linux. The returned `std::error_code` holds the platform-dependent
+ * error value whose `default_error_condition()` can be portably checked.
+ *
+ * @param cpus CPU set
+ */
+inline std::error_code set_affinity(const cpu_set& cpus) noexcept
+{
+#if defined(_WIN32)
+  if (!SetThreadAffinityMask(GetCurrentThread(), cpus))
+    return {static_cast<int>(GetLastError()), std::system_category()};
+#else
+  if (sched_setaffinity(0, cpus.alloc_size(), cpus) < 0)
+    return {errno, std::system_category()};
+#endif  // !defined(_WIN32)
+  // no error
+  return {};
 }
 
 }  // namespace pdmpmt
