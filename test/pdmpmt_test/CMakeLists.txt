@@ -29,7 +29,6 @@ if(GTest_FOUND)
     # if CUDA enabled for project add CUDA compile group
     if(PDMPMT_CUDA_ENABLED)
         pdmpmt_cuda_compile_group(pdmpmt_test_cu span_test.cu)
-        # pdmpmt_cuda_compile_options(pdmpmt_test_cu PRIVATE -diag-suppress 177)
         pdmpmt_cuda_link_libraries(
             pdmpmt_test_cu PRIVATE
             CUDA::cudart GTest::gtest cuda_compile_options pdmpmt++
