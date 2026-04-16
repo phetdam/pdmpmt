@@ -58,19 +58,11 @@ int main()
   // modify + set thread affinity
   for (auto i = 0u; i < cpus.size(); i += 2u)
     cpus[i] = false;
-#if defined(_WIN32)
-  if (!SetThreadAffinityMask(GetCurrentThread(), cpus))
-    throw std::system_error{
-      static_cast<int>(GetLastError()), std::system_category(),
-      "SetThreadAffinityMask() for current thread failed"
-    };
-#else
-  if (sched_setaffinity(0, cpus.alloc_size(), cpus) < 0)
-    throw std::system_error{
-      {errno, std::system_category()},
-      "call to sched_setaffinity() for current thread failed"
-    };
-#endif  // !defined(_WIN32)
+  {
+    auto err = pdmpmt::set_affinity(cpus);
+    if (err)
+      throw std::system_error{err, "unable to update thread affinity mask"};
+  }
   // get thread affinity again + print
   cpus = pdmpmt::cpu_set::current();
   print_info(cpus);
@@ -78,33 +70,12 @@ int main()
   for (auto i = 0u; i < cpus.size(); i++) {
     cpus = {};
     cpus[i] = true;
-#if defined(_WIN32)
-    // if ERROR_INVALID_PARAMETER, CPU is not online/allowed, so don't error
-    if (!SetThreadAffinityMask(GetCurrentThread(), cpus)) {
-      switch (GetLastError()) {
-      case ERROR_INVALID_PARAMETER:
-        break;
-      default:
-        throw std::system_error{
-          static_cast<int>(GetLastError()), std::system_category(),
-          "SetThreadAffinityMask() for current thread failed"
-        };
-      }
+    {
+      auto err = pdmpmt::set_affinity(cpus);
+      // note: don't error if CPU is not online/allowed (EINVAL)
+      if (err && err.default_error_condition() != std::errc::invalid_argument)
+        throw std::system_error{err, "unable to update thread affinity mask"};
     }
-#else
-    // if EINVAL, CPU is not online/insufficient perms, so don't error
-    if (sched_setaffinity(0, cpus.alloc_size(), cpus) < 0) {
-      switch (errno) {
-      case EINVAL:
-        break;
-      default:
-        throw std::system_error{
-          {errno, std::system_category()},
-          "call to sched_setaffinity() for current thread failed"
-        };
-      }
-    }
-#endif  // !defined(_WIN32)
     // if current CPU is not i affinity switch failed
     std::cout << cpus << " " << pdmpmt::cpu_set::fmt('*') << cpus << " current: ";
     auto cur_cpu = current_processor();
