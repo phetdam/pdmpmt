@@ -42,7 +42,7 @@ using regint32 = unsigned;
  *
  * @returns `true` if `cpuid` leaf is supported, `false` otherwise
  */
-bool cpuid(regint32 (&regs)[4], regint32 leaf = 0, regint32 sub = 0)
+inline bool cpuid(regint32 (&regs)[4], regint32 leaf = 0, regint32 sub = 0)
 {
 #if defined(_MSC_VER)
   __cpuidex(regs, leaf, sub);
