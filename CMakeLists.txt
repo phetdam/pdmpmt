@@ -437,13 +437,23 @@ else()
 endif()
 
 # find X11 (for use with GLX)
-# TODO: do we have a way to get the version without using pkg-config?
-message(CHECK_START "Looking for X11")
+# TODO: do we have a way to get the package version without using pkg-config?
 find_package(X11)
 if(X11_FOUND)
-    message(CHECK_PASS "found")
+    # read values of X_PROTOCOL and X_PROTOCOL_VERSION from X.h
+    file(
+        STRINGS "${X11_X11_INCLUDE_PATH}/X11/X.h" PDMPMT_X_VERSION
+        REGEX "^#define[ \t]+(X_PROTOCOL|X_PROTOCOL_REVISION)[ \t]+"
+    )
+    # keep only version numbers and join back into string
+    list(
+        TRANSFORM PDMPMT_X_VERSION REPLACE
+        "^#define[ \t]+(X_PROTOCOL|X_PROTOCOL_REVISION)[ \t]+([0-9]+).+$" "\\2"
+    )
+    list(JOIN PDMPMT_X_VERSION "." PDMPMT_X_VERSION)
+    message(STATUS "X version: ${PDMPMT_X_VERSION}")
 else()
-    message(CHECK_FAIL "not found")
+    message(STATUS "X version: None")
 endif()
 
 # GoogleTest for unit test runners
