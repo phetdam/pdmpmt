@@ -663,6 +663,19 @@ inline auto& operator<<(const cpu_set::text_formatter& out, const cpu_set& cpus)
  * used on Linux. The returned `std::error_code` holds the platform-dependent
  * error value whose `default_error_condition()` can be portably checked.
  *
+ * The reason `std::error_code` is returned instead of throwing an exception
+ * upon error is because there are some cases where we may want to ignore a
+ * subset of error conditions. For example, if a CPU set is invalid, e.g.
+ * because one of the requested CPUs is offline, then the returned error code's
+ * default error condition would be `std::errc::invalid_argument`. If we expect
+ * this error condition we can filter it out as follows:
+ *
+ * @code{.cc}
+ * auto err = pdmpmt::set_affinity(cpus);
+ * if (err && err.default_error_condition() != std::errc::invalid_argument)
+ *   throw std::system_error{err, "unable to update thread affinity mask"};
+ * @endcode
+ *
  * @param cpus CPU set
  */
 inline std::error_code set_affinity(const cpu_set& cpus) noexcept
