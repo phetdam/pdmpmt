@@ -96,7 +96,7 @@ endfunction()
 # and PUBLIC, and CUDA_INTERFACE_INCLUDE_DIRS, for INTERFACE and PUBLIC.
 #
 # Arguments:
-#   target                  CUDA C++ compile gruop
+#   target                  CUDA C++ compile group
 #   [PRIVATE dirs...]       Private compilation include directories
 #   [INTERFACE dirs...]     Interface include directories
 #   [PUBLIC dirs...]        Public compilation + interface include directories
@@ -133,7 +133,7 @@ endfunction()
 # PUB;IC, and CUDA_INTERFACE_COMPILE_OPTS, for INTERFACE and PUBLIC.
 #
 # Arguments:
-#   target                  CUDA C++ compile gruop
+#   target                  CUDA C++ compile group
 #   [PRIVATE dirs...]       Private CUDA compilation options
 #   [INTERFACE dirs...]     Interface CUDA compilation options
 #   [PUBLIC dirs...]        Public compilation + interface CUDA options
@@ -436,7 +436,7 @@ function(pdmpmt_add_cuda_groups target)
                         ${cuda_opts}
                         -o ${subdir_gen}${cuda_source}.${obj_ext}
                         "${cuda_source_path}"
-                COMMENT "CUDA C++ compile for ${cuda_source}"
+                COMMENT "CUDA C++ compile ${cuda_source}"
                 DEPFILE ${subdir_gen}${cuda_source}.d
                 # note: don't use VERBATIM since some cache variables are typed
                 # explicitly to STRING so CMake will automatically quote them.
