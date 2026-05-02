@@ -241,7 +241,7 @@ public:
       build_ = {begin, end};
 #else
       build_ = {begin, static_cast<std::size_t>(end - begin)};
-#endif  // !PDMPMT_HAS_CC20
+#endif  // !PDMPMT_HAS_CXX20
     }
     // otherwise, proceed to end of string for vendor-specific info view
     begin = ++end;

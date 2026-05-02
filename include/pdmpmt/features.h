@@ -21,10 +21,6 @@
 #define PDMPMT_HAS_CXX20 0
 #endif  // PDMPMT_HAS_CXX20
 
-// compatibility
-// TODO: refactor uses of the compatibility macros
-#define PDMPMT_HAS_CC20 PDMPMT_HAS_CXX20
-
 // X11
 #ifdef __has_include
 #if __has_include(<X11/Xlib.h>)

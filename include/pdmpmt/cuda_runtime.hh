@@ -33,11 +33,11 @@ inline auto cuda_error_string(cudaError_t err)
 {
   std::stringstream ss;
   ss << "CUDA error: " << cudaGetErrorName(err) << ": " << cudaGetErrorString(err);
-#if PDMPMT_HAS_CC20
+#if PDMPMT_HAS_CXX20
   return std::move(ss).str();  // string move-construct
 #else
   return ss.str();             // string copy
-#endif  // !PDMPMT_HAS_CC20
+#endif  // !PDMPMT_HAS_CXX20
 }
 
 /**
