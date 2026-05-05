@@ -195,7 +195,7 @@ add_executable(cpu_affinity cpu_affinity.cc)
 target_link_libraries(cpu_affinity PRIVATE pdmpmt++)
 add_test(NAME cpu_affinity COMMAND cpu_affinity)
 
-# cpu_cache_info: prints CPU cache information for each logical CPU
-add_executable(cpu_cache_info cpu_cache_info.cc)
-target_link_libraries(cpu_cache_info PRIVATE pdmpmt++)
-add_test(NAME cpu_cache_info COMMAND cpu_cache_info)
+# cpu_info: prints supported CPU features for each logical CPU
+add_executable(cpu_info cpu_info.cc)
+target_link_libraries(cpu_info PRIVATE pdmpmt++)
+add_test(NAME cpu_info COMMAND cpu_info)
