@@ -232,6 +232,11 @@ public:
   bool f16c() const noexcept { return detail::test<29>(ecx_1_); }
 
   /**
+   * `hypervisor` feature flag indicating if running under a hypervisor.
+   */
+  bool hypervisor() const noexcept { return detail::test<31>(ecx_1_); }
+
+  /**
    * `bmi1` feature flag indicating if BMI1 instructions are available.
    */
   bool bmi1() const noexcept { return detail::test<3>(ebx_7_); }
