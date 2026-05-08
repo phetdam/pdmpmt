@@ -86,6 +86,17 @@ bool test(T v, std::enable_if_t<std::is_integral_v<T>>* = 0) noexcept
  * This currently holds feature flags returned by `cpuid` for various CPU
  * compute features, e.g. if the CPU supports FMA, AVX-512F, etc. Of course,
  * use of this class is only supported on x86 machines.
+ *
+ * @note Hypervisors will intercept `cpuid` calls and can return information
+ *  that differs from the underlying hardware. If the `hypervisor()` member
+ *  function returns `true`, use `cpu_virt_info` for hypervisor features.
+ *
+ * @par
+ *
+ * @note On Windows, virtualization is often already enabled, which will result
+ *  in the `hypervisor()` member returning `true`, even if no "real" virtual
+ *  machine is running. Therefore, one must still check if leaf `0x40000000` is
+ *  supported; it is possible that no useful values will be returned.
  */
 class cpu_info {
 public:
@@ -410,6 +421,76 @@ private:
   regint eax_7_1_{};           // eax = 7, ecx = 1 cpuid eax info
   regint edx_7_1_{};           // eax = 7, ecx = 1 cpuid ecx info
   unsigned char avx10_ver_{};  // eax = 24, ecx = 0 cpuid AVX10 version
+};
+
+/**
+ * Hypervisor-specific CPU info structure.
+ *
+ * This holds the basic hypervisor feature flags and info returned when calling
+ * `cpuid` in a virtual environment with leaves `0x40000000` and above.
+ */
+class cpu_virt_info {
+public:
+  /**
+   * Ctor.
+   *
+   * This calls the `cpuid` instruction, checking if running under a hypervisor
+   * by seeing if `cpuid` with leaf 1 has `ecx` bit 31 set. If set, the `cpuid`
+   * call is running under a hypervisor, and leaf `0x40000000` and `0x40000001`
+   * information will be retrieved and stored.
+   */
+  cpu_virt_info()
+  {
+    // eax, ebx, ecx, edx register values
+    regint regs[4];
+    // get max supported leaf + vendor string
+    if (!cpuid(regs))
+      return;
+    // if max supported leaf < 1 we can't test for hypervisor feature
+    if (regs[0] < 1)
+      return;
+    // otherwise get leaf 1 values
+    cpuid(regs, 1);
+    // hypervisor feature bit check. if zero, no hypervisor
+    // note: this bit can be set even if no hypervisor is available. e.g. if
+    // virtualization is enabled in Windows this bit is set and can be checked
+    // from Task Manager under the CPU performance tab
+    if (!(regs[2] & 0x80000000))
+      return;
+    // running under hypervisor. collect 0x40000000 info
+    // note: because hypervisor bit could be set even without an actual
+    // hypervisor running we still need to check the cpuid return value
+    if (!cpuid(regs, 0x40000000))
+      return;
+    max_leaf_ = regs[0];
+    *reinterpret_cast<regint*>(vendor_) = regs[1];
+    *reinterpret_cast<regint*>(vendor_ + 4u) = regs[2];
+    *reinterpret_cast<regint*>(vendor_ + 8u) = regs[3];
+    // collect 0x40000001 info
+    if (!cpuid(regs, 0x40000001))
+      return;
+    eax_1_ = regs[0];
+  }
+
+  /**
+   * Return the null-terminated hypervisor vendor string.
+   */
+  auto vendor() const noexcept { return vendor_; }
+
+  /**
+   * Return the max hypervisor `cpuid` leaf value.
+   */
+  auto max_leaf() const noexcept { return max_leaf_; }
+
+  /**
+   * Return the hypervisor interface identification.
+   */
+  auto interface() const noexcept { return eax_1_; }
+
+private:
+  char vendor_[13]{};  // null-terminated hypervisor vendor string
+  regint max_leaf_{};  // maximum supported hypervisor leaf value
+  regint eax_1_{};     // eax = 0x40000001 cpuid eax info
 };
 
 }  // namespace pdmpmt
