@@ -487,6 +487,17 @@ public:
    */
   auto interface() const noexcept { return eax_1_; }
 
+  /**
+   * Indicate that hypervisor info was successfully collected.
+   *
+   * The `hypervisor` CPU feature flag is set when running under hardware
+   * virtualization without an actual hypervisor running, in which case calling
+   * `cpuid` with leaf `0x40000000` will indicate the leaf is not supported.
+   *
+   * If `false` is returned then no hypervisor info was collected.
+   */
+  explicit operator bool() const noexcept { return !!eax_1_; }
+
 private:
   char vendor_[13]{};  // null-terminated hypervisor vendor string
   regint max_leaf_{};  // maximum supported hypervisor leaf value
