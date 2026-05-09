@@ -11,6 +11,8 @@
 #include <ostream>
 #include <type_traits>
 
+#include "pdmpmt/warnings.h"
+
 namespace pdmpmt {
 
 /**
@@ -345,6 +347,9 @@ auto& to_hex(const O& out, const T& value)
       buf[i + i + 1u] = digits[c & 0xF];
     }
   }
+// MSVC emits C4365 due to std::streamsize being signed
+PDMPMT_MSVC_WARNING_PUSH()
+PDMPTM_MSVC_WARNING_DISABLE(4365)
   // write buffer into stream. if not using fixed-width hex formatter skip all
   // leading 0 digits in the buffer before writing if possible
   if constexpr (std::is_integral_v<T> && !is_fixed_hex_ostream_wrapper_v<O>) {
@@ -355,6 +360,7 @@ auto& to_hex(const O& out, const T& value)
   }
   // otherwise write entire buffer
   return out->write(buf, sizeof buf);
+PDMPMT_MSVC_WARNING_POP();
 }
 
 }  // namespace detail
