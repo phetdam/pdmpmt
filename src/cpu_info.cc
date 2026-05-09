@@ -30,6 +30,7 @@
 #include <vector>
 
 #include "pdmpmt/cpu_info.hh"
+#include "pdmpmt/format.hh"
 
 namespace {
 
@@ -43,14 +44,14 @@ int main()
   // print
   std::cout <<
     "Vendor: " << info.vendor() << "\n" <<
-    "Signature: 0x" << std::hex << info.signature() << "\n" <<
-    "Max Leaf: 0x" << std::hex << info.max_leaf() << std::endl;
+    "Signature: 0x" << pdmpmt::hex << info.signature() << "\n" <<
+    "Max Leaf: 0x" << pdmpmt::hex << info.max_leaf() << std::endl;
   // if hypervisor info was collected, print hypervisor info
   if (vinfo) {
     std::cout <<
       "  Hypervisor: " << vinfo.vendor() << "\n" <<
-      "  Interface: 0x" << std::hex << vinfo.interface() << "\n" <<
-      "  Max Leaf: 0x" << std::hex << vinfo.max_leaf() << std::endl;
+      "  Interface: 0x" << pdmpmt::hex << vinfo.interface() << "\n" <<
+      "  Max Leaf: 0x" << pdmpmt::hex << vinfo.max_leaf() << std::endl;
   }
   // print CPU features
   std::cout <<
