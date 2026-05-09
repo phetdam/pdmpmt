@@ -37,12 +37,23 @@ namespace {
 
 int main()
 {
-  // get CPU info
+  // get CPU info + hypervisor info
   pdmpmt::cpu_info info;
+  pdmpmt::cpu_virt_info vinfo;
   // print
   std::cout <<
     "Vendor: " << info.vendor() << "\n" <<
     "Signature: 0x" << std::hex << info.signature() << "\n" <<
+    "Max Leaf: 0x" << std::hex << info.max_leaf() << std::endl;
+  // if hypervisor info was collected, print hypervisor info
+  if (vinfo) {
+    std::cout <<
+      "  Hypervisor: " << vinfo.vendor() << "\n" <<
+      "  Interface: 0x" << std::hex << vinfo.interface() << "\n" <<
+      "  Max Leaf: 0x" << std::hex << vinfo.max_leaf() << std::endl;
+  }
+  // print CPU features
+  std::cout <<
     "Features:\n" <<
     "  FPU               " << info.fpu() << "\n" <<
     "  CMOV              " << info.cmov() << "\n" <<
@@ -89,7 +100,6 @@ int main()
     "  AMX-FP16          " << info.amxfp16() << "\n" <<
     "  AVX-IFMA          " << info.avxifma() << "\n" <<
     "  AVX10.1           " << info.avx10_1() << "\n" <<
-    "  AVX10.2           " << info.avx10_2() << "\n" <<
-    std::flush;
+    "  AVX10.2           " << info.avx10_2() << "\n" << std::flush;
   return EXIT_SUCCESS;
 }
