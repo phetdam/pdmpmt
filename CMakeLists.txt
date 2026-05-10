@@ -472,61 +472,6 @@ else()
     message(STATUS "GoogleMock version: None")
 endif()
 
-# pdmpmt::internal::headers: internal IMPORTED target for pdmpmt headers. this
-# does not include any implicit link dependencies required for use and is
-# intended solely for use during configuration to use pdmpmt headers
-add_library(pdmpmt::internal::headers INTERFACE IMPORTED)
-target_include_directories(
-    pdmpmt::internal::headers INTERFACE
-    "${CMAKE_CURRENT_SOURCE_DIR}/include"
-)
-
-# determine available SIMD features
-try_run(
-    simd_run_res
-    simd_build_res
-    "${CMAKE_CURRENT_BINARY_DIR}"
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/simd.cc"
-    LINK_LIBRARIES pdmpmt::internal::headers
-    COMPILE_OUTPUT_VARIABLE simd_build_out
-    CXX_STANDARD ${CMAKE_CXX_STANDARD}
-    CXX_STANDARD_REQUIRED ${CMAKE_CXX_STANDARD_REQUIRED}
-    RUN_OUTPUT_VARIABLE simd_run_out
-)
-# build + run should not fail
-if(NOT simd_build_res)
-    message(FATAL_ERROR "failed to build simd.cc:\n${simd_build_out}")
-endif()
-if(simd_run_res)
-    message(FATAL_ERROR "simd.cc run errored:\n${simd_run_out}")
-endif()
-# convert simd_run_out to list by replacing newlines with semicolons
-string(STRIP "${simd_run_out}" simd_run_out)
-# note: remove CR that might be present when running on Windows
-string(REPLACE "\r" "" simd_run_out "${simd_run_out}")
-string(REPLACE "\n" ";" simd_run_out "${simd_run_out}")
-# for each list item
-foreach(line ${simd_run_out})
-    # split line into feature and 1/0 flag
-    string(REGEX REPLACE "[ ]+" ";" line "${line}")
-    # get name of SIMD feature + set corresponding variable with 1/0
-    list(GET line 0 simd_feature)
-    list(GET line 1 PDMPMT_${simd_feature})
-    # append to list of SIMD features
-    if(PDMPMT_${simd_feature})
-        list(APPEND PDMPMT_SIMD_FEATURES ${simd_feature})
-    endif()
-endforeach()
-# print PDMPMT_SIMD_FEATURES as space-separated string
-list(JOIN PDMPMT_SIMD_FEATURES " " simd_list_str)
-message(STATUS "SIMD features: ${simd_list_str}")
-# clean up
-unset(simd_run_res)
-unset(simd_build_res)
-unset(simd_build_out)
-unset(simd_run_out)
-unset(simd_list_str)
-
 # find Python (note: may add Development component later)
 find_package(Python3 COMPONENTS Interpreter NumPy)
 if(Python3_FOUND)
@@ -616,6 +561,61 @@ else()
         "Skipping ray_example_lib (Ray C++ API not supported on Windows)"
     )
 endif()
+
+# pdmpmt::internal::headers: internal IMPORTED target for pdmpmt headers. this
+# does not include any implicit link dependencies required for use and is
+# intended solely for use during configuration to use pdmpmt headers
+add_library(pdmpmt::internal::headers INTERFACE IMPORTED)
+target_include_directories(
+    pdmpmt::internal::headers INTERFACE
+    "${CMAKE_CURRENT_SOURCE_DIR}/include"
+)
+
+# determine available SIMD features
+try_run(
+    simd_run_res
+    simd_build_res
+    "${CMAKE_CURRENT_BINARY_DIR}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/simd.cc"
+    LINK_LIBRARIES pdmpmt::internal::headers
+    COMPILE_OUTPUT_VARIABLE simd_build_out
+    CXX_STANDARD ${CMAKE_CXX_STANDARD}
+    CXX_STANDARD_REQUIRED ${CMAKE_CXX_STANDARD_REQUIRED}
+    RUN_OUTPUT_VARIABLE simd_run_out
+)
+# build + run should not fail
+if(NOT simd_build_res)
+    message(FATAL_ERROR "failed to build simd.cc:\n${simd_build_out}")
+endif()
+if(simd_run_res)
+    message(FATAL_ERROR "simd.cc run errored:\n${simd_run_out}")
+endif()
+# convert simd_run_out to list by replacing newlines with semicolons
+string(STRIP "${simd_run_out}" simd_run_out)
+# note: remove CR that might be present when running on Windows
+string(REPLACE "\r" "" simd_run_out "${simd_run_out}")
+string(REPLACE "\n" ";" simd_run_out "${simd_run_out}")
+# for each list item
+foreach(line ${simd_run_out})
+    # split line into feature and 1/0 flag
+    string(REGEX REPLACE "[ ]+" ";" line "${line}")
+    # get name of SIMD feature + set corresponding variable with 1/0
+    list(GET line 0 simd_feature)
+    list(GET line 1 PDMPMT_${simd_feature})
+    # append to list of SIMD features
+    if(PDMPMT_${simd_feature})
+        list(APPEND PDMPMT_SIMD_FEATURES ${simd_feature})
+    endif()
+endforeach()
+# print PDMPMT_SIMD_FEATURES as space-separated string
+list(JOIN PDMPMT_SIMD_FEATURES " " simd_list_str)
+message(STATUS "SIMD features: ${simd_list_str}")
+# clean up
+unset(simd_run_res)
+unset(simd_build_res)
+unset(simd_build_out)
+unset(simd_run_out)
+unset(simd_list_str)
 
 # set compiler-specific configuration options. this is done after finding all
 # dependencies so there is no possible interference with upstream compile flags
