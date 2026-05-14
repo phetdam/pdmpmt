@@ -56,6 +56,8 @@ void span_increment_test_kernel(std::size_t n, pdmpmt::span<int> out)
 
 /**
  * Test Thrust host vector modification.
+ *
+ * @note Could be moved to `span_test.cc` as there is no device code here.
  */
 TEST_F(SpanThrustTest, HostVectorTest)
 {
@@ -80,14 +82,14 @@ TEST_F(SpanThrustTest, HostVectorTest)
 TEST_F(SpanThrustTest, DeviceVectorTest)
 {
   thrust::host_vector h1{1, 2, 3, 4, 5};
-  thrust::device_vector d2{0, 1, 2, 3, 4};
+  thrust::device_vector d1{0, 1, 2, 3, 4};
   // 2 blocks of 2 threads
-  span_increment_test_kernel<<<2, 2>>>(4u, d2);
+  span_increment_test_kernel<<<2, 2>>>(4u, d1);
   // sync + copy back to host vector
   cudaDeviceSynchronize();
   PDMPMT_CUDA_THROW_IF_ERROR();
-  thrust::host_vector<int> h2(d2.size());
-  thrust::copy(d2.begin(), d2.end(), h2.begin());
+  thrust::host_vector<int> h2(d1.size());
+  thrust::copy(d1.begin(), d1.end(), h2.begin());
   // compare values
 #if PDMPMT_HAS_GMOCK
   EXPECT_THAT(h2, ::testing::Pointwise(::testing::Eq(), h1));
@@ -122,6 +124,54 @@ TEST_F(SpanThrustTest, IsDeviceTest)
   EXPECT_FALSE(s.is_host());
   EXPECT_TRUE(s.is_device());
   EXPECT_FALSE(s.is_managed());
+}
+
+/**
+ * CUDA kernel that squares parts of a span.
+ *
+ * This kernel creates a separate span and iterates using a range-for.
+ *
+ * @param n Number of threads <= `out.size()`
+ * @param out Span with values to square
+ */
+PDMPMT_KERNEL
+void span_square_test_kernel(std::size_t n, pdmpmt::span<int> out)
+{
+  // starting thread index
+  auto ti = blockIdx.x * blockDim.x + threadIdx.x;
+  // determine work size
+  auto work_size = out.size() / n;
+  // if last thread pick up the slack
+  if (ti == n - 1)
+    work_size += out.size() % n;
+  // create sub-span to operate on + square values
+  pdmpmt::span in{out.data() + out.size() / n * ti, work_size};
+  for (auto& v : in)
+    v *= v;
+}
+
+/**
+ * Test Thrust device vector value squaring.
+ *
+ * This tests the `span_square_test_kernel()`.
+ */
+TEST_F(SpanThrustTest, DeviceSquareTest)
+{
+  thrust::host_vector h1{1, 81, 4, 64, 9, 49, 16, 36, 25};
+  thrust::device_vector d1{1, 9, 2, 8, 3, 7, 4, 6, 5};
+  // 2 blocks of 4 threads
+  span_square_test_kernel<<<2, 4>>>(8u, d1);
+  // sync + copy back to host vector
+  cudaDeviceSynchronize();
+  PDMPMT_CUDA_THROW_IF_ERROR();
+  thrust::host_vector<int> h2(d1.size());
+  thrust::copy(d1.begin(), d1.end(), h2.begin());
+  // compare values
+#if PDMPMT_HAS_GMOCK
+  EXPECT_THAT(h2, ::testing::Pointwise(::testing::Eq(), h1));
+#else
+  EXPECT_EQ(h1, h2);
+#endif  // !PDMPMT_HAS_GMOCK
 }
 
 }  // namespace
