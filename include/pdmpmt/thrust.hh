@@ -31,7 +31,7 @@ namespace std {
  * @param vec Device vector to write
  */
 template <typename T, typename A, typename = pdmpmt::ostreamable_t<T>>
-auto& operator<<(std::ostream& out, const thrust::host_vector<T, A>& vec)
+auto& operator<<(ostream& out, const thrust::host_vector<T, A>& vec)
 {
   pdmpmt::write(out, vec.begin(), vec.end());
   return out;
@@ -47,7 +47,7 @@ auto& operator<<(std::ostream& out, const thrust::host_vector<T, A>& vec)
  * @param vec Device vector to write
  */
 template <typename T, typename A, typename = pdmpmt::ostreamable_t<T>>
-auto& operator<<(std::ostream& out, const thrust::device_vector<T, A>& vec)
+auto& operator<<(ostream& out, const thrust::device_vector<T, A>& vec)
 {
   out << "<device " << pdmpmt::cuda_get_device() << "> ";
   pdmpmt::write(out, vec.begin(), vec.end());
