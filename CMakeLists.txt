@@ -473,7 +473,7 @@ else()
 endif()
 
 # find Python (note: may add Development component later)
-find_package(Python3 COMPONENTS Interpreter NumPy)
+find_package(Python3 COMPONENTS Interpreter OPTIONAL_COMPONENTS NumPy)
 if(Python3_FOUND)
     message(STATUS "Python version: ${Python3_VERSION}")
     # get exact pip path from Python3_EXECUTABLE
