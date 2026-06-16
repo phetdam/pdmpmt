@@ -52,7 +52,7 @@ public:
   template <typename Gen>
   auto operator()(Gen& gen)
   {
-    // zeroed strnig of random length
+    // zeroed string of random length
     std::string str(ldist_(gen), '\0');
     // update with random characters + return
     for (auto& c : str)
