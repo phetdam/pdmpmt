@@ -358,6 +358,7 @@ struct hash<pdmpmt::cpu_cache_info> {
   {
     std::hash<std::string_view> hf;
     // hash bytes
+    // FIXME: this processes padding bytes which have unspecified value
     return hf({reinterpret_cast<const char*>(&info), sizeof info});
   }
 };
