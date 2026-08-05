@@ -17,6 +17,8 @@ namespace pdmpmt {
  * RAII guard ensuring an operation is invoked on scope exit.
  *
  * This is similar to `std::experimental::scope_exit` in nature.
+ *
+ * @todo Rewrite this using small-size optimized non-polymorphic storage.
  */
 class scope_exit {
 public:
