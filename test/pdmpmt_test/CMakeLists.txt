@@ -6,6 +6,7 @@ if(GTest_FOUND)
         pdmpmt_test
         block_test.cc
         file_mutex_test.cc
+        image_test.cc
         paths_test.cc
         scope_exit_test.cc
         span_test.cc
