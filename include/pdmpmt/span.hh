@@ -64,7 +64,7 @@ public:
 
 private:
   /**
-   * SFINAE constraint for the add-const converting ctor.s
+   * SFINAE constraint for the add-const converting ctors.
    *
    * The member is `true` only when `T` is const-qualified and the removing the
    * const-qualification results in the same type as `U`.
