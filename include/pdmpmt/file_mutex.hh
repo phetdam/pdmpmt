@@ -375,7 +375,7 @@ PDMPMT_MSVC_WARNING_POP()
   /**
    * Perform a blocking lock for the mutex.
    *
-   * This function suses inotify to efficiently check if the lockfile has been
+   * This function uses inotify to efficiently check if the lockfile has been
    * deleted, blocking using `poll()` until the kernel indicates a file change
    * in the monitored directory. If the deleted file is the lockfile and
    * `try_lock()` succeeds, we can then acquire the lock.
