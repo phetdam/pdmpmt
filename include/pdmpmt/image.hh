@@ -316,7 +316,7 @@ namespace detail {
  *
  * @param in Input stream
  */
-void skip_spaces_comments(std::istream& in, ppm_tag)
+inline void skip_spaces_comments(std::istream& in, ppm_tag)
 {
   // helper for skipping a comment. returns true if comment was skipped
   auto skip_comment = [&in]
@@ -435,7 +435,7 @@ public:
    * described in https://netpbm.sourceforge.net/doc/ppm.html. The max color
    * value is required to be `0xFF` and so each RGB triplet is 3 bytes.
    *
-   * @note Comments in the PPM file before the raster are not yet handled.
+   * All alpha values are set to `0xFF` as PPM supports only RGB, not RGBA.
    *
    * @param in Input stream
    */
@@ -651,6 +651,60 @@ private:
 };
 
 /**
+ * Stream wrapper for disambiguating PPM image `operator>` overloads.
+ */
+class ppm_istream_wrapper {
+public:
+  /**
+   * Ctor.
+   *
+   * @param in Input stream
+   */
+  ppm_istream_wrapper(std::istream& in) noexcept : in_{&in} {}
+
+  /**
+   * Return the input stream.
+   */
+  auto& in() const noexcept { return *in_; }
+
+private:
+  std::istream* in_;  // trivially-copyable
+};
+
+/**
+ * Return a `ppm_istream_wrapper` to enable reading an `image` in PPM format.
+ *
+ * @note All arguments are taken by reference to avoid MSVC emitting C4866.
+ *
+ * @param in Input stream
+ */
+inline ppm_istream_wrapper operator>>(std::istream& in, const ppm_tag&)
+{
+  return in;
+}
+
+/**
+ * Read an `image` in PPM format from an input stream opened in binary mode.
+ *
+ * See https://netpbm.sourceforge.net/doc/ppm.html for the PPM format.
+ *
+ * @note The maximum color value for the PPM is hardcoded to `0xFF`.
+ *
+ * @par
+ *
+ * @note PPM does not support alpha so all alpha values will be set fo `0xFF`.
+ *
+ * @param in Input stream
+ * @param res Image to [re-]initialize
+ */
+inline auto& operator>>(const ppm_istream_wrapper& in, image& res)
+{
+  image img{in.in(), ppm};
+  res = std::move(img);
+  return in.in();
+}
+
+/**
  * Stream wrapper for disambiguating PPM image `operator<<` overloads.
  */
 class ppm_ostream_wrapper {
@@ -661,21 +715,6 @@ public:
    * @param out Output stream
    */
   ppm_ostream_wrapper(std::ostream& out) noexcept : out_{&out} {}
-
-  /**
-   * Stream a value to the output stream.
-   *
-   * This simply delegates to the `std::ostream` overloads for `operator<<`.
-   *
-   * @tparam T type
-   *
-   * @param v Value to write to the `std::ostream`
-   */
-  template <typename T>
-  auto& operator<<(T&& v) const
-  {
-    return out() << std::forward<T>(v);
-  }
 
   /**
    * Return the output stream.
@@ -693,7 +732,7 @@ private:
  *
  * @param out Output stream
  */
-ppm_ostream_wrapper operator<<(std::ostream& out, const ppm_tag&)
+inline ppm_ostream_wrapper operator<<(std::ostream& out, const ppm_tag&)
 {
   return out;
 }
@@ -712,18 +751,19 @@ ppm_ostream_wrapper operator<<(std::ostream& out, const ppm_tag&)
  * @param out Output stream
  * @param img Image to write
  */
-auto& operator<<(const ppm_ostream_wrapper& out, const image& img)
+inline auto& operator<<(const ppm_ostream_wrapper& out, const image& img)
 {
+  auto& os = out.out();
   // PPM magic
-  out << "P6\n";
+  os << "P6\n";
   // image width + height
-  out << img.width() << ' ' << img.height() << '\n';
+  os << img.width() << ' ' << img.height() << '\n';
   // max color value
-  out << 0xFF << '\n';
+  os << 0xFF << '\n';
   // write pixel values + return
   for (auto i = 0u; i < img.size(); i++)
-    out << img(i).r() << img(i).g() << img(i).b();
-  return out.out();
+    os << img(i).r() << img(i).g() << img(i).b();
+  return os;
 }
 
 }  // namespace pdmpmt
