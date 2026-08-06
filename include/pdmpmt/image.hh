@@ -97,7 +97,7 @@ public:
      */
     bool operator==(const view& v) const noexcept
     {
-      return pixel::equal(rgba_, v.rgba_);
+      return equal(rgba_, v.rgba_);
     }
 
     /**
@@ -115,7 +115,7 @@ public:
      */
     bool operator==(const pixel& v) const noexcept
     {
-      return pixel::equal(rgba_, v.rgba_);
+      return equal(rgba_, v.rgba_);
     }
 
     /**
@@ -250,7 +250,7 @@ public:
    */
   bool operator==(const pixel& v) const noexcept
   {
-    return pixel::equal(rgba_, v.rgba_);
+    return equal(rgba_, v.rgba_);
   }
 
   /**
@@ -268,8 +268,8 @@ public:
    */
   bool operator==(const view& v) const noexcept
   {
-    // note: v.rgba_ is inaccessible so we address of the R byte
-    return pixel::equal(rgba_, &v.r());
+    // note: v.rgba_ is inaccessible so we use the address of the R byte
+    return equal(rgba_, &v.r());
   }
 
   /**
