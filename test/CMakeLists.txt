@@ -76,3 +76,7 @@ set_tests_properties(
     file_mutex_mp_test_n400 PROPERTIES
     RESOURCE_LOCK file_mutex_mp_test_lock
 )
+
+# image_ppm_test: image PPM tests
+add_executable(image_ppm_test image_ppm_test.cc)
+target_link_libraries(image_ppm_test PRIVATE pdmpmt++)
