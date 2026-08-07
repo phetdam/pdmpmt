@@ -80,3 +80,11 @@ set_tests_properties(
 # image_ppm_test: image PPM tests
 add_executable(image_ppm_test image_ppm_test.cc)
 target_link_libraries(image_ppm_test PRIVATE pdmpmt++)
+# -h, --help
+add_test(NAME image_ppm_test_h COMMAND image_ppm_test -h)
+add_test(NAME image_ppm_test_help COMMAND image_ppm_test --help)
+set_tests_properties(
+    image_ppm_test_h
+    image_ppm_test_help PROPERTIES
+    PASS_REGULAR_EXPRESSION "Usage: image_ppm_test"
+)
