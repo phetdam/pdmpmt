@@ -68,6 +68,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 # update module search path to find our CMake scripts
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
+include(pdmpmt_collect_tests)
 include(pdmpmt_config_compile)
 include(pdmpmt_cuda_compile)
 include(pdmpmt_find_pip_packages)

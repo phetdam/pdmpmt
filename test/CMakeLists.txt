@@ -88,3 +88,5 @@ set_tests_properties(
     image_ppm_test_help PROPERTIES
     PASS_REGULAR_EXPRESSION "Usage: image_ppm_test"
 )
+# register tests for CTest
+pdmpmt_collect_tests(image_ppm_test)
