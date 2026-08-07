@@ -417,7 +417,7 @@ int main(int argc, char** argv)
     return EXIT_FAILURE;
   }
   // running all tests
-  auto n_tests = std::size(image_tests);
+  constexpr auto n_tests = std::size(image_tests);
   std::cout << "Running " << n_tests << " PPM tests...\n" << std::endl;
   // count failures
   auto failed = 0u;
