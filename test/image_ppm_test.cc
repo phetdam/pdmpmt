@@ -311,12 +311,10 @@ bool check_image(const ppm_image_test& test, const pdmpmt::image& img)
   auto bad_pxv = 0u;
   for (auto i = 0u; i < img.size(); i++) {
     // create pixel from test image raster bytes
-PDMPMT_GNU_WARNING_PUSH()
+    // note: cannot use braced-list init as MSVC emits C2398
 PDMPMT_MSVC_WARNING_PUSH()
-PDMPMT_GNU_WARNING_DISABLE(narrowing)
 PDMPMT_MSVC_WARNING_DISABLE(4365)
-    pdmpmt::pixel rpx{rst[3u * i], rst[3u * i + 1u], rst[3u * i + 2u]};
-PDMPMT_GNU_WARNING_POP()
+    pdmpmt::pixel rpx(rst[3u * i], rst[3u * i + 1u], rst[3u * i + 2u]);
 PDMPMT_MSVC_WARNING_POP()
     // if any byte is mismatched
     if (img(i) != rpx) {
