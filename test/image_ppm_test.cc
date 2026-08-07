@@ -13,8 +13,8 @@
 #include <string>
 #include <string_view>
 
-#include "pdmpmt/format.hh"
 #include "pdmpmt/image.hh"
+#include "pdmpmt/warnings.h"
 
 namespace {
 
@@ -273,37 +273,30 @@ bool check_image(const ppm_image_test& test, const pdmpmt::image& img)
   // check bytes + count mismatched pixel channels
   auto bad_pxv = 0u;
   for (auto i = 0u; i < img.size(); i++) {
-    // note: can extend lifetime of non-copyable pixel::view with const ref
-    const auto& px = img(i);
-    // get PPM bytes
-    pdmpmt::pixel::byte ppm[3];
+    // create pixel from test image raster bytes
+PDMPMT_GNU_WARNING_PUSH()
 PDMPMT_MSVC_WARNING_PUSH()
+PDMPMT_GNU_WARNING_DISABLE(narrowing)
 PDMPMT_MSVC_WARNING_DISABLE(4365)
-    ppm[0] = rst[3u * i];
-    ppm[1] = rst[3u * i + 1];
-    ppm[2] = rst[3u * i + 2];
+    pdmpmt::pixel rpx{rst[3u * i], rst[3u * i + 1u], rst[3u * i + 2u]};
+PDMPMT_GNU_WARNING_POP()
 PDMPMT_MSVC_WARNING_POP()
     // if any byte is mismatched
-    if (px != pdmpmt::pixel{ppm[0], ppm[1], ppm[2]}) {
+    if (img(i) != rpx) {
       // print banner on first failure
       if (!bad_pxv)
         fail_message(test);
-      // get pixel bytes
-      pdmpmt::pixel::byte pxb[3];
-      pxb[0] = px.r();
-      pxb[1] = px.g();
-      pxb[2] = px.b();
       // report + increment
-      std::cout << "  img(" << i << ") != ppm[" << i << "] (" <<
-        pdmpmt::hex_u << pxb << " != " << pdmpmt::hex_u << ppm << ")\n";
+      std::cout << "  img(" << i << ") != ppm[" << i << "] (" << img(i) <<
+        " != " << rpx << ")\n";
       bad_pxv++;
     }
-    // ensure flush + error if bad_pxv
-    std::cout << std::flush;
-    if (bad_pxv) {
-      std::cout << "  mismatched pixels: " << bad_pxv << std::endl;
-      return false;
-    }
+  }
+  // ensure flush + error if bad_pxv is positive
+  std::cout << std::flush;
+  if (bad_pxv) {
+    std::cout << "  mismatched pixels: " << bad_pxv << std::endl;
+    return false;
   }
   // otherwise bytes match
   return true;
