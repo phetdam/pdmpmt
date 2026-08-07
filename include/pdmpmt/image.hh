@@ -71,6 +71,11 @@ public:
     }
 
     /**
+     * Return a pointer to the 4-char buffer.
+     */
+    auto data() const noexcept { return rgba_; }
+
+    /**
      * Return a reference to the red value.
      */
     byte& r() const noexcept { return rgba_[0]; }
@@ -204,14 +209,19 @@ public:
   }
 
   /**
+   * Return a pointer to the 4-char buffer.
+   */
+  auto data() const noexcept { return rgba_; }
+
+  /**
    * Return a reference to the red value.
    */
   byte& r() noexcept { return rgba_[0]; }
 
   /**
-   * Return the red value.
+   * Return a const reference to the red value.
    */
-  byte r() const noexcept { return rgba_[0]; }
+  auto& r() const noexcept { return rgba_[0]; }
 
   /**
    * Return a reference to the green value.
@@ -219,9 +229,9 @@ public:
   byte& g() noexcept { return rgba_[1]; }
 
   /**
-   * Return the green value.
+   * Return a const reference to the green value.
    */
-  byte g() const noexcept { return rgba_[1]; }
+  auto& g() const noexcept { return rgba_[1]; }
 
   /**
    * Return a reference to the blue value.
@@ -229,9 +239,9 @@ public:
   byte& b() noexcept { return rgba_[2]; }
 
   /**
-   * Return the blue value.
+   * Return a const reference to the blue value.
    */
-  byte b() const noexcept { return rgba_[2]; }
+  auto& b() const noexcept { return rgba_[2]; }
 
   /**
    * Return a reference to the alpha value.
@@ -239,9 +249,9 @@ public:
   byte& a() noexcept { return rgba_[3]; }
 
   /**
-   * Return the alpha value.
+   * Return a const reference to the alpha value.
    */
-  byte a() const noexcept { return rgba_[3]; }
+  auto& a() const noexcept { return rgba_[3]; }
 
   /**
    * Test for equality against a pixel.
@@ -268,8 +278,7 @@ public:
    */
   bool operator==(const view& v) const noexcept
   {
-    // note: v.rgba_ is inaccessible so we use the address of the R byte
-    return equal(rgba_, &v.r());
+    return equal(rgba_, v.data());
   }
 
   /**
@@ -286,14 +295,69 @@ private:
   /**
    * Check two RGBA byte buffers for equality.
    *
-   * @param a RGBA
-   * @param b RGBA
+   * @param a RGBA buffer
+   * @param b RGBA buffer
    */
   static bool equal(const byte* a, const byte* b) noexcept
   {
     return a[0] == b[0] && a[1] == b[1] && a[2] == b[2] && a[3] == b[3];
   }
 };
+
+namespace detail {
+
+/**
+ * Stream an RGBA buffer to the output stream in hexadecimal.
+ *
+ * All RGBA channels will be represented using 2 uppercase hex characters.
+ *
+ * @param out Output stream
+ * @param rgba RGBA buffer
+ */
+inline auto& write_rgba_hex(std::ostream& out, const pixel::byte* rgba)
+{
+  // hex characters
+  constexpr const char hex_chars[] = "0123456789ABCDEF";
+  // format bytes to buffer
+  char buf[8];
+  for (auto i = 0u; i < 4u; i++) {
+    buf[2u * i] = hex_chars[(rgba[i] >> 4) & 0xF];
+    buf[2u * i + 1u] = hex_chars[rgba[i] & 0xF];
+  }
+  // write to stream
+  return out.write(buf, sizeof buf);
+}
+
+}  // namespace detail
+
+/**
+ * Write a `pixel` to the output stream in hexadecimal.
+ *
+ * All RGBA channels will be represented using 2 uppercase hex characters.
+ *
+ * @param out Output stream
+ * @param px Pixel to write
+ */
+inline auto& operator<<(std::ostream& out, const pixel& px)
+{
+  return detail::write_rgba_hex(out, px.data());
+}
+
+/**
+ * Write a `pixel::view` to the output stream in hexdecimal.
+ *
+ * All RGBA channels will be represented using 2 uppercase hex characters.
+ *
+ * @note Although the `pixel::view` can be converted into a `pixel` we provide
+ *  this extra overload to support template argument deduction.
+ *
+ * @param out Output stream
+ * @param pv Pixel view to write
+ */
+inline auto& operator<<(std::ostream& out, const pixel::view& pv)
+{
+  return detail::write_rgba_hex(out, pv.data());
+}
 
 /**
  * Tag type to indicate an `image` should be handled in PPM format.
