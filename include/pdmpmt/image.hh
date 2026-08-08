@@ -136,6 +136,13 @@ public:
   };
 
   /**
+   * Default ctor.
+   *
+   * Constructs a black pixel with alpha set to `0xFF`.
+   */
+  pixel() noexcept : pixel{0, 0, 0} {}
+
+  /**
    * Ctor.
    *
    * Construct from 4 contiguous RGBA byte values.
