@@ -216,6 +216,26 @@ public:
   }
 
   /**
+   * Returns a black pixel.
+   *
+   * @param a Alpha value
+   */
+  static pixel black(byte a = 0xFF) noexcept
+  {
+    return {0, 0, 0, a};
+  }
+
+  /**
+   * Returns a white pixel.
+   *
+   * @param a Alpha value
+   */
+  static pixel white(byte a = 0xFF) noexcept
+  {
+    return {0xFF, 0xFF, 0xFF, a};
+  }
+
+  /**
    * Return a pointer to the 4-char buffer.
    */
   auto data() const noexcept { return rgba_; }
