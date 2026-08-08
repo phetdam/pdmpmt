@@ -56,6 +56,19 @@ TEST_F(PixelTest, ViewFromPixelTest)
 }
 
 /**
+ * Check pixel default construction.
+ */
+TEST_F(PixelTest, PixelDefaultTest)
+{
+  pdmpmt::pixel px;
+  // check bytes
+  EXPECT_EQ(0, px.r());
+  EXPECT_EQ(0, px.g());
+  EXPECT_EQ(0, px.b());
+  EXPECT_EQ(0xFF, px.a());
+}
+
+/**
  * Check pixel and pixel view equality.
  */
 TEST_F(PixelTest, ViewValueEqTest)
