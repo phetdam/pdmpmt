@@ -199,3 +199,37 @@ add_test(NAME cpu_affinity COMMAND cpu_affinity)
 add_executable(cpu_info cpu_info.cc)
 target_link_libraries(cpu_info PRIVATE pdmpmt++)
 add_test(NAME cpu_info COMMAND cpu_info)
+
+# gradient: generates a gradient between two colors + saves the image as PPM
+add_executable(gradient gradient.cc)
+target_link_libraries(gradient PRIVATE pdmpmt++)
+# -h, --help
+add_test(NAME gradient_h COMMAND gradient -h)
+add_test(NAME gradient_help COMMAND gradient --help)
+set_tests_properties(
+    gradient_h
+    gradient_help PROPERTIES
+    PASS_REGULAR_EXPRESSION "Usage: gradient"
+)
+
+##
+# Function to add a gradient test with the two RGB colors.
+#
+# The gradient program will use PROJECT_BINARY_DIR as the working directory.
+#
+# Arguments:
+#   c1      First color
+#   c2      Second color
+#
+function(pdmpmt_add_gradient_test c1 c2)
+    add_test(
+        NAME gradient_${c1}_${c2}
+        COMMAND gradient -c ${c1},${c2} -o grad_${c1}_${c2}.ppm
+        WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+    )
+endfunction()
+
+# pretty gradient examples
+pdmpmt_add_gradient_test(2ca02c 9467bd)
+pdmpmt_add_gradient_test(264d59 f9e07f)
+pdmpmt_add_gradient_test(a5cad2 ff7b89)
