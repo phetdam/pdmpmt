@@ -37,25 +37,26 @@ exit /b !ERRORLEVEL!
     echo KEY and VALUE will be split into separate arguments.
     echo.
     echo Options:
-    echo   -h,  --help               Print this usage
+    echo   -h, --help               Print this usage
     echo.
-    echo   -o,  --output-prefix OUTPUT_PREFIX
-    echo                             Build output directory prefix, default
-    echo                             %BUILD_OUTPUT_PREFIX%. The actual build
-    echo                             output directory will have _ARCH appended
-    echo                             to the specified directory prefix.
+    echo   -o OUTPUT_PREFIX, --output-prefix OUTPUT_PREFIX
+    echo                            Build output directory prefix, default
+    echo                            %BUILD_OUTPUT_PREFIX%. The actual build
+    echo                            output directory will have _ARCH appended
+    echo                            to the specified directory prefix.
     echo.
-    echo   -a,  --arch ARCH          Target machine architecture, default ^
+    echo   -a arch, --arch ARCH     Target machine architecture, default ^
 %BUILD_ARCH%.
-    echo                             Supported values: x86, x64, arm, arm64
+    echo                            Supported values: x86, x64, arm, arm64
     echo.
-    echo   -c,  --config CONFIG      Build configuration, default %BUILD_CONFIG%
+    echo   -c CONFIG, --config CONFIG
+    echo                            Build configuration, default %BUILD_CONFIG%
     echo.
-    echo   -Ca, --cmake-args CMAKE_ARGS
-    echo                             Args to pass to cmake config command
+    echo   -Ca CMAKE_ARGS, --cmake-args CMAKE_ARGS
+    echo                            Args to pass to cmake config command
     echo.
-    echo   -Cb, --cmake-build-args CMAKE_BUILD_ARGS
-    echo                             Args to pass to cmake build command
+    echo   -Cb CMAKE_BUILD_ARGS, --cmake-build-args CMAKE_BUILD_ARGS
+    echo                            Args to pass to cmake build command
 exit /b !ERRORLEVEL!
 
 ::::
