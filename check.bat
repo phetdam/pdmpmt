@@ -16,6 +16,9 @@ set BUILD_CONFIG=Debug
 :: current action to take, argument parsing mode
 set TEST_ACTION=
 set PARSE_ACTION=
+:: number of processors + starting CTest arguments
+set NPROC=%NUMBER_OF_PROCESSORS%
+set CTEST_ARGS=-j%NPROC%
 
 call :Main %*
 exit /b !ERRORLEVEL!
@@ -27,14 +30,18 @@ echo.
 echo CTest driver script for pdmpmt.
 echo.
 echo Currently supports only "build_windows" as the output prefix and x64 as
-echo the architecture for a build directory "build_windows_x64".
+echo the architecture for a build directory "build_windows_x64". CTest will run
+echo up to %%NUMBER_OF_PROCESSORS%% tests in parallel by default unless the -j,
+echo --parallel option is specified to provide a different parallelism level.
 echo.
 echo Options:
-echo   -h, --help               Print this usage
-echo   -c, --config CONFIG      Build configuration, default %BUILD_CONFIG%
+echo   -h,  --help                      Print this usage
+echo   -c,  --config CONFIG             Build config, default %BUILD_CONFIG%
+echo   -p,  --progress                  Print short CTest progress output
 echo.
-echo   -Ct, --ctest-args CTEST_ARGS
-echo                            Additional arguments for CTest
+echo   -j,  --parallel PROCS            Test parallelism level, default %NPROC%
+echo.
+echo   -Ct, --ctest-args CTEST_ARGS     Additional arguments for CTest
 exit /b 0
 
 :: Parse incoming command-line arguments.
@@ -65,20 +72,24 @@ for %%A in (%*) do (
                         if %%A==--ctest-args (
                             set PARSE_ACTION=parse_ctest_args
                         ) else (
+                            if %%A==-p (
+                                set "CTEST_ARGS=!CTEST_ARGS! --progress"
+                            ) else (
+                                if %%A==--progress (
+                                    set "CTEST_ARGS=!CTEST_ARGS! --progress"
+                                ) else (
 if !PARSE_ACTION!==parse_config (
     set "BUILD_CONFIG=%%A"
 ) else (
     if !PARSE_ACTION!==parse_ctest_args (
-        if not defined CTEST_ARGS (
-            set "CTEST_ARGS=%%A"
-        ) else (
-            set "CTEST_ARGS=!CTEST_ARGS! %%A"
-        )
+        set "CTEST_ARGS=!CTEST_ARGS! %%A"
     ) else (
         echo Error: Unknown argument %%A. Try %PROGNAME% --help for usage.
         exit /b 1
     )
 )
+                                )
+                            )
                         )
                     )
                 )
@@ -103,6 +114,5 @@ if !TEST_ACTION!==print_usage (
     exit /b 0
 )
 :: run CTest tests
-ctest --test-dir build_windows_x64 -C !BUILD_CONFIG! -j%NUMBER_OF_PROCESSORS% ^
-    !CTEST_ARGS!
+ctest --test-dir build_windows_x64 -C !BUILD_CONFIG! !CTEST_ARGS!
 exit /b 0
