@@ -117,8 +117,8 @@ endfunction()
 #   target                  Custom or executable target
 #
 #   [COMMAND cmd...]        Command to invoke the test driver. If not specified
-#                           then ${target} is used, so if the target a custom
-#                           target, then COMMAND is required.
+#                           then ${target} is used, so if the target is a
+#                           custom target, COMMAND is required.
 #
 #   [LIST_OPTION opt]       Command-line option for printing the list of tests
 #   [RUN_OPTION opt]        Command-line option used to specify a single test
