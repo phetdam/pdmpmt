@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "pdmpmt/image.hh"
+#include "pdmpmt/warnings.h"
 
 namespace {
 
@@ -125,9 +126,11 @@ auto split_comma(std::string_view str)
   if (mid == end)
     throw std::runtime_error{std::string{str} + " missing ',' delimiter"};
   // split at ','
+  // note: the &* syntax is to satisfy the Microsoft STL implementation that
+  // uses a separate string_view iterator type instead of const char*
   return std::pair{
-    std::string_view{begin, static_cast<std::size_t>(mid - begin)},
-    std::string_view{mid + 1, static_cast<std::size_t>(end - mid - 1)}
+    std::string_view{&*begin, static_cast<std::size_t>(mid - begin)},
+    std::string_view{&*(mid + 1), static_cast<std::size_t>(end - mid - 1)}
   };
 }
 
@@ -161,12 +164,15 @@ void parse(pdmpmt::pixel& px, std::string_view str)
     return static_cast<unsigned char>(c - '0');
   };
   // init pixel
+PDMPMT_MSVC_WARNING_PUSH()
+PDMPMT_MSVC_WARNING_DISABLE(4365)
   px.r() = (x2b(str[0]) << 4) + x2b(str[1]);
   px.g() = (x2b(str[2]) << 4) + x2b(str[3]);
   px.b() = (x2b(str[4]) << 4) + x2b(str[5]);
   // note: alpha chars are optional
   if (str.size() == 8)
     px.a() = (x2b(str[6]) << 4) + x2b(str[7]);
+PDMPMT_MSVC_WARNING_POP()
 }
 
 /**
@@ -289,8 +295,11 @@ auto sample_interval(float x, float y, std::size_t size)
   // sampled values
   std::vector<float> values(size);
   // compute v(i) = x + i * (y - x) / (size - 1) + return
+PDMPMT_MSVC_WARNING_PUSH()
+PDMPMT_MSVC_WARNING_DISABLE(5219)
   for (auto i = 0u; i < size; i++)
     values[i] = x + i * (y - x) / (size - 1u);
+PDMPMT_MSVC_WARNING_POP()
   return values;
 }
 
