@@ -62,12 +62,21 @@ function(pdmpmt_pytest_add_tests_impl)
     # test root directory is supposed to be. this does not correctly the
     # working directory, however, so that's still an issue
     foreach(test_name ${test_list})
+        # note: CTest implements its own minimal versions of add_test() and
+        # set_tests_properties(). see Source/CTest/cmCTestTestHandler.cxx in
+        # the CMake source tree for the relevant AddBuiltinCommand() calls
         string(
             APPEND test_script_content
-            "add_test(\n"
-            "    \"${test_name}\"\n"
-            "    \"${Python3_EXECUTABLE}\" -m pytest \"${TEST_ROOT}/${test_name}\"\n"
-            ")\n"
+"add_test(\n"
+"    \"${test_name}\"\n"
+"    \"${Python3_EXECUTABLE}\" -m pytest \"${TEST_ROOT}/${test_name}\"\n"
+")\n"
+"set_tests_properties(\n"
+"    \"${test_name}\" PROPERTIES\n"
+# correctly mark skipped tests
+# note: needed to double-escape the backslashes in the regex
+"    SKIP_REGULAR_EXPRESSION \"SKIPPED \\\\[1\\\\]\"\n"
+")\n"
         )
     endforeach()
     # write test list to file
