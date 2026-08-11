@@ -25,7 +25,7 @@ exit /b !ERRORLEVEL!
 
 :: Print script usage.
 :PrintUsage
-echo Usage: %PROGNAME% [-h] [-c CONFIG] [-Ct CTEST_ARGS]
+echo Usage: %PROGNAME% [-h] [-c CONFIG] [-p] [-j PROCS] [-Ct CTEST_ARGS]
 echo.
 echo CTest driver script for pdmpmt.
 echo.
