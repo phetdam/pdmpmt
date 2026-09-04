@@ -215,17 +215,21 @@ set_tests_properties(
 ##
 # Function to add a gradient test with the two RGB colors.
 #
-# The gradient program will use PROJECT_BINARY_DIR as the working directory.
+# The gradient program will use PROJECT_BINARY_DIR as the working directory if
+# the CMake generator is single-config and use PROJECT_BINARY_DIR with a
+# per-config subdirectory if the CMake generator is multi-config.
 #
 # Arguments:
 #   c1      First color
 #   c2      Second color
 #
 function(pdmpmt_add_gradient_test c1 c2)
+    # indicate if generator is multi-config
+    get_property(multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
     add_test(
         NAME gradient_${c1}_${c2}
         COMMAND gradient -c ${c1},${c2} -o grad_${c1}_${c2}.ppm
-        WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+        WORKING_DIRECTORY ${PROJECT_BINARY_DIR}$<${multi_config}:/$<CONFIG>>
     )
 endfunction()
 
