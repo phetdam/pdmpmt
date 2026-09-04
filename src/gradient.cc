@@ -62,7 +62,9 @@ const auto program_usage = "Usage: " + progname +
   "\n"
   "  -d DIMS, --dims DIMS\n"
   "                       Comma-separated values specifying the image width\n"
-  "                       and height in pixels, default "
+  "                       and height in pixels, defaulting to " +
+    std::to_string(def_width) + "," + std::to_string(def_height) + "\n"
+  "\n"
   "  -o OUTPUT, --output OUTPUT\n"
   "                       Path to write the resulting gradient image to. The\n"
   "                       image file will be in the PPM binary format.";
