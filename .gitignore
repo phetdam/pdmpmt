@@ -18,3 +18,5 @@ dask-worker-space
 /build_windows*
 # ignore __init__.py (generated)
 /pdmpmt/__init__.py
+# ignore Vim swap files
+*.swp
