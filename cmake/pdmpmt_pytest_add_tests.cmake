@@ -59,8 +59,9 @@ function(pdmpmt_pytest_add_tests_impl)
     string(REPLACE "\n" ";" test_list "${test_list}")
     # loop through items to add tests
     # note: use absolute path so pytest will automatically figure out what the
-    # test root directory is supposed to be. this does not correctly the
-    # working directory, however, so that's still an issue
+    # test root directory is supposed to be. currently the working directory
+    # will just default to CMAKE_CURRENT_BINARY_DIR; if we want to set it, then
+    # we need to set the working directory from outside this impl function
     foreach(test_name ${test_list})
         # note: CTest implements its own minimal versions of add_test() and
         # set_tests_properties(). see Source/CTest/cmCTestTestHandler.cxx in
@@ -102,6 +103,8 @@ endfunction()
 #                           the path is relative it will be resolved relative
 #                           to ${CMAKE_CURRENT_SOURCE_DIR}. All pytest tests
 #                           will be run using this as the working directory.
+#
+#                           FIXME: currently only supports directories
 #
 function(pdmpmt_pytest_add_tests target)
     # parse arguments
