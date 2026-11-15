@@ -151,7 +151,7 @@ constexpr indentation_factory indent;
  * @param rng Range to format
  */
 template <typename R>
-auto format(R&& rng, pdmpmt::constraint_t<pdmpmt::is_range_v<R>> = 0)
+auto format(R&& rng, pdmpmt::constraint_t<pdmpmt::is_range_v<R>> = {})
 {
   std::stringstream ss;
   // iterate

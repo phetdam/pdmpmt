@@ -86,7 +86,7 @@ template <typename T, typename U>
 constexpr bool in_unit_circle(
   T x,
   U y,
-  constraint_t<std::is_floating_point_v<T> && std::is_floating_point_v<U>> = 0)
+  constraint_t<std::is_floating_point_v<T> && std::is_floating_point_v<U>> = {})
 {
   // note: no square root is needed
   return (x * x + y * y <= std::common_type_t<T, U>{1});
@@ -223,7 +223,7 @@ template <typename T, typename C1, typename C2>
 T mcpi_gather(
   const C1& in_counts,
   const C2& tot_counts,
-  constraint_t<is_range_v<C1> && is_range_v<C2>> = 0)
+  constraint_t<is_range_v<C1> && is_range_v<C2>> = {})
 {
   // number of samples inside the unit circle, total number of samples drawn
   // TODO: this can be done using multiple threads
@@ -339,7 +339,7 @@ inline double mcpi(std::size_t n_samples)
  * @param n Number of axis sub-intervals (square root of total samples)
  */
 template <typename T = double>
-T quasi_mcpi(std::size_t n, constraint_t<std::is_floating_point_v<T>> = 0)
+T quasi_mcpi(std::size_t n, constraint_t<std::is_floating_point_v<T>> = {})
 {
   // total points in unit circle
   std::size_t n_in = 0u;

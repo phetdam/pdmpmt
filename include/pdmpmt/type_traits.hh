@@ -271,6 +271,23 @@ using uniform_random_bit_generator_t = std::enable_if_t<
 >;
 
 /**
+ * Scoped enumeration type for use as the `constraint_t<true>::type` member.
+ *
+ * This is provided to prevent use of `constraint_t<truth> = {}` as a trailing
+ * function parameter causing overload resolution ambiguity as integral types
+ * cannot implicitly convert to a scoped enumeration type.
+ */
+enum class constraint_type { value = 0 };
+
+/**
+ * Inline global for initializing non-type template usage of `constraint_t`.
+ *
+ * `{}` cannot directly be used as an initializer for a non-type template
+ * parameter so for brevity `constraint_v` should be used instead.
+ */
+inline constexpr auto constraint_v = constraint_type::value;
+
+/**
  * Boost-style traits type constraints type.
  *
  * This is modeled after observing the usage of `constraint_t` in Boost.Asio
@@ -278,23 +295,46 @@ using uniform_random_bit_generator_t = std::enable_if_t<
  *
  * @code{.cc}
  * template <typename T>
- * auto f(T&&, constraint_t<is_something_v<T>> = 0)
+ * auto f(T&&, constraint_t<is_something_v<T>> = {})
  * {
  *   // ...
  * }
  * @endcode
  *
+ * However, since `constraint<true>::type` is a scoped enumeration, the
+ * `constraint_t` helper avoids overload ambiguity since integral types cannot
+ * be implictly converted to scoped enumerations. The downside is that use as a
+ * non-type template parameter is a bit more verbose:
+ *
+ * @code{.cc}
+ * template <typename T, constraint_t<is_something_v<T>> = constraint_v>
+ * auto g(T&&)
+ * {
+ *   // ...
+ * }
+ * @endcode
+ *
+ * We cannot directly use `{}` as the initializer for a non-type template
+ * parameter despite what one might think; this defect is tracked by CWG2450.
+ * It is also not recommended to use `auto = constraint_t<truth>{}` since users
+ * can bypass the constraint by passing `5` for example and this form also
+ * doesn't allow SFINAE to prevent template definition. The same concerns also
+ * apply to use of `typename = constraint_t<truth>`.
+ *
+ * See https://www.open-std.org/jtc1/sc22/wg21/docs/cwg_defects.html#2450 for
+ * details on CWG2450 which is not yet resolved.
+ *
  * @tparam truth Truth condition
  */
 template <bool truth>
-struct constraint_type {};
+struct constraint {};
 
 /**
  * True specialization when the truth condition is `true`.
  */
 template <>
-struct constraint_type<true> {
-  using type = int;
+struct constraint<true> {
+  using type = constraint_type;
 };
 
 /**
@@ -303,7 +343,7 @@ struct constraint_type<true> {
  * @tparam truth Truth condition
  */
 template <bool truth>
-using constraint_t = typename constraint_type<truth>::type;
+using constraint_t = typename constraint<truth>::type;
 
 /**
  * Traits type loosely satisfying the *LegacyIterator* named requirements.
