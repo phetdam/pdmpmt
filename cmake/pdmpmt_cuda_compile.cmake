@@ -125,18 +125,56 @@ function(pdmpmt_cuda_include_directories target)
 endfunction()
 
 ##
+# Add macro definitions to the CUDA C++ compilation group.
+#
+# Macros can have PRIVATE, INTERFACE, or PUBLIC visibility.
+#
+# The macros should be of the form NAME or NAME=value and will be stored in
+# CUDA_COMPILE_DEFS, for PRIVATE and PUBLIC, and for INTERFACE and PUBLIC, in
+# CUDA_INTERFACE_COMPILE_DEFS, similar to CUDA_[INTERFACE_]COMPILE_OPTS.
+#
+# Arguments:
+#   target                      CUDA C++ compile group
+#   [PRIVATE macros...]         Private CUDA compilation macros
+#   [INTERFACE macros...]       Interface CUDA compilation macros
+#   [PUBLIC macros...]          Public compilation + interface CUDA macros
+#
+function(pdmpmt_cuda_compile_definitions target)
+    cmake_parse_arguments(ARG "" "" "PRIVATE;INTERFACE;PUBLIC" ${ARGN})
+    # get CUDA_COMPILE_DEFS
+    get_property(cuda_defs TARGET ${target} PROPERTY CUDA_COMPILE_DEFS)
+    # append compile defs, de-duplicate, and set
+    list(APPEND cuda_defs ${ARG_PRIVATE} ${ARG_PUBLIC})
+    list(REMOVE_DUPLICATES cuda_defs)
+    set_property(TARGET ${target} PROPERTY CUDA_COMPILE_DEFS "${cuda_defs}")
+    # get CUDA_INTERFACE_COMPILE_DEFS
+    get_property(
+        cuda_int_defs
+        TARGET ${target}
+        PROPERTY CUDA_INTERFACE_COMPILE_DEFS
+    )
+    # append interface compile defs, de-duplicate, and set
+    list(APPEND cuda_int_defs ${ARG_INTERFACE} ${ARG_PUBLIC})
+    list(REMOVE_DUPLICATES cuda_int_defs)
+    set_property(
+        TARGET ${target} PROPERTY
+        CUDA_INTERFACE_COMPILE_DEFS "${cuda_int_defs}"
+    )
+endfunction()
+
+##
 # Add compilation options to the CUDA C++ compilation group.
 #
-# Option can have PRIVATE, INTERFACE, or PUBLIC visibility.
+# Options can have PRIVATE, INTERFACE, or PUBLIC visibility.
 #
-# The compile options will be stored in the CUDA_COMPILE_OPTS, for PRIVATE and
-# PUB;IC, and CUDA_INTERFACE_COMPILE_OPTS, for INTERFACE and PUBLIC.
+# The compile options will be stored in CUDA_COMPILE_OPTS, for PRIVATE and
+# PUBLIC, and CUDA_INTERFACE_COMPILE_OPTS, for INTERFACE and PUBLIC.
 #
 # Arguments:
 #   target                  CUDA C++ compile group
-#   [PRIVATE dirs...]       Private CUDA compilation options
-#   [INTERFACE dirs...]     Interface CUDA compilation options
-#   [PUBLIC dirs...]        Public compilation + interface CUDA options
+#   [PRIVATE opts...]       Private CUDA compilation options
+#   [INTERFACE opts...]     Interface CUDA compilation options
+#   [PUBLIC opts...]        Public compilation + interface CUDA options
 #
 function(pdmpmt_cuda_compile_options target)
     cmake_parse_arguments(ARG "" "" "PRIVATE;INTERFACE;PUBLIC" ${ARGN})
@@ -161,7 +199,6 @@ function(pdmpmt_cuda_compile_options target)
     )
 endfunction()
 
-
 ##
 # Add libraries for linking to the CUDA C++ compilation group.
 #
@@ -169,12 +206,19 @@ endfunction()
 # CUDA_INTERFACE_INCLUDE_DIRS properties for each target will be added to the
 # CUDA_INCLUDE_DIRS and CUDA_INTERFACE_INCLUDE_DIRS properties appropriately.
 #
+# Any compilation definitions in the INTERFACE_COMPILE_DEFINITIONS or the
+# CUDA_INTERFACE_COMPILE_DEFS properties for each target will be added to the
+# CUDA_COMPILE_DEFS and CUDA_INTERFACE_COMPILE_DEFS properties appropriately.
+#
 # Any compilation options in the INTERFACE_COMPILE_OPTIONS or the
 # CUDA_INTERFACE_COMPILE_OPTS properties for each target will be added to the
 # CUDA_COMPILE_OPTS and CUDA_INTERFACE_COMPILE_OPTS properties appropriately.
 #
 # Any libraries in INTERFACE_LINK_LIBRARIES or CUDA_INTERFACE_LINK_LIBS will
 # be added to the CUDA_LINK_LIBS and CUDA_INTERFACE_LINK_LIBS properties.
+#
+# Note: This function does *not* correctly handle transitive properties which
+# is a defect we should probably remedy in the future.
 #
 # Arguments:
 #   target                  CUDA C++ compile group
@@ -190,7 +234,7 @@ function(pdmpmt_cuda_link_libraries target)
     foreach(lib ${ARG_PRIVATE} ${ARG_PUBLIC})
         # if a target
         if(TARGET ${lib})
-            # obtain all include dirs, compile options, libraries
+            # obtain all include dirs, compile defs, compile options, libraries
             # note: libraries are directly used as targets to preserve any
             # additional usage requirements needed by C++ objects
             get_property(
@@ -200,6 +244,14 @@ function(pdmpmt_cuda_link_libraries target)
             get_property(
                 lib_cuda_dirs TARGET ${lib}
                 PROPERTY CUDA_INTERFACE_INCLUDE_DIRS
+            )
+            get_property(
+                lib_compile_defs TARGET ${lib}
+                PROPERTY INTERFACE_COMPILE_DEFINITIONS
+            )
+            get_property(
+                lib_cuda_defs TARGET ${lib}
+                PROPERTY CUDA_INTERFACE_COMPILE_DEFS
             )
             get_property(
                 lib_compile_opts TARGET ${lib}
@@ -224,6 +276,18 @@ function(pdmpmt_cuda_link_libraries target)
                 pdmpmt_cuda_include_directories(
                     ${target} PRIVATE
                     ${lib_cuda_dirs}
+                )
+            endif()
+            if(lib_compile_defs)
+                pdmpmt_cuda_compile_definitions(
+                    ${target} PRIVATE
+                    ${lib_compile_defs}
+                )
+            endif()
+            if(lib_cuda_defs)
+                pdmpmt_cuda_compile_definitions(
+                    ${target} PRIVATE
+                    ${lib_cuda_defs}
                 )
             endif()
             if(lib_compile_opts)
@@ -248,6 +312,8 @@ function(pdmpmt_cuda_link_libraries target)
             # ensure unset for next iteration
             unset(lib_include_dirs)
             unset(lib_cuda_dirs)
+            unset(lib_compile_defs)
+            unset(lib_cuda_defs)
             unset(lib_compile_opts)
             unset(lib_cuda_compile_opts)
             unset(lib_cuda_libs)
@@ -268,7 +334,7 @@ function(pdmpmt_cuda_link_libraries target)
     foreach(lib ${ARG_INTERFACE} ${ARG_PUBLIC})
         # if a target
         if(TARGET ${lib})
-            # obtain all include dirs + libraries
+            # obtain all include dirs, compile defs, compile options, libraries
             # note: libraries are directly used as targets to preserve any
             # additional usage requirements needed by C++ objects
             get_property(
@@ -278,6 +344,14 @@ function(pdmpmt_cuda_link_libraries target)
             get_property(
                 lib_cuda_dirs TARGET ${lib}
                 PROPERTY CUDA_INTERFACE_INCLUDE_DIRS
+            )
+            get_property(
+                lib_compile_defs TARGET ${lib}
+                PROPERTY INTERFACE_COMPILE_DEFINITIONS
+            )
+            get_property(
+                lib_cuda_defs TARGET ${lib}
+                PROPERTY CUDA_INTERFACE_COMPILE_DEFS
             )
             get_property(
                 lib_compile_opts TARGET ${lib}
@@ -304,6 +378,18 @@ function(pdmpmt_cuda_link_libraries target)
                     ${lib_cuda_dirs}
                 )
             endif()
+            if(lib_compile_defs)
+                pdmpmt_cuda_compile_definitions(
+                    ${target} INTERFACE
+                    ${lib_compile_defs}
+                )
+            endif()
+            if(lib_cuda_defs)
+                pdmpmt_cuda_compile_definitions(
+                    ${target} INTERFACE
+                    ${lib_cuda_defs}
+                )
+            endif()
             if(lib_compile_opts)
                 pdmpmt_cuda_compile_options(
                     ${target} INTERFACE
@@ -326,6 +412,8 @@ function(pdmpmt_cuda_link_libraries target)
             # ensure unset for next iteration
             unset(lib_include_dirs)
             unset(lib_cuda_dirs)
+            unset(lib_compile_defs)
+            unset(lib_cuda_defs)
             unset(lib_compile_opts)
             unset(lib_cuda_compile_opts)
             unset(lib_cuda_libs)
@@ -397,8 +485,9 @@ function(pdmpmt_add_cuda_groups target)
     endif()
     # for each CUDA compile group
     foreach(cuda_group ${ARGN})
-        # get CUDA_INCLUDE_DIRS, CUDA_COMPILE_OPTS, and CUDA_SOURCES
+        # get all the CUDA includes, compile defs, options, sources
         get_property(cuda_dirs TARGET ${cuda_group} PROPERTY CUDA_INCLUDE_DIRS)
+        get_property(cuda_defs TARGET ${cuda_group} PROPERTY CUDA_COMPILE_DEFS)
         get_property(cuda_opts TARGET ${cuda_group} PROPERTY CUDA_COMPILE_OPTS)
         get_property(cuda_sources TARGET ${cuda_group} PROPERTY CUDA_SOURCES)
         # prepend include directories with -I option and quote
@@ -406,6 +495,9 @@ function(pdmpmt_add_cuda_groups target)
         list(TRANSFORM cuda_includes APPEND "\"")
         # remove any INSTALL_INTERFACE entries as those will expand to -I""
         list(FILTER cuda_includes EXCLUDE REGEX "-I\"\\$<INSTALL_INTERFACE:")
+        # prepend definitions with -D option and quote
+        list(TRANSFORM cuda_defs PREPEND "-D\"" OUTPUT_VARIABLE cuda_defines)
+        list(TRANSFORM cuda_defines APPEND "\"")
         # for each of the sources add a custom command + object for generation
         foreach(cuda_source ${cuda_sources})
             # get absolute path to source
@@ -433,6 +525,7 @@ function(pdmpmt_add_cuda_groups target)
                         # ensure for MSVC that we write to separate PDB files
                         "$<${MSVC}:-Xcompiler \"/Fd${subdir_gen}${cuda_source}.pdb\">"
                         # additional CUDA compile options
+                        ${cuda_defines}
                         ${cuda_opts}
                         -o ${subdir_gen}${cuda_source}.${obj_ext}
                         "${cuda_source_path}"
