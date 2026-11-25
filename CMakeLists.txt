@@ -438,23 +438,23 @@ else()
 endif()
 
 # find X11 (for use with GLX)
-# TODO: do we have a way to get the package version without using pkg-config?
 find_package(X11)
 if(X11_FOUND)
-    # read values of X_PROTOCOL and X_PROTOCOL_VERSION from X.h
+    # the .pc file for X11 is in the same directory as the library
+    cmake_path(GET X11_X11_LIB PARENT_PATH PDMPMT_X11_PC_PATH)
+    cmake_path(APPEND PDMPMT_X11_PC_PATH "pkgconfig" "x11.pc")
+    # read version + remove "Version: " prefix
     file(
-        STRINGS "${X11_X11_INCLUDE_PATH}/X11/X.h" PDMPMT_X_VERSION
-        REGEX "^#define[ \t]+(X_PROTOCOL|X_PROTOCOL_REVISION)[ \t]+"
+        STRINGS "${PDMPMT_X11_PC_PATH}" PDMPMT_X11_VERSION
+        REGEX "Version:[ ]+[0-9.]+"
     )
-    # keep only version numbers and join back into string
-    list(
-        TRANSFORM PDMPMT_X_VERSION REPLACE
-        "^#define[ \t]+(X_PROTOCOL|X_PROTOCOL_REVISION)[ \t]+([0-9]+).+$" "\\2"
+    string(
+        REGEX REPLACE "Version:[ ]+([0-9.]+)" "\\1"
+        PDMPMT_X11_VERSION "${PDMPMT_X11_VERSION}"
     )
-    list(JOIN PDMPMT_X_VERSION "." PDMPMT_X_VERSION)
-    message(STATUS "X version: ${PDMPMT_X_VERSION}")
+    message(STATUS "X11 version: ${PDMPMT_X11_VERSION}")
 else()
-    message(STATUS "X version: None")
+    message(STATUS "X11 version: None")
 endif()
 
 # GoogleTest for unit test runners
