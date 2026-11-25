@@ -217,8 +217,10 @@ endfunction()
 # Any libraries in INTERFACE_LINK_LIBRARIES or CUDA_INTERFACE_LINK_LIBS will
 # be added to the CUDA_LINK_LIBS and CUDA_INTERFACE_LINK_LIBS properties.
 #
-# Note: This function does *not* correctly handle transitive properties which
-# is a defect we should probably remedy in the future.
+# This function recursively operates on targets to ensure that all the
+# necessary include directories, compile definitions, and options, that are
+# typically consumed transitively are correctly and eagerly captured in the
+# appropriate CUDA_* target properties for CUDA compilation.
 #
 # Arguments:
 #   target                  CUDA C++ compile group
@@ -262,6 +264,10 @@ function(pdmpmt_cuda_link_libraries target)
                 PROPERTY CUDA_INTERFACE_COMPILE_OPTS
             )
             get_property(
+                lib_link_libs TARGET ${lib}
+                PROPERTY INTERFACE_LINK_LIBRARIES
+            )
+            get_property(
                 lib_cuda_libs TARGET ${lib}
                 PROPERTY CUDA_INTERFACE_LINK_LIBS
             )
@@ -303,11 +309,11 @@ function(pdmpmt_cuda_link_libraries target)
                 )
             endif()
             # handle CUDA compile group libraries
-            if(lib_cuda_libs)
-                list(APPEND cuda_libs ${lib_cuda_libs})
-            # otherwise copy over the target directly
-            else()
-                list(APPEND cuda_libs ${lib})
+            list(APPEND cuda_libs ${lib_cuda_libs})
+            list(APPEND cuda_libs ${lib})
+            # ensure transitive compile flags are consumed
+            if(lib_link_libs)
+                pdmpmt_cuda_link_libraries(${target} PRIVATE ${lib_link_libs})
             endif()
             # ensure unset for next iteration
             unset(lib_include_dirs)
@@ -316,6 +322,7 @@ function(pdmpmt_cuda_link_libraries target)
             unset(lib_cuda_defs)
             unset(lib_compile_opts)
             unset(lib_cuda_compile_opts)
+            unset(lib_link_libs)
             unset(lib_cuda_libs)
         # otherwise just a library name so pass directly
         else()
@@ -362,6 +369,10 @@ function(pdmpmt_cuda_link_libraries target)
                 PROPERTY CUDA_INTERFACE_COMPILE_OPTS
             )
             get_property(
+                lib_link_libs TARGET ${lib}
+                PROPERTY INTERFACE_LINK_LIBRARIES
+            )
+            get_property(
                 lib_cuda_libs TARGET ${lib}
                 PROPERTY CUDA_INTERFACE_LINK_LIBS
             )
@@ -403,11 +414,11 @@ function(pdmpmt_cuda_link_libraries target)
                 )
             endif()
             # handle CUDA compile group libraries
-            if(lib_cuda_libs)
-                list(APPEND cuda_int_libs ${lib_cuda_libs})
-            # otherwise copy over the target directly
-            else()
-                list(APPEND cuda_int_libs ${lib})
+            list(APPEND cuda_int_libs ${lib_cuda_libs})
+            list(APPEND cuda_int_libs ${lib})
+            # ensure transitive compile flags are consumed
+            if(lib_link_libs)
+                pdmpmt_cuda_link_libraries(${target} INTERFACE ${lib_link_libs})
             endif()
             # ensure unset for next iteration
             unset(lib_include_dirs)
@@ -416,6 +427,7 @@ function(pdmpmt_cuda_link_libraries target)
             unset(lib_cuda_defs)
             unset(lib_compile_opts)
             unset(lib_cuda_compile_opts)
+            unset(lib_link_libs)
             unset(lib_cuda_libs)
         # otherwise just a library name so pass directly
         else()
