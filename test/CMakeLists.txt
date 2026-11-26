@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION ${CMAKE_MINIMUM_REQUIRED_VERSION})
 if(GTest_FOUND)
     # mcpi_test: C++ Monte Carlo pi estimation test program
     add_executable(mcpi_test mcpi_test.cc)
-    target_link_libraries(mcpi_test PRIVATE GTest::gtest_main pdmpmt pdmpmt++)
+    target_link_libraries(mcpi_test PRIVATE pdmpmt::gtest_main pdmpmt pdmpmt++)
     # link OpenMP if OpenMP is available (only need C++ target)
     if(OpenMP_FOUND)
         target_link_libraries(mcpi_test PRIVATE OpenMP::OpenMP_CXX)

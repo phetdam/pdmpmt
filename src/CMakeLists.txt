@@ -11,10 +11,11 @@ if(CUDAToolkit_FOUND)
     pdmpmt_cuda_compile_group(thrust_demo_cu thrust_demo.cu)
     pdmpmt_cuda_link_libraries(
         thrust_demo_cu PRIVATE
-        CUDA::cudart cuda_compile_options pdmpmt++
+        pdmpmt::cudart cuda_compile_options pdmpmt++
     )
     pdmpmt_add_cuda_groups(thrust_demo thrust_demo_cu)
-    # target_link_libraries(thrust_demo PRIVATE CUDA::cudart pdmpmt++)
+    # TODO: likely a legacy comment from before pdmpmt_cuda_compile_group()
+    # target_link_libraries(thrust_demo PRIVATE pdmpmt::cudart pdmpmt++)
     add_test(NAME thrust_demo COMMAND thrust_demo)
 else()
     message(STATUS "Skipping thrust_demo (requires CUDA Toolkit)")
@@ -23,7 +24,7 @@ endif()
 # cuda_info: print info on available CUDA devices
 if(CUDAToolkit_FOUND)
     add_executable(cuda_info cuda_info.cc)
-    target_link_libraries(cuda_info PRIVATE CUDA::cudart pdmpmt++)
+    target_link_libraries(cuda_info PRIVATE pdmpmt::cudart pdmpmt++)
     # print standard output
     add_test(NAME cuda_info COMMAND cuda_info)
     # test command-line options
@@ -85,7 +86,7 @@ if(CUDAToolkit_FOUND)
     # note: compile options provided via cuda_compile_options
     pdmpmt_cuda_link_libraries(
         curand_mcpi_cu PRIVATE
-        CUDA::cudart CUDA::curand cuda_compile_options pdmpmt++
+        pdmpmt::cudart pdmpmt::curand cuda_compile_options pdmpmt++
     )
     pdmpmt_add_cuda_groups(curand_mcpi curand_mcpi_cu)
     add_test(NAME curand_mcpi COMMAND curand_mcpi)
@@ -96,13 +97,13 @@ endif()
 # opengl_info: print OpenGL platform + version info
 if(OpenGL_FOUND AND WIN32 OR (X11_FOUND AND OpenGL_GLX_FOUND))
     add_executable(opengl_info opengl_info.cc)
-    target_link_libraries(opengl_info PRIVATE OpenGL::GL pdmpmt++)
+    target_link_libraries(opengl_info PRIVATE pdmpmt::OpenGL pdmpmt++)
     # on Windows, link to relevant system libraries like GDI
     if(WIN32)
         target_link_libraries(opengl_info PRIVATE gdi32 user32)
     # otherwise, using GLX + X11
     else()
-        target_link_libraries(opengl_info PRIVATE OpenGL::GLX X11::X11)
+        target_link_libraries(opengl_info PRIVATE pdmpmt::GLX pdmpmt::X11)
     endif()
     # smoke test
     add_test(NAME opengl_info COMMAND opengl_info)

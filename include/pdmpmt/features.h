@@ -21,59 +21,96 @@
 #define PDMPMT_HAS_CXX20 0
 #endif  // PDMPMT_HAS_CXX20
 
+// note: no "automatic" detection of external libraries via __has_include()
+// because if there are multiple library versions, one or more of which are
+// located in a system include location, but of an inappropriate version,
+// __has_include() would locate headers for the version(s) in the system
+// location(s), which may *not* be the what the target application desires.
+// therefore, to prevent this "accidental" enablement, we require the build
+// system to define feature macros. PDMATH_USE_<feature> macro definition will
+// be used to enable, and PDMATH_HAS_<feature> will be defined by this header
+// to 1 or 0 appropriately for downstream consumption.
+
 // X11
-#ifdef __has_include
-#if __has_include(<X11/Xlib.h>)
+#ifdef PDMPMT_USE_X11
+#undef PDMPMT_HAS_X11
 #define PDMPMT_HAS_X11 1
-#endif  // __has_include(<X11/Xlib.h>)
-#endif  // __has_include
+#endif  // PDMPMT_USE_X11
 
 #ifndef PDMPMT_HAS_X11
 #define PDMPMT_HAS_X11 0
 #endif  // PDMPMT_HAS_X11
 
+// OpenGL
+#ifdef PDMPMT_USE_GL
+#undef PDMPMT_HAS_GL
+#define PDMPMT_HAS_GL 1
+#endif  // PDMPMT_USE_GL
+
+#ifndef PDMPMT_HAS_GL
+#define PDMPMT_HAS_GL 0
+#endif  // PDMPMT_HAS_GL
+
+// GLU
+#ifdef PDMPMT_USE_GLU
+#undef PDMPMT_HAS_GLU
+#define PDMPMT_HAS_GLU 1
+#endif  // PDMPMT_USE_GLU
+
+#ifndef PDMPMT_HAS_GLU
+#define PDMPMT_HAS_GLU 0
+#endif  // PDMPMT_HAS_GLU
+
 // GLX
 // note: usually GL/glx.h includes X11/Xlib.h itself
-#ifdef __has_include
-#if __has_include(<GL/glx.h>)
+#ifdef PDMPMT_USE_GLX
+#undef PDMPMT_HAS_GLX
 #define PDMPMT_HAS_GLX 1
-#endif  // __has_include(<GL/glx.h>)
-#endif  // __has_include
+#endif  // PDMPMT_USE_GLX
 
 #ifndef PDMPMT_HAS_GLX
 #define PDMPMT_HAS_GLX 0
 #endif  // PDMPMT_HAS_GLX
 
+// GoogleTest
+#ifdef PDMPMT_USE_GTEST
+#undef PDMPMT_HAS_GTEST
+#define PDMPMT_HAS_GTEST 1
+#endif  // PDMPMT_USE_GTEST
+
+#ifndef PDMPMT_HAS_GTEST
+#define PDMPMT_HAS_GTEST 0
+#endif  // PDMPMT_HAS_GTEST
+
 // GoogleMock
-#ifdef __has_include
-#if __has_include(<gmock/gmock.h>)
+// note: some Linux platforms distribute GoogleTest and GoogleMock separately
+// so we have a separate feature macro for GoogleMock
+#ifdef PDMPMT_USE_GMOCK
+#undef PDMPMT_HAS_GMOCK
 #define PDMPMT_HAS_GMOCK 1
-#endif  // __has_include(<gmock/gmock.h>)
-#endif  // __has_include
+#endif  // PDMPMT_USE_GMOCK
 
 #ifndef PDMPMT_HAS_GMOCK
 #define PDMPMT_HAS_GMOCK 0
 #endif  // PDMPMT_HAS_GMOCK
 
 // Thrust
-#ifdef __has_include
-#if __has_include(<thrust/version.h>)
+#ifdef PDMPMT_USE_THRUST
+#undef PDMPMT_HAS_THRUST
 #define PDMPMT_HAS_THRUST 1
-#endif  // __has_include(<thrust/version.h>)
-#endif  // __has_include
+#endif  // PDMPMT_USE_THRUST
 
 #ifndef PDMPMT_HAS_THRUST
 #define PDMPMT_HAS_THRUST 0
 #endif  // PDMPTM_HAS_THRUST
 
-// CUDA API headers
+// CUDA
 // note: cuda.h is the driver API header while cuda_runtime_api.h is the
 // runtime API header. usually cuda_runtime.h is used over cuda_runtime_api.h
-#ifdef __has_include
-#if __has_include(<cuda.h>)
+#ifdef PDMPMT_USE_CUDA
+#undef PDMPMT_HAS_CUDA
 #define PDMPMT_HAS_CUDA 1
-#endif  // __has_include(<cuda.h>)
-#endif  // __has_include
+#endif  // PDMPMT_USE_CUDA
 
 #ifndef PDMPMT_HAS_CUDA
 #define PDMPMT_HAS_CUDA 0

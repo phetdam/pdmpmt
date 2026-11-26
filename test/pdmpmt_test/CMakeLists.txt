@@ -32,20 +32,20 @@ if(GTest_FOUND)
         pdmpmt_cuda_compile_group(pdmpmt_test_cu span_test.cu)
         pdmpmt_cuda_link_libraries(
             pdmpmt_test_cu PRIVATE
-            CUDA::cudart GTest::gtest cuda_compile_options pdmpmt++
+            pdmpmt::cudart cuda_compile_options pdmpmt::gtest pdmpmt++
         )
-        if(TARGET GTest::gmock)
-            pdmpmt_cuda_link_libraries(pdmpmt_test_cu PRIVATE GTest::gmock)
+        if(TARGET pdmpmt::gmock)
+            pdmpmt_cuda_link_libraries(pdmpmt_test_cu PRIVATE pdmpmt::gmock)
         endif()
         pdmpmt_add_cuda_groups(pdmpmt_test pdmpmt_test_cu)
     endif()
     target_link_libraries(pdmpmt_test PRIVATE pdmpmt pdmpmt_config pdmpmt++)
     # if GoogleMock is available we want to use its main instead
-    if(TARGET GTest::gmock_main)
-        target_link_libraries(pdmpmt_test PRIVATE GTest::gmock_main)
+    if(TARGET pdmpmt::gmock_main)
+        target_link_libraries(pdmpmt_test PRIVATE pdmpmt::gmock_main)
     # otherwise just use the GoogleTest main
     else()
-        target_link_libraries(pdmpmt_test PRIVATE GTest::gtest_main)
+        target_link_libraries(pdmpmt_test PRIVATE pdmpmt::gtest_main)
     endif()
     # register Google Tests tests with CTest
     gtest_discover_tests(pdmpmt_test)

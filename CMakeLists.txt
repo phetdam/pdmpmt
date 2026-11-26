@@ -221,6 +221,29 @@ if(CUDAToolkit_FOUND)
         )
         set(PDMPMT_CUDA_ENABLED FALSE)
     endif()
+    # add custom targets to propagate feature macros
+    # CUDA runtime library
+    add_library(pdmpmt::cudart INTERFACE IMPORTED)
+    target_compile_definitions(pdmpmt::cudart INTERFACE PDMPMT_USE_CUDA)
+    target_link_libraries(pdmpmt::cudart INTERFACE CUDA::cudart)
+    # cuRAND
+    add_library(pdmpmt::curand INTERFACE IMPORTED)
+    target_compile_definitions(pdmpmt::curand INTERFACE PDMPMT_USE_CUDA)
+    target_link_libraries(pdmpmt::curand INTERFACE CUDA::curand)
+    # Thrust
+    # note: part of CCCL in more recent CUDA Toolkit distributions
+    find_path(
+        PDMPMT_HAS_THRUST
+        NAMES thrust/version.h
+        PATHS "${CUDAToolkit_LIBRARY_ROOT}"
+        PATH_SUFFIXES include include/cccl
+        NO_DEFAULT_PATH
+    )
+    if(PDMPMT_HAS_THRUST)
+        foreach(target pdmpmt::cudart pdmpmt::curand)
+            target_compile_definitions(${target} INTERFACE PDMPMT_USE_THRUST)
+        endforeach()
+    endif()
 else()
     message(STATUS "CUDA version: None")
 endif()
@@ -353,6 +376,10 @@ if(OpenGL_FOUND)
     # context and call glGetString(GL_VERSION) to report the OpenGL version.
     # we probably also need to print out the device context, etc.
     message(STATUS "OpenGL version: ${PDMPMT_OPENGL_GL_VERSION}")
+    # add custom target to propagate feature macros
+    add_library(pdmpmt::OpenGL INTERFACE IMPORTED)
+    target_compile_definitions(pdmpmt::OpenGL INTERFACE PDMPMT_USE_GL)
+    target_link_libraries(pdmpmt::OpenGL INTERFACE OpenGL::GL)
 else()
     message(STATUS "OpenGL version: None")
 endif()
@@ -412,6 +439,10 @@ if(OPENGL_GLU_FOUND)
     endforeach()
     # report
     message(STATUS "GLU version: ${PDMPMT_GLU_VERSION}")
+    # add custom target to propagate feature macro
+    add_library(pdmpmt::GLU INTERFACE IMPORTED)
+    target_compile_definitions(pdmpmt::GLU INTERFACE PDMPMT_USE_GLU)
+    target_link_libraries(pdmpmt::GLU INTERFACE OpenGL::GLU)
 else()
     message(STATUS "GLU version: None")
 endif()
@@ -433,6 +464,10 @@ if(OpenGL_GLX_FOUND)
     endforeach()
     # report
     message(STATUS "GLX version: ${PDMPMT_GLX_VERSION}")
+    # add custom target to propagate feature macro
+    add_library(pdmpmt::GLX INTERFACE IMPORTED)
+    target_compile_definitions(pdmpmt::GLX INTERFACE PDMPMT_USE_GLX)
+    target_link_libraries(pdmpmt::GLX INTERFACE OpenGL::GLX)
 else()
     message(STATUS "GLX version: None")
 endif()
@@ -453,6 +488,10 @@ if(X11_FOUND)
         PDMPMT_X11_VERSION "${PDMPMT_X11_VERSION}"
     )
     message(STATUS "X11 version: ${PDMPMT_X11_VERSION}")
+    # add custom target to propagate feature macro
+    add_library(pdmpmt::X11 INTERFACE IMPORTED)
+    target_compile_definitions(pdmpmt::X11 INTERFACE PDMPMT_USE_X11)
+    target_link_libraries(pdmpmt::X11 INTERFACE X11::X11)
 else()
     message(STATUS "X11 version: None")
 endif()
@@ -462,6 +501,14 @@ find_package(GTest 1.10)
 if(GTest_FOUND)
     message(STATUS "GoogleTest version: ${GTest_VERSION}")
     include(GoogleTest)  # enable test discovery
+    # add custom targets to propagate feature macro
+    add_library(pdmpmt::gtest INTERFACE IMPORTED)
+    target_compile_definitions(pdmpmt::gtest INTERFACE PDMPMT_USE_GTEST)
+    target_link_libraries(pdmpmt::gtest INTERFACE GTest::gtest)
+    # note: repeat for gtest_main target
+    add_library(pdmpmt::gtest_main INTERFACE IMPORTED)
+    target_compile_definitions(pdmpmt::gtest_main INTERFACE PDMPMT_USE_GTEST)
+    target_link_libraries(pdmpmt::gtest_main INTERFACE GTest::gtest_main)
 else()
     message(STATUS "GoogleTest version: None")
 endif()
@@ -469,6 +516,14 @@ endif()
 # GoogleTest and GoogleMock separately. we look for the defined targets
 if(TARGET GTest::gmock)
     message(STATUS "GoogleMock version: ${GTest_VERSION}")
+    # add custom targets to propagate feature macro
+    add_library(pdmpmt::gmock INTERFACE IMPORTED)
+    target_compile_definitions(pdmpmt::gmock INTERFACE PDMPMT_USE_GMOCK)
+    target_link_libraries(pdmpmt::gmock INTERFACE GTest::gmock)
+    # note: repeat for gmock_main target
+    add_library(pdmpmt::gmock_main INTERFACE IMPORTED)
+    target_compile_definitions(pdmpmt::gmock_main INTERFACE PDMPMT_USE_GMOCK)
+    target_link_libraries(pdmpmt::gmock_main INTERFACE GTest::gmock_main)
 else()
     message(STATUS "GoogleMock version: None")
 endif()
